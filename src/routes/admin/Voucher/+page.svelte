@@ -26,21 +26,15 @@
 	];
 </script>
 
-<div class="px-6 py-6">
-	<div class="mx-auto max-w-7xl">
-		<div class="rounded-xl border border-gray-200/60 bg-white shadow-sm">
-			<DataTable
-				tableData={response.vouchers}
-				tableColumns={columns}
-				entityName="voucher"
-				searchConfig={{ enabled: true, column: 'title', placeholder: 'Title' }}
-				filterConfig={{
-					enabled: true,
-					options: serviceOptions,
-					defaultColumn: 'service'
-				}}
-				enableAddNew={true}
-			/>
-		</div>
-	</div>
-</div>
+<DataTable
+	tableData={response.vouchers}
+	tableColumns={columns}
+	entityName="voucher"
+	searchConfig={{ enabled: true, column: 'title', placeholder: 'Title' }}
+	filterConfig={{
+		enabled: true,
+		options: serviceOptions,
+		defaultColumn: 'service'
+	}}
+	enableAddNew={true}
+/>
