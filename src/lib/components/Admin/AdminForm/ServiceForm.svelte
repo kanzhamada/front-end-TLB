@@ -32,7 +32,8 @@
 		id: '',
 		serviceName: '',
 		price: 0,
-		description: ''
+		description: '',
+		attainableCoin: 0
 	};
 
 	// Initialize form with better error handling
@@ -78,6 +79,7 @@
 		$formData.serviceName = detailData.serviceName;
 		$formData.price = detailData.price;
 		$formData.description = detailData.description;
+		$formData.attainableCoin = detailData.attainableCoin ?? 0;
 	}
 </script>
 
@@ -195,6 +197,46 @@
 			</Form.Control>
 			<Form.Description class="mt-2 text-sm text-gray-500">
 				Please enter a brief description about the service.
+			</Form.Description>
+			<Form.FieldErrors />
+		</Form.Field>
+
+			<!-- Attainable Coin Field -->
+		<Form.Field {form} name="attainableCoin">
+			<Form.Control>
+				{#snippet children({ props })}
+					<div class="group">
+						<Form.Label class="mb-2 flex items-center text-sm font-semibold text-gray-700">
+							Attainable Coin
+						</Form.Label>
+						<!-- <div class="relative"> -->
+						<!-- <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center">
+								<span
+									class="flex h-full items-center justify-center rounded-l-md border-r border-gray-200 bg-[#2E6057] px-3  text-sm font-medium text-white"
+								>
+									Rp
+								</span>
+							</div> -->
+
+						<Input
+							{...props}
+							bind:value={$formData.attainableCoin}
+							class="w-full rounded-lg border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 transition-all duration-200 hover:border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+							placeholder="e.g. 312"
+							required
+							readonly={isReadonly}
+							disabled={isSubmitting}
+							type="number"
+						/>
+						<div class="mt-1 text-right text-xs text-gray-400">
+							Max Attainable Coin: 9.999.999
+							<!-- </div> -->
+						</div>
+					</div>
+				{/snippet}
+			</Form.Control>
+			<Form.Description class="mt-2 text-sm text-gray-500">
+				(Optional) Enter the attainable coin of the service.
 			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>

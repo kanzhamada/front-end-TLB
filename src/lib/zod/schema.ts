@@ -41,7 +41,12 @@ export const serviceSchema = z.object({
 		.min(1, 'Price must be at least 1')
 		.max(9999999, 'Price must be at most 7 digits'),
 
-	description: z.string().trim().max(255, 'Description must be at most 255 characters')
+	description: z.string().trim().max(255, 'Description must be at most 255 characters'),
+
+	attainableCoin: z
+		.number()
+		.min(0, 'Attainable coin must be at least 1')
+		.max(9999999, 'Attainable coin must be at most 7 digits')
 });
 
 export const voucherSchema = z.object({

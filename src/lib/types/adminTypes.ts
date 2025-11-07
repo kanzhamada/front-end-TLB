@@ -21,6 +21,7 @@ export type Service = {
 	serviceName: string;
 	price: number;
 	description: string;
+	attainableCoin?: number;
 };
 
 export type Voucher = {
