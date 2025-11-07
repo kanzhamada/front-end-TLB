@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private';
 import type { Service } from '$lib/types/adminTypes';
 import { userId } from '$lib/zod/schema';
 import { faker } from '@faker-js/faker';
@@ -6,7 +7,8 @@ const services: Service[] = Array.from({ length: 69 }, () => ({
 	id: userId(),
 	serviceName: faker.word.noun(),
 	price: Math.floor(Math.random() * 10000) + 1000,
-	description: faker.lorem.paragraph()
+	description: faker.lorem.paragraph(),
+	attainableCoin: Math.floor(Math.random() * 10000)
 }));
 
 interface ServiceResponse {
@@ -30,7 +32,8 @@ export const getServiceById = (id: string): ServiceResponse => {
 			id: service.id,
 			serviceName: service.serviceName,
 			price: service.price,
-			description: service.description
+			description: service.description,
+			attainableCoin: service.attainableCoin
 		};
 
 		return {
@@ -45,10 +48,28 @@ export const getServiceById = (id: string): ServiceResponse => {
 	}
 };
 
-export const getService = () => {
-	return {
-		services
-	};
+export const getService = async () => {
+	try {
+		const response = await fetch(env.BACKEND_HOST + '/admin/view-service', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		if (response.ok) {
+			const services = await response.json();
+			return {
+				success: true,
+				data: services
+			};
+		}
+	} catch (error) {
+		return {
+			success: false,
+			error: 'Failed to fetch service' + error
+		};
+	}
 };
 
 export const editService = (updatedService: Service): boolean => {
