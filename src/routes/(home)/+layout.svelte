@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CustomerNavbar from '$lib/components/User/CustomerNavbar.svelte';
+	import CustomerFootbar from '$lib/components/User/CustomerFootbar.svelte';
 
 	let { children } = $props();
 </script>
@@ -9,4 +10,5 @@
 	<main class="">
 		{@render children()}
 	</main>
+	<CustomerFootbar />
 </div>
