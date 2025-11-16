@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { getServices, getSchedule } from '$lib/api/shared/api';
+import { getOperational, getServices } from '$lib/api/shared/api';
 
 export const load = async () => {
 	// Only run on client side since SSR is disabled
@@ -8,7 +8,7 @@ export const load = async () => {
 			// Fetch services and schedule in parallel
 			const [servicesResponse, scheduleResponse] = await Promise.all([
 				getServices(),
-				getSchedule()
+				getOperational()
 			]);
 
 			// Return data with fallbacks for errors
@@ -43,4 +43,3 @@ export const load = async () => {
 		}
 	};
 };
-

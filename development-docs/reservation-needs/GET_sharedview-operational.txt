@@ -1,0 +1,742 @@
+GET | /shared/view-operational
+
+response : 
+
+{
+    "sucess": true,
+    "message": "Operationals fetched successfully",
+    "data": [
+        {
+            "date": "2025-07-09",
+            "dateID": "1fd237af-afca-4ba7-b6a5-04659fa4a1a5",
+            "hourDetail": [
+                {
+                    "hour": "10:26:11",
+                    "hourID": "79aa2a4c-d4b3-462c-9f25-bfdd7c727329",
+                    "status": "booked"
+                }
+            ]
+        },
+        {
+            "date": "2025-08-14",
+            "dateID": "3507375e-804a-40fa-a951-33aa0b16eaea",
+            "hourDetail": [
+                {
+                    "hour": "17:00:00",
+                    "hourID": "0846352f-0f46-45e2-9773-252d69c2005b",
+                    "status": "booked"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-03",
+            "dateID": "31cc43bb-8cc9-4252-ac5a-7a38d2a7a540",
+            "hourDetail": [
+                {
+                    "hour": "14:00:00",
+                    "hourID": "0557278d-c803-4021-b226-5729f543c635",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "4092ae98-3df7-4e9a-970c-99035f736f38",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-04",
+            "dateID": "131d95e6-bd37-4f0a-bc65-f548c8d4bb2c",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "8d8ebbef-cdd8-477a-8c2c-6310d18991aa",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "ae58a95e-e61f-4f9e-a619-37d199b2701f",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "613c9a89-55ad-4796-a3dd-bc5e2f136871",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "fb76151f-570f-4d8d-b65f-67581b045f48",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "c52c40cc-15f5-4d70-824a-1cbc42bec250",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "2974a03e-b3b5-4642-a91d-0a3c262769f1",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "443220d0-4533-4f91-bceb-eae8b2eaa47f",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "25190c83-6d78-4603-ac7b-9a1e746c18a2",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "3e3a45c8-c8c9-4e20-92fb-814874e94436",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "e7406d3b-7e40-49ab-9dbc-797b2f891117",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-05",
+            "dateID": "ab9d10d6-d257-4695-b5d9-eb3e998720fc",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "07cc55b3-8540-48ad-931d-6ab372abd4a4",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "0df51222-2cf0-49f5-ae21-8d3c1e9e09b6",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "ea91ce14-8b5a-455e-a1a6-6267d09090a3",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "b58ba010-61f5-4319-981a-0702f1d3016d",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "f8b73a9a-9f8d-4ca1-9cc1-b76ef4021087",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "367348c3-85c3-41c9-90d2-d2153b4a7561",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "6ab0f7de-0342-4460-a818-8318f837a8e2",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "49d33cb8-a7ae-45a8-9d62-b592b962a155",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "d5a7b1c6-81e3-418a-adb5-1e3cad47b692",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "4c0158b3-94f5-447a-8adf-bfb1d4f17b49",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-06",
+            "dateID": "7da3cba9-e378-4d2a-88b8-1400b84c9af0",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "aa37fbdd-4166-4496-9c45-ff3b2dfc8e46",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "107135da-a106-4623-a669-4e6309184123",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "c8744c13-3cdc-4df5-929f-517c85347a84",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "e8691b7c-5e73-4ded-986a-743ced55bc81",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "5c59d65f-7763-41ca-a614-af3a4712021f",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "378b2495-b9f5-411d-a393-a6d816ef9789",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "98b4f326-25bf-481c-b248-d53af36ea9eb",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "70de7c13-d78a-46b6-a56b-c30e5753f7f6",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "1655798d-6711-4226-a696-e2793f5a6927",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "34b53ada-36ee-4eda-b43b-7b344bfe61bb",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-07",
+            "dateID": "aab4677f-2677-4fec-9152-e8c6d2304f5a",
+            "hourDetail": [
+                {
+                    "hour": "14:00:00",
+                    "hourID": "f5ac0a18-3c96-4a04-883e-87fc9825d794",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "42687cb3-87c5-464e-b203-716b200135f3",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "00ad2c99-9631-41cb-b5da-3db476386147",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "e9cdd7d8-4083-409c-97da-0b64274f9501",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "d244d48d-bd76-4fb1-9793-187b740c5455",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "9e8bc08f-4db1-427b-b6cf-b09e50847c66",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "a2c53c88-bb66-462a-a43c-7ada86b86163",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "2d0c3bc6-f1f0-4b7d-928c-c92d260f2405",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "42e49f74-336c-4380-8012-81730582a388",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-08",
+            "dateID": "3182ab35-21eb-4adf-94a0-92c7d1e319af",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "39b7ef73-ab57-4778-84d3-4a2a62c3f108",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "38e9fe85-235b-489f-9eb3-650adca97fd7",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "434cbc89-f21a-43f3-bed3-3f0715173cb0",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "2abe530b-5e72-474c-8ced-d7c7bde00704",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "a3d352a0-b8eb-4885-abed-62a4857f2f02",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "f4f39fbd-47b5-4fd4-b732-d2272458a1f4",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "3670d86e-d656-4065-a604-8f5443d10c61",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "67a97f7c-d308-439f-8cad-2aa6a1140dd7",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "938ac2d4-a74a-413f-91da-a3f77630b8cb",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "e2353358-aa0b-423f-9d47-29be734855bc",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-09",
+            "dateID": "62a7920e-144f-4c99-8458-959e739b9b12",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "3a6dbbf0-dc3f-4feb-98a6-105555f180d5",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "1b0d7ab7-6b1d-4b3a-9ff6-177e342d117d",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "faf0adbf-b9bc-4967-b0e1-72b6f7e263b1",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "fbaa94ac-6276-4f93-b2f5-fc0f19fd0fec",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "b167652d-8c4c-4a6f-abf1-5debaa9ca1f0",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "71073f81-cdb0-49d7-b197-7f78ba95c32d",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "86ea3064-d33c-4fab-8ff2-22e7c71889d5",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "7a2588e0-4137-4aa3-9138-aaa2ec9fbf85",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "e8a4b3b3-50df-48c7-8c71-914f1026acab",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "d848b0df-f475-4fa9-bebd-d2676531ac24",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-10",
+            "dateID": "f472cee6-73ee-440c-9b1c-a8ba979aba34",
+            "hourDetail": [
+                {
+                    "hour": "14:00:00",
+                    "hourID": "8cf5f8cc-6e08-4dc3-ab24-6ffccdfc0e5f",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "1e2e8231-1b1d-4d2d-9726-ba9040751560",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-11",
+            "dateID": "4137b878-caa5-488c-92ea-70349a14736f",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "7a489055-68f7-4c0c-8ce9-42c7e189377a",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "f2492c7d-dc19-4ff8-960d-e0c0357b3e23",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "059c06e9-5705-4fcb-8d51-b6317af5c17b",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "105c65c5-97cd-4358-ad93-d2424a65364d",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "9581af81-5ca5-4ab2-8fc1-ec730a7860df",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "76fd3366-ce03-4850-9e88-8ea229e581e2",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "8d4315cf-ad27-4617-9f45-6808df4ca9a8",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "da6d5b2a-b46d-43e8-8654-efcf36bebe02",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "27440358-9040-4927-9f10-eb3c16ac3290",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "236fe369-d229-497d-9d1b-e1df800f8b8a",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-12",
+            "dateID": "88751a39-b260-4253-ae70-af1f1240eef2",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "bff22657-bf0c-4ac5-ba76-ebe443ee91f6",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "33f51b8a-df71-4c2b-979a-726ac60d386f",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "cdadfd7b-8cd8-40bd-9518-5780c5094feb",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "9fa5977b-386d-40cc-9bd0-eed4a954c7fc",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "98c4ded2-263c-4415-9c98-537cd26552ca",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "fc9603d0-e41f-4db0-80c1-887f10bdc32a",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "08bb3785-e985-4229-88bf-728cb882f426",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "6e504e90-72ee-49c9-92ea-5b3449a09b28",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "a7824e89-b364-4258-b197-93255bd042b0",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "87c93bca-020c-4895-b6e4-a38b134a1de4",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-13",
+            "dateID": "59d4a510-bfc2-4e0c-839b-fc3ba42faa46",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "b3fa2e82-3567-4858-82e4-19071597bb57",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "ae2b9baa-36a8-4b56-997d-639fbf3faa6a",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "851da3d1-e469-447a-b8ec-ddc2020439c9",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "eac0541f-b1bf-4ef4-b0e3-fb428b9ddaa6",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "23cdc522-6bbb-4d51-a033-28a2cd19c487",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "8246570d-3a70-489a-94ae-f18b4e38d1f8",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "5f6d821c-47c7-4144-ae3d-e291d5a20652",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "067b8d3f-4cba-4483-9fa9-74fa6712a12a",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "5f8cc3ac-9859-46bd-bef3-9e7a688c0e81",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "77af1052-4bb2-47fb-9ffa-8054a4555a61",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-14",
+            "dateID": "8719ae0a-6c30-4485-b6a8-3c55497799ef",
+            "hourDetail": [
+                {
+                    "hour": "14:00:00",
+                    "hourID": "a229423f-9f74-47b5-8f95-07dff6b8bacf",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "a129577e-5178-4ea5-a349-4f539b1596f2",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "d45e305b-45cc-41cd-9c8b-fc1134054a96",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "2812892a-fdef-4670-8222-b49f80568455",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "a7b3daf1-4a07-49ec-93d6-a061b269fd85",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "c4afebc1-5c22-4a0b-8a61-2aec2cb86ca3",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "59ad4ee4-d600-4318-b8f6-1453f5b97ade",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "63ee20be-1a82-4066-8d8b-6f0f0a58857d",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "ab05cda6-388b-4776-a12c-fc47a1e1e23d",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-15",
+            "dateID": "1c09e027-0e1b-475a-85b1-c098cbb86dec",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "8b548886-faf6-463b-8140-76566687cc97",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "3622041d-f5af-4e74-a7d7-4c5edf19566f",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "6b2df0a8-e00e-47fe-b33a-9096b1490258",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "db759437-290b-4f12-a860-f0338decc3ec",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "1f2d5995-55d0-48d8-8f79-63b1b7f80d79",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "ad866f98-4b05-4d03-b61b-b9be4cf5ce10",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "40c7cf5d-1ec4-49dc-8fa0-356d506bf205",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "c2524357-7912-4fd5-80cc-086ee925f99c",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "5d878e48-991a-43dc-9bc3-b776f4e8668a",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "8da3c3e0-30f8-42b4-a4e0-fb0ad7715ff7",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-16",
+            "dateID": "0a4ea478-b455-4f70-a82d-3b2776bb39b6",
+            "hourDetail": [
+                {
+                    "hour": "13:00:00",
+                    "hourID": "e68d33da-02c1-4557-ae29-9a8c588ad768",
+                    "status": "available"
+                },
+                {
+                    "hour": "14:00:00",
+                    "hourID": "d63ef482-016f-4afa-b400-777746d94d57",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "4cc3c35e-b7e0-4658-99e7-678d421aeedf",
+                    "status": "available"
+                },
+                {
+                    "hour": "16:00:00",
+                    "hourID": "239194fc-dfd8-4613-89a7-05aabd15ea85",
+                    "status": "available"
+                },
+                {
+                    "hour": "17:00:00",
+                    "hourID": "a23dc0fc-7fc0-4e02-834f-a6f56fdbe5f7",
+                    "status": "available"
+                },
+                {
+                    "hour": "18:00:00",
+                    "hourID": "a8737752-bf3e-4b0b-93c1-c10c40f7d5c5",
+                    "status": "available"
+                },
+                {
+                    "hour": "19:00:00",
+                    "hourID": "a8891670-9c3d-4f30-9d67-29b72e50d8a9",
+                    "status": "available"
+                },
+                {
+                    "hour": "20:00:00",
+                    "hourID": "7fc277a2-e921-4337-98ff-87dc0826c5ce",
+                    "status": "available"
+                },
+                {
+                    "hour": "21:00:00",
+                    "hourID": "ab077de1-4ad8-4b35-9986-c3cde0bd7c63",
+                    "status": "available"
+                },
+                {
+                    "hour": "22:00:00",
+                    "hourID": "c4276137-efe2-4ec6-adc4-45f1a48afa5e",
+                    "status": "available"
+                }
+            ]
+        },
+        {
+            "date": "2025-11-17",
+            "dateID": "8685d467-ec8d-402e-907f-061b050973ce",
+            "hourDetail": [
+                {
+                    "hour": "14:00:00",
+                    "hourID": "b8d56ea7-8bbc-48a3-8d1a-e3d07cd20977",
+                    "status": "available"
+                },
+                {
+                    "hour": "15:00:00",
+                    "hourID": "f727af25-4aa7-4325-aee9-3c2fd0dab89a",
+                    "status": "available"
+                }
+            ]
+        }
+    ]
+}

@@ -33,7 +33,7 @@ export const actions: Actions = {
 		try {
 			const data = form.data;
 
-			if (data.id && service.find(b => b.id === data.id)) {
+			if (data.id && service.find((b) => b.id === data.id)) {
 				const updated = editService({ ...data, id: data.id as string });
 				if (!updated) throw new Error('Failed to update');
 			} else {
