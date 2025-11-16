@@ -1,5 +1,7 @@
 node_modules
 
+development-docs
+
 # Output
 .output
 .vercel
@@ -21,3 +23,8 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+development-docs
+
+QWEN.md
+ARCHITECTURE.md
