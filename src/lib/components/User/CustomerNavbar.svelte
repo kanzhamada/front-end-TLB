@@ -7,16 +7,18 @@
 		<div class="flex h-16 items-center justify-between">
 			<!-- Logo -->
 			<div class="flex items-center gap-2">
-				<img src="/three_lights_barbershop_logo.svg" alt="Three Lights Barbershop Logo" class="h-12 w-auto">
+				<img
+					src="/three_lights_barbershop_logo.svg"
+					alt="Three Lights Barbershop Logo"
+					class="h-12 w-auto"
+				/>
 			</div>
 
 			<!-- Navigation Links -->
 			<div class="hidden items-center gap-8 md:flex">
-				<a href="/user" class="text-[#e8ddd4] transition-colors hover:text-white">Home</a>
-				<a href="/user/katalog" class="text-[#e8ddd4] transition-colors hover:text-white">Katalog</a
-				>
-				<a href="/user/profile" class="text-[#e8ddd4] transition-colors hover:text-white">Profile</a
-				>
+				<a href="/" class="text-[#e8ddd4] transition-colors hover:text-white">Home</a>
+				<a href="/catalogue" class="text-[#e8ddd4] transition-colors hover:text-white">Katalog</a>
+				<a href="/profile" class="text-[#e8ddd4] transition-colors hover:text-white">Profile</a>
 			</div>
 
 			<!-- Reservation Button -->
