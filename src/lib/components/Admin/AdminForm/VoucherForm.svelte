@@ -267,7 +267,7 @@
 								step="60"
 								disabled={isReadonly}
 								bind:value={$formData.startDate.time}
-								class="bg-background w-full justify-start px-4 py-3 [&::-webkit-calendar-picker-indicator]:hidden"
+								class="w-full justify-start bg-background px-4 py-3 [&::-webkit-calendar-picker-indicator]:hidden"
 							/>
 						</div>
 					{/snippet}
@@ -363,7 +363,7 @@
 								step="60"
 								disabled={isReadonly}
 								bind:value={$formData.expiredDate.time}
-								class="bg-background w-full justify-start px-4 py-3 [&::-webkit-calendar-picker-indicator]:hidden"
+								class="w-full justify-start bg-background px-4 py-3 [&::-webkit-calendar-picker-indicator]:hidden"
 							/>
 						</div>
 					{/snippet}

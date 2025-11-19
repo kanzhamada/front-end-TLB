@@ -1,0 +1,126 @@
+GET | /shared/view-service
+
+response : 
+{
+    "sucess": true,
+    "message": "Services fetched successfully",
+    "data": [
+        {
+            "name": "Haircut Basic",
+            "price": 50000,
+            "serviceID": "f023f6d8-15c6-47f8-b6f1-5d902d7c62cc",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "A simple and clean haircut for everyday style.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Haircut Premium",
+            "price": 100000,
+            "serviceID": "7ed00d63-2cba-421d-b1b0-e02584707ded",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Includes wash, massage, and detailed styling.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Beard Trim",
+            "price": 30000,
+            "serviceID": "b997c46b-d33a-47d9-a7e8-dff2162e0694",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Professional beard trimming and shaping service.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Hair Coloring",
+            "price": 200000,
+            "serviceID": "5d512f0d-b454-4d40-927d-45d65f80d247",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Full-head hair coloring with premium products.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Hair Wash",
+            "price": 25000,
+            "serviceID": "f393c5d0-ebea-4ad2-9a2c-6d108a08a2d0",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Relaxing hair wash using quality shampoo.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Kids Haircut",
+            "price": 40000,
+            "serviceID": "1c3582c1-32a2-497b-b7c3-16f199c0095b",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Fun and quick haircut for children.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Scalp Treatment",
+            "price": 150000,
+            "serviceID": "a3cd72d9-54a7-4070-ae9a-c70f25cd89e5",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Deep cleansing and treatment for scalp health.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Hair Styling",
+            "price": 80000,
+            "serviceID": "b5e13799-7f9a-45e2-a4ed-c6c93efbcae6",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Stylish hair setting for special occasions.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Straightening",
+            "price": 180000,
+            "serviceID": "75291c12-689d-4f83-b8c8-bbc2c86b3773",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Hair straightening with heat protection.",
+            "attainableCoin": null
+        },
+        {
+            "name": "Perming",
+            "price": 170000,
+            "serviceID": "2ace6cc0-fa5f-4ae0-9d49-99cba013f2b7",
+            "created_at": "2025-07-07T01:35:24.485871+00:00",
+            "updated_at": "2025-07-07T01:35:24.485871",
+            "description": "Professional curling for long-lasting texture.",
+            "attainableCoin": null
+        },
+        {
+            "name": "cut haircut",
+            "price": 80000,
+            "serviceID": "c8cdf9a6-9fd8-451e-ba93-92c05463cd12",
+            "created_at": "2025-07-07T02:03:46.288441+00:00",
+            "updated_at": "2025-07-07T02:03:46.288441",
+            "description": "lorem ipsum",
+            "attainableCoin": null
+        },
+        {
+            "name": "cut haircu121t",
+            "price": 80000,
+            "serviceID": "1cf8d6a8-5c6d-4061-94f1-9ff9d4939615",
+            "created_at": "2025-07-07T02:18:11.095447+00:00",
+            "updated_at": "2025-07-07T02:18:11.095447",
+            "description": "lorem ipsum",
+            "attainableCoin": null
+        },
+        {
+            "name": "cut haircu121t xxx",
+            "price": 80000,
+            "serviceID": "17bdb4f7-86e8-461a-90ec-bfccd939b367",
+            "created_at": "2025-07-21T08:27:41.154981+00:00",
+            "updated_at": "2025-07-21T08:27:41.154981",
+            "description": "lorem ipsum 69",
+            "attainableCoin": null
+        }
+    ]
+}

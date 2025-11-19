@@ -201,7 +201,7 @@
 			<Form.FieldErrors />
 		</Form.Field>
 
-			<!-- Attainable Coin Field -->
+		<!-- Attainable Coin Field -->
 		<Form.Field {form} name="attainableCoin">
 			<Form.Control>
 				{#snippet children({ props })}

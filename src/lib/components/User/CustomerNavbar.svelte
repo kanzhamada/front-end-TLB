@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import ReservationSheet from './Reservation/ReservationSheet.svelte';
+	import { authStore } from '$lib/stores/auth';
+	import { goto } from '$app/navigation';
 </script>
 
 <nav class="fixed top-0 right-0 left-0 z-50 bg-[#032B24] shadow-lg">
@@ -22,9 +25,38 @@
 			</div>
 
 			<!-- Reservation Button -->
-			<Button class="bg-[#e8ddd4] text-[#2e6057] hover:bg-[#2e6057]/90 hover:text-[#e8ddd4]/90"
-				>Reservasi</Button
-			>
+			{#if $authStore.session}
+				<ReservationSheet
+					triggerClass="bg-[#e8ddd4] text-[#2e6057] hover:bg-[#2e6057]/90 hover:text-[#e8ddd4]/90"
+					triggerText="Reservasi"
+				/>
+				<Button
+					variant="ghost"
+					class="ml-2 text-[#e8ddd4] hover:text-white"
+					onclick={() => {
+						authStore.clear();
+						goto('/');
+					}}
+				>
+					Keluar
+				</Button>
+			{:else}
+				<div class="flex items-center gap-3">
+					<Button
+						variant="outline"
+						class="border-[#e8ddd4] text-[#e8ddd4] hover:bg-[#e8ddd4]/10"
+						onclick={() => goto('/auth/login')}
+					>
+						Masuk
+					</Button>
+					<Button
+						class="bg-[#e8ddd4] text-[#2e6057] hover:bg-[#2e6057]/90 hover:text-[#e8ddd4]/90"
+						onclick={() => goto('/auth/register')}
+					>
+						Daftar
+					</Button>
+				</div>
+			{/if}
 		</div>
 	</div>
 </nav>

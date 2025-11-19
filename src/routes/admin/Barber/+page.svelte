@@ -3,7 +3,7 @@
 	import DataTable from '$lib/components/Admin/Table/DataTable.svelte';
 	import { barberColumns as columns } from '$lib/columns/admin/barberColumns';
 
-	let response = getBarber()
+	let response = getBarber();
 </script>
 
 <DataTable
