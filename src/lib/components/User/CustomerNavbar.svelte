@@ -19,9 +19,14 @@
 
 			<!-- Navigation Links -->
 			<div class="hidden items-center gap-8 md:flex">
+<<<<<<< HEAD
 				<a href="/user" class="text-[#e8ddd4] transition-colors hover:text-white">Home</a>
 				<a href="/user/katalog" class="text-[#e8ddd4] transition-colors hover:text-white">Katalog</a
 				>
+=======
+				<a href="/" class="text-[#e8ddd4] transition-colors hover:text-white">Home</a>
+				<a href="/catalogue" class="text-[#e8ddd4] transition-colors hover:text-white">Katalog</a>
+>>>>>>> bccc036692ab3cab86b4d61a189b62279f22e6c9
 				<a href="/profile" class="text-[#e8ddd4] transition-colors hover:text-white">Profile</a>
 			</div>
 
