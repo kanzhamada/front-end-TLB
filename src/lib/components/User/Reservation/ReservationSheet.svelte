@@ -518,15 +518,18 @@
 				// after the data has been loaded and the state has been updated
 				if (reservationToReschedule) {
 					// Find barber by name - need to wait for barbers to be loaded
-					const matchingBarber = barbers.find(b => b.name === reservationToReschedule.barber.name);
+					const matchingBarber = barbers.find(
+						(b) => b.name === reservationToReschedule.barber.name
+					);
 					if (matchingBarber) {
 						selectedBarberId = matchingBarber.id;
 					}
 
 					// Find service by name and price
-					const matchingService = services.find(s =>
-						s.name === reservationToReschedule.service.name &&
-						s.price === reservationToReschedule.service.price
+					const matchingService = services.find(
+						(s) =>
+							s.name === reservationToReschedule.service.name &&
+							s.price === reservationToReschedule.service.price
 					);
 					if (matchingService) {
 						selectedServiceId = matchingService.id;
@@ -818,12 +821,10 @@
 						<Button variant="outline" onclick={goBack}>Kembali</Button>
 						<Button
 							onclick={goNext}
-							disabled={
-								!selectedBarberId ||
+							disabled={!selectedBarberId ||
 								!selectedServiceId ||
 								(reservationToReschedule && (!selectedDayId || !selectedTimeId)) ||
-								(reservationToReschedule && loadingData)
-							}
+								(reservationToReschedule && loadingData)}
 						>
 							{#if reservationToReschedule}
 								Lanjut ke Konfirmasi
@@ -940,12 +941,10 @@
 											Memproses Pembayaran...
 										{/if}
 									</span>
+								{:else if reservationToReschedule}
+									Konfirmasi Reschedule
 								{:else}
-									{#if reservationToReschedule}
-										Konfirmasi Reschedule
-									{:else}
-										Konfirmasi Reservasi
-									{/if}
+									Konfirmasi Reservasi
 								{/if}
 							</Button>
 						</div>

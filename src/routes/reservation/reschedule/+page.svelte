@@ -14,7 +14,7 @@
 
 	onMount(async () => {
 		const reservationId = data.reservationId;
-		
+
 		if (!reservationId) {
 			error = 'Reservation ID is required';
 			loading = false;
@@ -37,7 +37,8 @@
 			reservation = response.data[0];
 		} catch (err) {
 			console.error('Error loading reservation details:', err);
-			error = err instanceof Error ? err.message : 'An error occurred while loading reservation details';
+			error =
+				err instanceof Error ? err.message : 'An error occurred while loading reservation details';
 		} finally {
 			loading = false;
 		}
@@ -58,9 +59,7 @@
 		<div class="rounded-lg bg-red-50 p-4 text-red-700">
 			{error}
 			<div class="mt-4">
-				<Button onclick={() => goto('/profile/reservation')}>
-					Kembali ke Daftar Reservasi
-				</Button>
+				<Button onclick={() => goto('/profile/reservation')}>Kembali ke Daftar Reservasi</Button>
 			</div>
 		</div>
 	{:else if reservation}
@@ -98,7 +97,7 @@
 			</div>
 		</div>
 
-		<ReservationSheet 
+		<ReservationSheet
 			triggerText="Reschedule Reservasi"
 			reservationToReschedule={reservation}
 			on:reservationCompleted={handleRescheduleCompleted}
@@ -107,9 +106,7 @@
 		<div class="rounded-lg border border-dashed border-gray-300 p-8 text-center">
 			<p class="text-gray-500">Reservasi tidak ditemukan</p>
 			<div class="mt-4">
-				<Button onclick={() => goto('/profile/reservation')}>
-					Kembali ke Daftar Reservasi
-				</Button>
+				<Button onclick={() => goto('/profile/reservation')}>Kembali ke Daftar Reservasi</Button>
 			</div>
 		</div>
 	{/if}

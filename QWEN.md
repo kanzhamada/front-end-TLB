@@ -51,6 +51,12 @@ front-end-TLB/
 │   │   └── assets/               # Static assets
 │   ├── routes/                    # SvelteKit routes
 │   │   ├── (home)/               # Customer route group
+│   │   │   ├── profile/          # Profile pages with mini navigation
+│   │   │   │   ├── +layout.svelte # Profile layout without duplicate navbar
+│   │   │   │   ├── +page.svelte   # Main profile page
+│   │   │   │   ├── coin/          # Coin history page
+│   │   │   │   ├── reservation/   # Reservation management page
+│   │   │   │   └── voucher/       # Voucher management page
 │   │   └── admin/                # Admin route group
 │   ├── app.css                   # Global styles + Tailwind
 │   ├── app.d.ts                  # App type definitions
@@ -63,6 +69,7 @@ front-end-TLB/
 
 - **Customer Routes:** `(home)` route group with navbar layout
 - **Admin Routes:** `admin/` prefix with sidebar + header layout
+- **Profile Routes:** Under `(home)/profile` with mini navigation between sections
 - **Feature Modules:** Each admin feature follows a consistent CRUD pattern with Create/Edit/Detail pages
 
 ### 2. API Layer Architecture
@@ -78,7 +85,18 @@ front-end-TLB/
   - Form components for each entity type with superforms + Zod validation
 - **UI Components:** 30+ shadcn-svelte components in `src/lib/components/ui/`
 
-### 4. Data Flow Pattern
+### 4. Profile Page Design
+
+- **Layout Integration:** Profile pages are children of the home route group, sharing the same navbar and footer
+- **No Duplicate Navigation:** Profile layout does not include a separate navbar to prevent collision
+- **Mini Navigation:** Each profile section has a mini navigation bar for switching between sections:
+  - Profile (Main info & security)
+  - Reservations (Active & history)
+  - Coin History
+  - Vouchers
+- **Modern UI:** All profile components use shadcn-svelte components for consistency
+
+### 5. Data Flow Pattern
 
 ```
 User Action → Form Component → Server Action → Validation → API Function → Data Update → Response
