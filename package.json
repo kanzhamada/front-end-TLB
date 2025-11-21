@@ -58,6 +58,14 @@
 	"dependencies": {
 		"@faker-js/faker": "^9.8.0",
 		"@supabase/supabase-js": "^2.76.1",
+		"@theatre/core": "^0.7.2",
+		"@theatre/studio": "^0.7.2",
+		"@threlte/core": "^8.3.0",
+		"@threlte/extras": "^9.7.0",
+		"@threlte/theatre": "^3.1.0",
+		"lucide-svelte": "^0.553.0",
+		"svelte-file-dropzone": "^2.0.9",
+		"three": "^0.181.2",
 		"zod": "^3.25.76"
 	}
 }
