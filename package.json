@@ -17,7 +17,7 @@
 		"@eslint/compat": "^1.2.5",
 		"@eslint/js": "^9.18.0",
 		"@internationalized/date": "^3.8.2",
-		"@lucide/svelte": "^0.544.0",
+		"@lucide/svelte": "^0.554.0",
 		"@sveltejs/adapter-auto": "^6.0.0",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -58,7 +58,6 @@
 	"dependencies": {
 		"@faker-js/faker": "^9.8.0",
 		"@supabase/supabase-js": "^2.76.1",
-		"lucide-svelte": "^0.553.0",
 		"zod": "^3.25.76"
 	}
 }

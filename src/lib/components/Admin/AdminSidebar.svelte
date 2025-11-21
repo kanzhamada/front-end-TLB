@@ -1,20 +1,23 @@
 <script lang="ts">
 	import SidebarHeader from '../ui/sidebar/sidebar-header.svelte';
-	import ImagesIcon from '@lucide/svelte/icons/images';
-	import HouseIcon from '@lucide/svelte/icons/house';
-	import UserRoundIcon from '@lucide/svelte/icons/users-round';
-	import CalendarCheckIcon from '@lucide/svelte/icons/calendar-check';
-	import TicketsIcon from '@lucide/svelte/icons/tickets';
-	import MessageCircleIcon from '@lucide/svelte/icons/message-circle';
-	import ScissorsIcon from '@lucide/svelte/icons/scissors';
-	import CalendarClockIcon from '@lucide/svelte/icons/calendar-clock';
-	import LogoutIcon from '@lucide/svelte/icons/log-out';
-	import MenuIcon from '@lucide/svelte/icons/menu';
+	import {
+		Images as ImagesIcon,
+		House as HouseIcon,
+		UserRound as UserRoundIcon,
+		CalendarCheck as CalendarCheckIcon,
+		Ticket as TicketsIcon,
+		MessageCircle as MessageCircleIcon,
+		Scissors as ScissorsIcon,
+		CalendarClock as CalendarClockIcon,
+		LogOut as LogoutIcon,
+		Menu as MenuIcon
+	} from 'lucide-svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js'; // Impor Tooltip
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { page } from '$app/stores';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
+	import { unreadChatCount } from '$lib/stores/chat';
 
 	let {
 		ref = $bindable(null),
@@ -37,7 +40,7 @@
 			title: 'Dashboard',
 			url: '/admin',
 			icon: HouseIcon,
-			tooltip: 'Go to Dashboard' // Tambahan tooltip
+			tooltip: 'Go to Dashboard'
 		},
 		{
 			title: 'Reservation',
@@ -82,24 +85,20 @@
 			tooltip: 'Manage Vouchers'
 		}
 	];
+
+	// Get unread count value for display
+	let unreadCount = $state(0);
+
+	// Subscribe to the unreadChatCount store
+	$effect(() => {
+		const unsubscribe = unreadChatCount.subscribe((value) => {
+			unreadCount = value;
+		});
+		return unsubscribe;
+	});
 </script>
 
-<!-- Mobile toggle button dengan Tooltip -->
 <Tooltip.Provider>
-	<!-- <button
-		class="fixed top-4 left-4 z-50 rounded-md p-2 md:hidden"
-		on:click={() => sidebar.toggle()}
-	>
-		<Tooltip.Root>
-			<Tooltip.Trigger>
-				<MenuIcon class="h-6 w-6" />
-			</Tooltip.Trigger>
-			<Tooltip.Content>
-				<p>Toggle Sidebar</p>
-			</Tooltip.Content>
-		</Tooltip.Root>
-	</button> -->
-
 	<Sidebar.Root {collapsible} {...restProps}>
 		<Sidebar.Header>
 			<img src="/three_lights_barbershop_logo.svg" alt="" class="p-4" />
@@ -114,9 +113,27 @@
 									<Sidebar.MenuItem class="py-2">
 										<Sidebar.MenuButton isActive={$page.url.pathname === item.url}>
 											{#snippet child({ props })}
-												<a href={item.url} {...props} on:click={handleMenuClick}>
+												<a href={item.url} {...props} onclick={handleMenuClick}>
 													<item.icon class="h-6 w-6" />
-													<span class="py-3 text-base">{item.title}</span>
+													<span class="relative py-3 text-base">
+														{item.title}
+														{#if item.title === 'Chat' && unreadCount > 0}
+															<span class="absolute -top-1 -right-1 flex h-5 w-5">
+																<span class="relative flex h-5 w-5 items-center justify-center">
+																	<span
+																		class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"
+																	></span>
+																	<span class="relative inline-flex h-3 w-3 rounded-full bg-red-500"
+																	></span>
+																</span>
+																<span
+																	class="absolute -top-0.5 -right-0.5 flex items-center justify-center text-[0.6rem] font-bold text-white"
+																>
+																	{unreadCount > 9 ? '9+' : unreadCount}
+																</span>
+															</span>
+														{/if}
+													</span>
 													<Tooltip.Content>
 														<p>{item.tooltip}</p>
 													</Tooltip.Content>

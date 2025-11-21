@@ -40,12 +40,15 @@
 		AlertCircle,
 		MessageCircle
 	} from 'lucide-svelte';
+	import CustomerChatModal from '$lib/components/User/Chat/CustomerChatModal.svelte';
 
 	let reservations: ReservationResponse[] = $state([]);
 	let activeReservations: ReservationResponse[] = $state([]);
 	let historyReservations: ReservationResponse[] = $state([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let showChatModal = $state(false);
+	let selectedReservation: any = $state(null);
 
 	const activeStatuses = ['waiting', 'onGoing', 'waitingForPayment', 'requestToReschedule'];
 	const historyStatuses = ['completed', 'canceledByUser', 'canceledByAdmin', 'declined', 'expired'];
@@ -212,6 +215,12 @@
 			processingReservationId = null;
 		}
 	}
+
+	// Function to open chat modal
+	function openChatModal(reservation: any) {
+		selectedReservation = reservation;
+		showChatModal = true;
+	}
 </script>
 
 {#if loading}
@@ -343,7 +352,7 @@
 										<Button
 											variant="outline"
 											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
-											onclick={() => alert('Fitur chat akan segera tersedia')}
+											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
 											Chat
@@ -378,7 +387,7 @@
 										<Button
 											variant="outline"
 											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
-											onclick={() => alert('Fitur chat akan segera tersedia')}
+											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
 											Chat
@@ -400,7 +409,7 @@
 										<Button
 											variant="outline"
 											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
-											onclick={() => alert('Fitur chat akan segera tersedia')}
+											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
 											Chat
@@ -434,7 +443,7 @@
 										<Button
 											variant="outline"
 											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
-											onclick={() => alert('Fitur chat akan segera tersedia')}
+											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
 											Chat
@@ -447,6 +456,13 @@
 				{/if}
 			</CardContent>
 		</Card>
+
+		<!-- Customer Chat Modal -->
+		<CustomerChatModal
+			reservation={selectedReservation}
+			open={showChatModal}
+			onClose={() => (showChatModal = false)}
+		/>
 
 		<!-- Reservation History Section -->
 		<Card class="border border-gray-200">
