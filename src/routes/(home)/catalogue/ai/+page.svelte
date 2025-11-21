@@ -1,9 +1,7 @@
 <script lang="ts">
 	import {
-		Scissors,
 		X,
 		Star,
-		Expand,
 		Upload,
 		ImageIcon,
 		AlertCircle,
@@ -12,14 +10,13 @@
 		Camera,
 		Aperture
 	} from 'lucide-svelte';
-	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { getCatalogue } from '$lib/api/shared/catalogue';
 	import * as Accordion from '$lib/components/ui/accordion';
 	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import {
 		type ColumnFiltersState,
@@ -29,8 +26,11 @@
 	} from '@tanstack/table-core';
 	import { catalogueColumns } from '$lib/columns/admin/catalogueColumns';
 	import { createSvelteTable } from '$lib/components/ui/data-table/index.js';
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import CatalogueCard from '$lib/components/ui/CatalogueCard.svelte';
+	import ServiceDetailModal from '$lib/components/ui/ServiceDetailModal.svelte';
+	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
 
 	let avatar = $state(null);
 	let isDragging = $state(false);
@@ -38,9 +38,6 @@
 	let accordionValue = $state(['contoh-foto']); // Auto open on load
 	let scanning = $state(false);
 	let result = $state<string | null>(null);
-	let hairType = $state('');
-	let faceShape = $state('');
-	let vibe = $state('');
 
 	// Camera State
 	let showCamera = $state(false);
@@ -521,96 +518,28 @@
 					{:else}
 						<!-- Filter Section -->
 						<div class="mb-10">
-							<div class="flex flex-wrap items-center gap-4">
-								<span class="text-xs font-bold tracking-widest text-secondary/80 uppercase"
-									>Filter By:</span
-								>
-								<button
-									on:click={() => {
-										selectedFilter = 'All';
-										selectedFilterValue = '';
-										dataCatalogue.getColumn('type')?.setFilterValue(undefined);
-										dataCatalogue.setPageIndex(0);
-									}}
-									class={`rounded-full px-6 py-2 text-[10px] font-bold tracking-widest uppercase transition-all duration-300 ${
-										selectedFilter === 'All'
-											? 'bg-senary text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.4)]'
-											: 'border border-white/10 bg-transparent text-secondary/80 hover:border-senary/50 hover:text-senary'
-									}`}
-								>
-									ALL
-								</button>
-								{#each serviceOptions.slice(1) as option}
-									<button
-										on:click={() => {
-											selectedFilter = option.value;
-											selectedFilterValue = option.value;
-											dataCatalogue.getColumn('type')?.setFilterValue(option.value || undefined);
-											dataCatalogue.setPageIndex(0);
-										}}
-										class={`rounded-full px-6 py-2 text-[10px] font-bold tracking-widest uppercase transition-all duration-300 ${
-											selectedFilter === option.value
-												? 'bg-senary text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.4)]'
-												: 'border border-white/10 bg-transparent text-secondary/80 hover:border-senary/50 hover:text-senary'
-										}`}
-									>
-										{option.label}
-									</button>
-								{/each}
-							</div>
+							<FilterGroup
+								options={serviceOptions}
+								{selectedFilter}
+								onSelect={(value) => {
+									selectedFilter = value || 'All';
+									selectedFilterValue = value;
+									dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
+									dataCatalogue.setPageIndex(0);
+								}}
+							/>
 						</div>
 
 						<!-- Service Grid -->
 						<div class="mb-12 grid grid-cols-2 gap-6 sm:grid-cols-3 xl:grid-cols-4">
 							{#each dataCatalogue.getRowModel().rows as row, i (row.id)}
 								{@const catalogue = row.original}
-								<div
-									in:scale={{ duration: 600, delay: i * 50, start: 0.9, easing: quintOut }}
-									class="group relative overflow-hidden rounded-xl border border-white/5 bg-black/40 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:border-senary/30 hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)]"
-								>
-									<div class="relative aspect-[3/4] overflow-hidden">
-										<img
-											src={catalogue.image[0]}
-											alt={catalogue.name}
-											class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
-										/>
-										<div
-											class="absolute inset-0 bg-gradient-to-t from-[#0A1F18] via-transparent to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-80"
-										></div>
-
-										<!-- Hover Overlay -->
-										<div
-											class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all duration-500 group-hover:opacity-100"
-										>
-											<button
-												on:click|stopPropagation={() => (selectedService = catalogue)}
-												class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 py-2.5 text-[10px] font-bold tracking-widest text-white uppercase backdrop-blur-md transition hover:bg-white hover:text-black"
-											>
-												<Expand class="h-3 w-3" />
-												VIEW
-											</button>
-											<button
-												class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full bg-senary py-2.5 text-[10px] font-bold tracking-widest text-primary uppercase shadow-lg transition hover:bg-white hover:text-black"
-											>
-												<Scissors class="h-3 w-3" />
-												BOOK
-											</button>
-										</div>
-
-										<!-- Labels -->
-										<div
-											class="absolute top-3 right-3 rounded-full border border-white/10 bg-black/60 px-3 py-1 text-[9px] font-bold tracking-wider text-white uppercase backdrop-blur-md"
-										>
-											{catalogue.type}
-										</div>
-
-										<div
-											class="absolute bottom-0 left-0 w-full p-5 transition-transform duration-500 group-hover:translate-y-4 group-hover:opacity-0"
-										>
-											<h4 class="truncate font-serif text-lg text-white">{catalogue.name}</h4>
-										</div>
-									</div>
-								</div>
+								<CatalogueCard
+									{catalogue}
+									index={i}
+									onSelect={(c) => (selectedService = c)}
+									onBook={(c) => console.log('Book', c)}
+								/>
 							{/each}
 						</div>
 
@@ -683,68 +612,4 @@
 </div>
 
 <!-- Detail Modal -->
-{#if selectedService}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
-		transition:fade={{ duration: 300 }}
-		on:click={() => (selectedService = null)}
-	>
-		<div
-			class="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A1F18] shadow-2xl"
-			on:click|stopPropagation
-			in:scale={{ start: 0.95, duration: 300, easing: quintOut }}
-		>
-			<div class="relative">
-				<Carousel.Root opts={{ loop: true }}>
-					<Carousel.Content>
-						{#each selectedService.image as src, i}
-							<Carousel.Item>
-								<img
-									{src}
-									alt={`${selectedService.name} ${i + 1}`}
-									class="h-128 w-full object-cover"
-								/>
-							</Carousel.Item>
-						{/each}
-					</Carousel.Content>
-					{#if selectedService.image.length > 1}
-						<Carousel.Previous
-							class="absolute top-1/2 left-4 -translate-y-1/2 border-white/10 bg-black/40 text-white hover:bg-white hover:text-black"
-						/>
-						<Carousel.Next
-							class="absolute top-1/2 right-4 -translate-y-1/2 border-white/10 bg-black/40 text-white hover:bg-white hover:text-black"
-						/>
-					{/if}
-				</Carousel.Root>
-				<button
-					on:click={() => (selectedService = null)}
-					class="absolute top-4 right-4 cursor-pointer rounded-full bg-black/40 p-2 text-white transition hover:bg-white hover:text-black"
-				>
-					<X class="h-6 w-6" />
-				</button>
-			</div>
-			<div class="p-8">
-				<div class="mb-2 flex items-center gap-3">
-					<span
-						class="rounded-full border border-senary/30 bg-senary/10 px-3 py-1 text-[10px] font-bold tracking-widest text-senary uppercase"
-						>{selectedService.type}
-					</span>
-				</div>
-				<h3 class="mb-4 font-serif text-3xl text-secondary">{selectedService.name}</h3>
-				<div class="mb-8">
-					<h4 class="mb-2 text-sm font-bold tracking-widest text-secondary/80 uppercase">
-						Description
-					</h4>
-					<p class="text-lg leading-relaxed font-light text-secondary/70">
-						{selectedService.description}
-					</p>
-				</div>
-				<button
-					class="w-full rounded-xl bg-senary py-4 text-sm font-bold tracking-widest text-primary uppercase transition hover:bg-white hover:shadow-lg"
-				>
-					Book Appointment
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<ServiceDetailModal bind:selectedService onClose={() => (selectedService = null)} />
