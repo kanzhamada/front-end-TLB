@@ -5,7 +5,7 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen bg-[#e8ddd4]">
+<div class="min-h-screen bg-slate-950">
 	<CustomerNavbar />
 	<main class="">
 		{@render children()}
