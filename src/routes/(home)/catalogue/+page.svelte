@@ -1,15 +1,5 @@
 <script lang="ts">
-	import {
-		Search,
-		Scissors,
-		X,
-		Star,
-		ChevronsDown,
-		Expand,
-		Sparkles,
-		AlertCircle
-	} from 'lucide-svelte';
-	import * as Carousel from '$lib/components/ui/carousel/index.js';
+	import { Search, ChevronsDown, Sparkles } from 'lucide-svelte';
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -26,6 +16,9 @@
 	} from '@tanstack/table-core';
 	import { catalogueColumns } from '$lib/columns/admin/catalogueColumns';
 	import { createSvelteTable } from '$lib/components/ui/data-table/index.js';
+	import CatalogueCard from '$lib/components/ui/CatalogueCard.svelte';
+	import ServiceDetailModal from '$lib/components/ui/ServiceDetailModal.svelte';
+	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
 
 	let response = getCatalogue();
 	let catalogues = response.catalogues;
@@ -181,37 +174,15 @@
 
 				<div class="flex w-full flex-col gap-4 md:w-auto md:items-end">
 					<div class="flex flex-wrap items-center gap-3">
-						<span class="mr-2 text-sm font-medium text-secondary/70">Filter:</span>
-						<button
-							on:click={() => {
-								selectedFilter = 'All';
-								selectedFilterValue = '';
-								dataCatalogue.getColumn('type')?.setFilterValue(undefined);
+						<FilterGroup
+							options={serviceOptions}
+							{selectedFilter}
+							onSelect={(value) => {
+								selectedFilter = value || 'All';
+								selectedFilterValue = value;
+								dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
 							}}
-							class={`rounded-full px-6 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${
-								selectedFilter === 'All'
-									? 'bg-senary text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.5)]'
-									: 'border border-white/10 bg-white/5 text-secondary/70 hover:border-senary/50 hover:text-senary'
-							}`}
-						>
-							ALL
-						</button>
-						{#each serviceOptions.slice(1) as option}
-							<button
-								on:click={() => {
-									selectedFilter = option.value;
-									selectedFilterValue = option.value;
-									dataCatalogue.getColumn('type')?.setFilterValue(option.value || undefined);
-								}}
-								class={`rounded-full px-6 py-2 text-xs font-bold tracking-widest uppercase transition-all duration-300 ${
-									selectedFilter === option.value
-										? 'bg-senary text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.5)]'
-										: 'border border-white/10 bg-white/5 text-secondary/70 hover:border-senary/50 hover:text-senary'
-								}`}
-							>
-								{option.label}
-							</button>
-						{/each}
+						/>
 					</div>
 
 					<div class="relative w-full md:w-72">
@@ -235,58 +206,12 @@
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 				{#each dataCatalogue.getRowModel().rows as row, i (row.id)}
 					{@const catalogue = row.original}
-					<div
-						in:scale={{ duration: 400, delay: i * 50, start: 0.9, easing: quintOut }}
-						class="glass-panel glass-panel-hover group relative overflow-hidden rounded-2xl"
-					>
-						<div class="relative aspect-[3/4] overflow-hidden">
-							<img
-								src={catalogue.image[0]}
-								alt={catalogue.name}
-								class="h-full w-full object-cover transition duration-700 group-hover:scale-110 group-hover:grayscale-100"
-							/>
-							<div
-								class="absolute inset-0 bg-gradient-to-t from-[#0A1F18] via-transparent to-transparent opacity-90"
-							></div>
-
-							<!-- Hover Overlay -->
-							<div
-								class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100"
-							>
-								<button
-									on:click|stopPropagation={() => (selectedService = catalogue)}
-									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 py-2 text-xs font-bold tracking-widest text-secondary backdrop-blur-md transition hover:bg-white hover:text-primary"
-								>
-									<Expand class="h-3 w-3" />
-									VIEW
-								</button>
-								<button
-									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full bg-senary py-2 text-xs font-bold tracking-widest text-primary shadow-lg transition hover:bg-senary/80"
-								>
-									<Scissors class="h-3 w-3" />
-									BOOK
-								</button>
-							</div>
-
-							<!-- Labels -->
-							<div
-								class="absolute top-3 right-3 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold tracking-widest text-secondary uppercase backdrop-blur-md"
-							>
-								{catalogue.type}
-							</div>
-
-							<div
-								class="absolute bottom-0 left-0 w-full p-6 transition-transform duration-300 group-hover:translate-y-2 group-hover:opacity-0"
-							>
-								<h4 class="truncate font-serif text-xl font-bold text-secondary">
-									{catalogue.name}
-								</h4>
-								<p class="mt-1 line-clamp-2 text-xs font-light text-secondary/70">
-									{catalogue.description}
-								</p>
-							</div>
-						</div>
-					</div>
+					<CatalogueCard
+						{catalogue}
+						index={i}
+						onSelect={(c) => (selectedService = c)}
+						onBook={(c) => console.log('Book', c)}
+					/>
 				{/each}
 			</div>
 
@@ -295,7 +220,7 @@
 				perPage={itemsPerPage}
 				{siblingCount}
 				page={currentPageIndex}
-				class="mx-auto flex w-full justify-center"
+				class="mx-auto mt-12 flex w-full justify-center"
 			>
 				{#snippet children({ pages })}
 					<Pagination.Content>
@@ -353,68 +278,4 @@
 </div>
 
 <!-- Detail Modal -->
-{#if selectedService}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md"
-		transition:fade={{ duration: 300 }}
-		on:click={() => (selectedService = null)}
-	>
-		<div
-			class="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A1F18] shadow-2xl"
-			on:click|stopPropagation
-			in:scale={{ start: 0.95, duration: 300, easing: quintOut }}
-		>
-			<div class="relative">
-				<Carousel.Root opts={{ loop: true }}>
-					<Carousel.Content>
-						{#each selectedService.image as src, i}
-							<Carousel.Item>
-								<img
-									{src}
-									alt={`${selectedService.name} ${i + 1}`}
-									class="h-128 w-full object-cover"
-								/>
-							</Carousel.Item>
-						{/each}
-					</Carousel.Content>
-					{#if selectedService.image.length > 1}
-						<Carousel.Previous
-							class="absolute top-1/2 left-4 -translate-y-1/2 border-white/10 bg-black/40 text-white hover:bg-white hover:text-black"
-						/>
-						<Carousel.Next
-							class="absolute top-1/2 right-4 -translate-y-1/2 border-white/10 bg-black/40 text-white hover:bg-white hover:text-black"
-						/>
-					{/if}
-				</Carousel.Root>
-				<button
-					on:click={() => (selectedService = null)}
-					class="absolute top-4 right-4 cursor-pointer rounded-full bg-black/40 p-2 text-white transition hover:bg-white hover:text-black"
-				>
-					<X class="h-6 w-6" />
-				</button>
-			</div>
-			<div class="p-8">
-				<div class="mb-2 flex items-center gap-3">
-					<span
-						class="rounded-full border border-senary/30 bg-senary/10 px-3 py-1 text-[10px] font-bold tracking-widest text-senary uppercase"
-						>{selectedService.type}
-					</span>
-				</div>
-				<h3 class="mb-4 font-serif text-3xl text-secondary">{selectedService.name}</h3>
-				<div class="mb-8">
-					<h4 class="mb-2 text-sm font-bold tracking-widest text-secondary/80 uppercase">
-						Description
-					</h4>
-					<p class="text-lg leading-relaxed font-light text-secondary/70">
-						{selectedService.description}
-					</p>
-				</div>
-				<button
-					class="w-full rounded-xl bg-senary py-4 text-sm font-bold tracking-widest text-primary uppercase transition hover:bg-white hover:shadow-lg"
-				>
-					Book Appointment
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<ServiceDetailModal bind:selectedService onClose={() => (selectedService = null)} />
