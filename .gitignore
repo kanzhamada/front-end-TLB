@@ -1,7 +1,6 @@
 node_modules
 
-development-docs/
-
+development-docs
 # Output
 .output
 .vercel

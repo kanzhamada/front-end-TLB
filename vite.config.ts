@@ -9,17 +9,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			// Proxy API requests to the backend server
-			'/auth': {
-				target: 'http://localhost:3000',
-				changeOrigin: true,
-				secure: false
-			},
 			'/customer': {
-				target: 'http://localhost:3000',
-				changeOrigin: true,
-				secure: false
-			},
-			'/admin': {
 				target: 'http://localhost:3000',
 				changeOrigin: true,
 				secure: false

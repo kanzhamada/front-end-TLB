@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private';
 import type { Service } from '$lib/types/adminTypes';
 import { userId } from '$lib/zod/schema';
 import { faker } from '@faker-js/faker';
@@ -49,27 +48,26 @@ export const getServiceById = (id: string): ServiceResponse => {
 };
 
 export const getService = async () => {
-	try {
-		const response = await fetch(env.BACKEND_HOST + '/admin/view-service', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-
-		if (response.ok) {
-			const services = await response.json();
-			return {
-				success: true,
-				data: services
-			};
-		}
-	} catch (error) {
-		return {
-			success: false,
-			error: 'Failed to fetch service' + error
-		};
-	}
+	// try {
+	// 	const response = await fetch(env.BACKEND_HOST + '/admin/view-service', {
+	// 		method: 'GET',
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		}
+	// 	});
+	// 	if (response.ok) {
+	// 		const services = await response.json();
+	// 		return {
+	// 			success: true,
+	// 			data: services
+	// 		};
+	// 	}
+	// } catch (error) {
+	// 	return {
+	// 		success: false,
+	// 		error: 'Failed to fetch service' + error
+	// 	};
+	// }
 };
 
 export const editService = (updatedService: Service): boolean => {

@@ -43,7 +43,7 @@ async function request<T>(path: string, payload: unknown): Promise<T> {
 		console.log('Response status:', response.status); // Debug response status
 
 		const json = (await response.json()) as T;
-		console.log('Response data:', json); // Debug response data
+		console.log('Response data:', json); // Debug response status
 
 		if (!response.ok) {
 			throw Object.assign(new Error(`Request failed: ${response.status}`), {

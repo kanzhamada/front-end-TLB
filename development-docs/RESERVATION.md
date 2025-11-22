@@ -69,8 +69,6 @@ Request Body :
 }
 ```
 
-**Note**: `notes` and `voucherId` are optional fields.
-
 Response Body Success :
 
 ```json
@@ -108,33 +106,35 @@ URL Parameter :
 
 Response Body Success :
 
+```json
 {
-"success": true,
-"message": "Reservation details fetched successfully",
-"data": [
-{
-"notes": null,
-"barber": {
-"name": "ini barber ya",
-"phoneNumber": "0081"
-},
-"status": "waiting",
-"userID": "265c8882-672a-4f6d-80d7-2de6caff26d1",
-"invoice": null,
-"service": {
-"name": "Haircut Basic",
-"price": 50000
-},
-"dateTime": {
-"date": "2025-11-05",
-"hour": "19:00:00"
-},
-"serviceID": "f023f6d8-15c6-47f8-b6f1-5d902d7c62cc",
-"dateTimeID": "6ab0f7de-0342-4460-a818-8318f837a8e2",
-"reservationID": "be2b13cf-3e11-4d79-beb4-4ad330e2c4c1"
+	"success": true,
+	"message": "Reservation details fetched successfully",
+	"data": [
+		{
+			"notes": null,
+			"barber": {
+				"name": "ini barber ya",
+				"phoneNumber": "0081"
+			},
+			"status": "waiting",
+			"userID": "265c8882-672a-4f6d-80d7-2de6caff26d1",
+			"invoice": null,
+			"service": {
+				"name": "Haircut Basic",
+				"price": 50000
+			},
+			"dateTime": {
+				"date": "2025-11-05",
+				"hour": "19:00:00"
+			},
+			"serviceID": "f023f6d8-15c6-47f8-b6f1-5d902d7c62cc",
+			"dateTimeID": "6ab0f7de-0342-4460-a818-8318f837a8e2",
+			"reservationID": "be2b13cf-3e11-4d79-beb4-4ad330e2c4c1"
+		}
+	]
 }
-]
-}
+```
 
 ## View Reservation History API (Customer)
 
