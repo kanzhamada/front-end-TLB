@@ -10,12 +10,12 @@ export const getReservations = () => {
 		'canceled-by-user',
 		'canceled-by-admin'
 	] as const;
-	const reservations: Reservation[] = Array.from({ length: 69 }, (_, index) => ({
+	const reservations: Reservation[] = Array.from({ length: 269 }, (_, index) => ({
 		id: `id-${index + 1}`,
 		customer: faker.person.fullName(),
 		invoice: `INV-${Math.floor(Math.random() * 10000)}`,
 		dateTime: new Date(
-			2025,
+			2020 + Math.floor(Math.random() * 6),
 			Math.floor(Math.random() * 12),
 			Math.floor(Math.random() * 28) + 1,
 			Math.floor(Math.random() * 24),
@@ -29,6 +29,15 @@ export const getReservations = () => {
 	}));
 
 	return {
-		reservations
+		reservations: reservations.sort(
+			(a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
+		)
 	};
+};
+
+export const getLatestWaitingReservations = () => {
+	const response = getReservations();
+	const waitingReservations = response.reservations.filter((r) => r.status === 'waiting-approve');
+	const latestThree = waitingReservations.slice(0, 3);
+	return latestThree;
 };
