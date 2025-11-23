@@ -106,12 +106,15 @@
 		<Sidebar.Content>
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
-					<Sidebar.Menu>
+					<Sidebar.Menu class="space-y-2 px-2">
 						{#each items as item (item.title)}
 							<Tooltip.Root>
 								<Tooltip.Trigger>
-									<Sidebar.MenuItem class="py-2">
-										<Sidebar.MenuButton isActive={$page.url.pathname === item.url}>
+									<Sidebar.MenuItem>
+										<Sidebar.MenuButton
+											isActive={$page.url.pathname === item.url}
+											class="w-full justify-start rounded-xl px-4 py-3 transition-all duration-300 hover:bg-emerald-50 hover:pl-6 data-[active=true]:bg-emerald-100/80 data-[active=true]:text-emerald-900 data-[active=true]:shadow-sm"
+										>
 											{#snippet child({ props })}
 												<a href={item.url} {...props} onclick={handleMenuClick}>
 													<item.icon class="h-6 w-6" />
@@ -149,16 +152,15 @@
 			</Sidebar.Group>
 		</Sidebar.Content>
 		<Sidebar.Footer>
-			<Sidebar.Menu>
+			<Sidebar.Menu class="px-2 pb-4">
 				<Tooltip.Root>
 					<Tooltip.Trigger>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								style="--sidebar-accent: #FCEAE9; --sidebar-accent-foreground: #E0514A;"
-								class="cursor-pointer"
+								class="w-full justify-start rounded-xl px-4 py-3 text-red-600 transition-all duration-300 hover:bg-red-50 hover:pl-6"
 							>
-								<LogoutIcon class="h-6 w-6" />
-								<span class="py-3 text-base">Logout</span>
+								<LogoutIcon class="h-5 w-5" />
+								<span class="ml-3 text-base font-medium">Logout</span>
 							</Sidebar.MenuButton>
 							<Tooltip.Content>
 								<p>Sign out of your account</p>
@@ -167,7 +169,7 @@
 					</Tooltip.Trigger>
 				</Tooltip.Root>
 			</Sidebar.Menu>
-			<div class="items-left flex justify-center space-x-2 p-4 text-xs">
+			<div class="items-left flex justify-center space-x-2 p-4 text-xs text-gray-500">
 				<span>© 2025 by Three Lights Barbershop</span>
 			</div>
 		</Sidebar.Footer>

@@ -36,26 +36,7 @@
 		{ day: 'Minggu', time: '17:00 - 21:00' }
 	];
 
-	const serviceData = [
-		{
-			id: '1',
-			title: 'Premium Haircut',
-			price: 'Rp 45.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		},
-		{
-			id: '2',
-			title: 'Classic Haircut',
-			price: 'Rp 40.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		},
-		{
-			id: '3',
-			title: 'Shave Beard',
-			price: 'Rp 15.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		}
-	];
+	
 	const serviceData = [
 		{
 			id: '1',

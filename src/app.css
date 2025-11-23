@@ -55,6 +55,29 @@
 	--sidebar-accent-foreground: #E8E8C8;
 	--sidebar-border: rgba(212, 175, 55, 0.2);
 	--sidebar-ring: #D4AF37;
+
+	/* --- Admin Dashboard Theme (Soft Glassmorphism) --- */
+	--admin-bg: #F3F4F6;
+	/* Light grey/pastel background */
+	--admin-glass-bg: rgba(255, 255, 255, 0.7);
+	--admin-glass-border: rgba(255, 255, 255, 0.5);
+	--admin-glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+	--admin-primary: #10B981;
+	/* Emerald 500 - Mint/Green highlight */
+	--admin-primary-foreground: #FFFFFF;
+	--admin-secondary: #D1FAE5;
+	/* Emerald 100 - Soft green */
+	--admin-secondary-foreground: #065F46;
+	/* Emerald 800 */
+
+	--admin-muted: #F9FAFB;
+	/* Gray 50 */
+	--admin-muted-foreground: #6B7280;
+	/* Gray 500 */
+
+	--admin-radius-xl: 1.5rem;
+	/* 24px */
 }
 
 .dark {
@@ -162,5 +185,14 @@
 
 	.text-gradient-green {
 		@apply bg-gradient-to-r from-[#8BA89E] via-[#E8E8C8] to-[#8BA89E] bg-clip-text text-transparent;
+	}
+
+	.admin-glass-panel {
+		background: var(--admin-glass-bg);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid var(--admin-glass-border);
+		box-shadow: var(--admin-glass-shadow);
+		border-radius: var(--admin-radius-xl);
 	}
 }
