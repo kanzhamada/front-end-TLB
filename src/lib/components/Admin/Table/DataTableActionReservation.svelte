@@ -104,7 +104,7 @@
 			<DropdownMenu.Separator />
 		{/if}
 
-		<a href="/admin/Reservation/chat/{data.id}">
+		<a href="/a1-portal-a16-tlb/Reservation/chat/{data.id}">
 			<DropdownMenu.Item class="m-0 cursor-pointer">
 				<MessageCircleIcon class="mr-2 h-4 w-4" />
 				Chat with Customer

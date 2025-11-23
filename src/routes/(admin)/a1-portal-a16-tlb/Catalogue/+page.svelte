@@ -144,7 +144,7 @@
 
 				<!-- Add New button -->
 
-				<Button href={`/admin/Catalogue/Create`} class="ml-auto">
+				<Button href={`/a1-portal-a16-tlb/Catalogue/Create`} class="ml-auto">
 					Add New Catalogue
 					<Plus />
 				</Button>
@@ -153,7 +153,7 @@
 			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 				{#each dataCatalogue.getRowModel().rows as row (row.id)}
 					{@const catalogue = row.original}
-					<a href="/admin/Catalogue/{catalogue.id}">
+					<a href="/a1-portal-a16-tlb/Catalogue/{catalogue.id}">
 						<Card.Root
 							class="group flex h-full flex-col overflow-hidden rounded-3xl border border-[#2e605775] bg-white/90 shadow-2xl shadow-gray-900/10 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2"
 						>

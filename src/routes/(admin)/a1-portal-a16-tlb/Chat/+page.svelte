@@ -97,7 +97,7 @@
 	}
 
 	function handleChatSelect(chatId: string) {
-		goto(`/admin/Chat/${chatId}`);
+		goto(`/a1-portal-a16-tlb/Chat/${chatId}`);
 	}
 </script>
 

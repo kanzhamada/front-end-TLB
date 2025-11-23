@@ -2,9 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/api/auth';
 	import { authStore } from '$lib/stores/auth';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import {
 		Card,
 		CardContent,
@@ -13,11 +10,11 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
+	import LoginForm from '$lib/components/auth/LoginForm.svelte';
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
-	let email = $state('');
-	let password = $state('');
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
 
@@ -26,18 +23,25 @@
 		toast.error(message);
 	}
 
-	async function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
+	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
+		cancel(); // Prevent default form submission
+		const email = formData.get('email') as string;
+		const password = formData.get('password') as string;
+		
+		performLogin(email, password);
+	};
+
+	async function performLogin(email: string, password: string) {
 		if (submitting) return;
 
 		formError = null;
 		submitting = true;
 
 		try {
-			console.log('Attempting login with:', { email, password });
+			console.log('Attempting login with:', { email });
 
 			const response = await login({ email, password });
-			console.log('Login response:', response); // Add this for debugging
+			console.log('Login response:', response);
 
 			const success = response.success ?? response.sucess ?? false;
 
@@ -52,10 +56,9 @@
 			toast.success('Berhasil masuk!');
 			await goto('/');
 		} catch (error) {
-			console.error('Login error:', error); // Add this for debugging
+			console.error('Login error:', error);
 
 			if (browser) {
-				// Only use browser-specific code in browser
 				const customError = error as { response?: { message?: string } };
 				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
 				handleError(message);
@@ -103,48 +106,13 @@
 					</CardHeader>
 
 					<CardContent class="space-y-6 px-0 py-6">
-						<form class="space-y-6" onsubmit={handleSubmit}>
-							<div class="space-y-2">
-								<Label for="email" class="text-sm font-semibold text-[#032B24]">Email</Label>
-								<Input
-									id="email"
-									type="email"
-									placeholder="nama@email.com"
-									bind:value={email}
-									required
-									autocomplete="email"
-									disabled={submitting}
-									class="bg-[#f5f1ea] text-[#032B24]"
-								/>
-							</div>
-
-							<div class="space-y-2">
-								<Label for="password" class="text-sm font-semibold text-[#032B24]">Kata Sandi</Label
-								>
-								<Input
-									id="password"
-									type="password"
-									placeholder="Masukkan kata sandi"
-									bind:value={password}
-									required
-									autocomplete="current-password"
-									disabled={submitting}
-									class="bg-[#f5f1ea] text-[#032B24]"
-								/>
-							</div>
-
-							{#if formError}
-								<p class="text-sm font-medium text-red-600">{formError}</p>
-							{/if}
-
-							<Button
-								type="submit"
-								class="w-full bg-[#fcb13f] text-[#032B24] hover:bg-[#fcb13f]/90"
-								disabled={submitting}
-							>
-								{submitting ? 'Memproses...' : 'Masuk'}
-							</Button>
-						</form>
+						<LoginForm 
+							actionUrl="?/login" 
+							showRegister={false} 
+							bind:submitting 
+							bind:formError 
+							enhanceHandler={handleLogin}
+						/>
 					</CardContent>
 
 					<CardFooter class="flex flex-col items-start gap-2 px-0 py-0">

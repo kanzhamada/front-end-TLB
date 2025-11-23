@@ -202,7 +202,7 @@
 
 		<!-- Add New button -->
 		{#if enableAddNew}
-			<Button href={`/admin/${capitalizeFirstLetter(entityName)}/Create`} class="ml-auto">
+			<Button href={`/a1-portal-a16-tlb/${capitalizeFirstLetter(entityName)}/Create`} class="ml-auto">
 				Add New {capitalizeFirstLetter(entityName)}
 				<Plus />
 			</Button>

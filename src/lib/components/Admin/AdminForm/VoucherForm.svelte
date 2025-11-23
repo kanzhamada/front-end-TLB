@@ -488,7 +488,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex justify-end gap-3 border-t border-gray-100 pt-6">
-			<CancelButton href="/admin/Voucher" disabled={isSubmitting} />
+			<CancelButton href="/a1-portal-a16-tlb/Voucher" disabled={isSubmitting} />
 
 			{#if action === 'view'}
 				<DeleteButton

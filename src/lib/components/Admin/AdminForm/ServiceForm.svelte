@@ -17,7 +17,7 @@
 	interface ServiceDetail extends Service {}
 
 	interface Props {
-		data?: { form?: SuperValidated<Infer<ServiceSchema>> };
+		data?: { form?: SuperValidated<any> };
 		detailData?: ServiceDetail;
 		action: 'create' | 'view' | 'edit';
 		title: string;
@@ -243,7 +243,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex justify-end gap-3 border-t border-gray-100 pt-6">
-			<CancelButton href="/admin/Service" disabled={isSubmitting} />
+			<CancelButton href="/a1-portal-a16-tlb/Service" disabled={isSubmitting} />
 
 			{#if action === 'view'}
 				<DeleteButton

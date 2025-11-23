@@ -40,54 +40,6 @@
 			title: 'Dashboard',
 			url: '/admin',
 			icon: HouseIcon,
-			tooltip: 'Go to Dashboard'
-		},
-		{
-			title: 'Reservation',
-			url: '/admin/Reservation',
-			icon: CalendarCheckIcon,
-			tooltip: 'Manage Reservations'
-		},
-		{
-			title: 'Catalogue',
-			url: '/admin/Catalogue',
-			icon: ImagesIcon,
-			tooltip: 'View Catalogue'
-		},
-		{
-			title: 'Barber',
-			url: '/admin/Barber',
-			icon: UserRoundIcon,
-			tooltip: 'Manage Barbers'
-		},
-		{
-			title: 'Service',
-			url: '/admin/Service',
-			icon: ScissorsIcon,
-			tooltip: 'Manage Services'
-		},
-		{
-			title: 'Operational Time',
-			url: '/admin/OperationalTime',
-			icon: CalendarClockIcon,
-			tooltip: 'Set Operational Hours'
-		},
-		{
-			title: 'Chat',
-			url: '/admin/Chat',
-			icon: MessageCircleIcon,
-			tooltip: 'Chat with Customers'
-		},
-		{
-			title: 'Voucher',
-			url: '/admin/Voucher',
-			icon: TicketsIcon,
-			tooltip: 'Manage Vouchers'
-		}
-	];
-
-	// Get unread count value for display
-	let unreadCount = $state(0);
 
 	// Subscribe to the unreadChatCount store
 	$effect(() => {

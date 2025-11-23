@@ -1,12 +1,12 @@
 <script lang="ts">
-	import * as Chart from '$lib/components/ui/chart/index.js';
+	import * as Chart from '$lib/components/ui/chart/index';
 	import { scaleBand } from 'd3-scale';
 	import { BarChart } from 'layerchart';
-	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import { getLatestWaitingReservations, getReservations } from '$lib/api/admin/reservation';
-	import { Check, X, MessageCircle, Eye, Wallet, Users } from 'lucide-svelte';
+	import { Check, X, MessageCircle, Eye, Wallet, Users, Monitor as MonitorIcon } from 'lucide-svelte';
 	import StatsCard from '$lib/components/Admin/Statistics/StatsCard.svelte';
 	import { processChartData, type Period } from '$lib/utils/dashboard';
+	import type { Component } from 'svelte';
 
 	// Data Fetching
 	const latestReservation = getLatestWaitingReservations();
@@ -25,19 +25,19 @@
 		weekly: {
 			label: 'Weekly',
 			color: 'var(--chart-1)',
-			icon: MonitorIcon,
+			icon: MonitorIcon as any,
 			theme: { light: '#2563eb', dark: '#93c5fd' }
 		},
 		monthly: {
 			label: 'Monthly',
 			color: 'var(--chart-2)',
-			icon: MonitorIcon,
+			icon: MonitorIcon as any,
 			theme: { light: '#059669', dark: '#6ee7b7' }
 		},
 		yearly: {
 			label: 'Yearly',
 			color: 'var(--chart-3)',
-			icon: MonitorIcon,
+			icon: MonitorIcon as any,
 			theme: { light: '#7c3aed', dark: '#c4b5fd' }
 		}
 	} satisfies Chart.ChartConfig;
@@ -83,7 +83,7 @@
 		<Chart.Container config={chartConfig} class="h-[300px] w-full">
 			<BarChart
 				data={chartData}
-				xScale={scaleBand().padding(0.3)}
+				xScale={scaleBand().padding(0.3) as any}
 				x="xAxis"
 				seriesLayout="group"
 				legend
@@ -106,23 +106,20 @@
 						radius: 4
 					},
 					xAxis: {
-						format: (d) => {
+						format: (d: string) => {
 							if (activeChart === 'weekly') return d.slice(0, 3);
 							if (activeChart === 'monthly') return d.slice(0, 3);
 							return d;
 						},
-						tickSize: 0,
 						tickPadding: 10
 					},
 					yAxis: {
-						tickSize: 0,
 						tickPadding: 10,
-						grid: true,
-						gridColor: '#E5E7EB'
+						grid: true
 					},
 					tooltip: {
-						header: (value) => value.xAxis,
-						format: (point) => {
+						header: (data: { xAxis: string }) => data.xAxis,
+						format: (point: { series: { key: string }; value: number }) => {
 							if (point.series.key === 'income') {
 								return `Rp ${point.value.toLocaleString()}`;
 							}
@@ -134,7 +131,6 @@
 				{#snippet tooltip()}
 					<Chart.Tooltip
 						class="rounded-xl border border-white/50 bg-white/80 p-3 shadow-lg backdrop-blur-md"
-						contentClass="text-sm font-medium text-gray-700"
 					/>
 				{/snippet}
 			</BarChart>

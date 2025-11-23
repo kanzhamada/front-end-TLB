@@ -1,12 +1,10 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import { createRawSnippet } from 'svelte';
-import { renderSnippet } from '$lib/components/ui/data-table/index.js';
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
+import { renderSnippet } from '$lib/components/ui/data-table/index';
+import { renderComponent } from '$lib/components/ui/data-table/index';
 import SortableHeaderButton from '$lib/components/Admin/Table/SortableHeaderButton.svelte';
 import DataTableAction from '$lib/components/Admin/Table/DataTableAction.svelte';
-import EyeIcon from '@lucide/svelte/icons/eye';
-import TrashIcon from '@lucide/svelte/icons/trash';
-import SquarePenIcon from '@lucide/svelte/icons/square-pen';
+import { Eye as EyeIcon, Trash as TrashIcon, SquarePen as SquarePenIcon } from 'lucide-svelte';
 import type { Service } from '$lib/types/adminTypes';
 
 export const serviceColumns: ColumnDef<Service>[] = [
@@ -69,12 +67,12 @@ export const serviceColumns: ColumnDef<Service>[] = [
 				data: row.original,
 				href: [
 					{
-						url: `/admin/Service/${row.original.id}`,
+						url: `/a1-portal-a16-tlb/Service/${row.original.id}`,
 						itemText: 'View Details',
 						icon: EyeIcon
 					},
 					{
-						url: `/admin/Service/${row.original.id}/Edit`,
+						url: `/a1-portal-a16-tlb/Service/${row.original.id}/Edit`,
 						itemText: 'Edit Service',
 						icon: SquarePenIcon
 					}

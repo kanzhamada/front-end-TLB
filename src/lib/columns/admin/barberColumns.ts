@@ -1,11 +1,9 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import { createRawSnippet } from 'svelte';
-import { renderSnippet } from '$lib/components/ui/data-table/index.js';
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
+import { renderSnippet } from '$lib/components/ui/data-table/index';
+import { renderComponent } from '$lib/components/ui/data-table/index';
 import SortableHeaderButton from '$lib/components/Admin/Table/SortableHeaderButton.svelte';
-import EyeIcon from '@lucide/svelte/icons/eye';
-import TrashIcon from '@lucide/svelte/icons/trash';
-import SquarePenIcon from '@lucide/svelte/icons/square-pen';
+import { Eye as EyeIcon, Trash as TrashIcon, SquarePen as SquarePenIcon } from 'lucide-svelte';
 import DataTableAction from '$lib/components/Admin/Table/DataTableAction.svelte';
 import type { Barber } from '$lib/types/adminTypes';
 
@@ -61,12 +59,12 @@ export const barberColumns: ColumnDef<Barber>[] = [
 				data: row.original,
 				href: [
 					{
-						url: `/admin/Barber/${row.original.id}`,
+						url: `/a1-portal-a16-tlb/Barber/${row.original.id}`,
 						itemText: 'View Details',
 						icon: EyeIcon
 					},
 					{
-						url: `/admin/Barber/${row.original.id}/Edit`,
+						url: `/a1-portal-a16-tlb/Barber/${row.original.id}/Edit`,
 						itemText: 'Edit Barber',
 						icon: SquarePenIcon
 					}

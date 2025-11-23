@@ -1,12 +1,10 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import { createRawSnippet } from 'svelte';
-import { renderSnippet } from '$lib/components/ui/data-table/index.js';
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
+import { renderSnippet } from '$lib/components/ui/data-table/index';
+import { renderComponent } from '$lib/components/ui/data-table/index';
 import DataTableAction from '$lib/components/Admin/Table/DataTableAction.svelte';
 import SortableHeaderButton from '$lib/components/Admin/Table/SortableHeaderButton.svelte';
-import EyeIcon from '@lucide/svelte/icons/eye';
-import TrashIcon from '@lucide/svelte/icons/trash';
-import SquarePenIcon from '@lucide/svelte/icons/square-pen';
+import { Eye as EyeIcon, Trash as TrashIcon, SquarePen as SquarePenIcon } from 'lucide-svelte';
 import type { Voucher } from '$lib/types/adminTypes';
 
 export const voucherColumns: ColumnDef<Voucher>[] = [
@@ -114,12 +112,12 @@ export const voucherColumns: ColumnDef<Voucher>[] = [
 				data: row.original,
 				href: [
 					{
-						url: `/admin/Voucher/${row.original.id}`,
+						url: `/a1-portal-a16-tlb/Voucher/${row.original.id}`,
 						itemText: 'View Details',
 						icon: EyeIcon
 					},
 					{
-						url: `/admin/Voucher/${row.original.id}/Edit`,
+						url: `/a1-portal-a16-tlb/Voucher/${row.original.id}/Edit`,
 						itemText: 'Edit Voucher',
 						icon: SquarePenIcon
 					}

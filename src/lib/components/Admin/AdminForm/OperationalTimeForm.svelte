@@ -1,25 +1,25 @@
 <script lang="ts">
-	import { decode } from './../../../../../.svelte-kit/generated/client/app.js';
+	import { decode } from './../../../../../.svelte-kit/generated/client/app';
 	import SaveButton from '$lib/components/Global/Button/SaveButton.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import * as Form from '$lib/components/ui/form/index';
+	import { Input } from '$lib/components/ui/input/index';
 	import { type OperationalTimeSchema } from '$lib/zod/schema';
 	import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import { Textarea } from '$lib/components/ui/textarea/index';
 	import { goto } from '$app/navigation';
-	import * as Select from '$lib/components/ui/select/index.js';
+	import * as Select from '$lib/components/ui/select/index';
 	import { toast } from 'svelte-sonner';
 	import EditButton from '$lib/components/Global/Button/EditButton.svelte';
 	import DeleteButton from '$lib/components/Global/Button/DeleteButton.svelte';
 	import CancelButton from '$lib/components/Global/Button/CancelButton.svelte';
 	import type { OperationalTime } from '$lib/types/adminTypes';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Calendar } from '$lib/components/ui/calendar/index';
+	import * as Popover from '$lib/components/ui/popover/index';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import ClockIcon from '@lucide/svelte/icons/clock';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { cn } from '$lib/utils.js';
+	import { buttonVariants } from '$lib/components/ui/button/index';
+	import { Label } from '$lib/components/ui/label/index';
+	import { cn } from '$lib/utils';
 	import {
 		type DateValue,
 		DateFormatter,
@@ -70,7 +70,7 @@
 			if (form.valid && success) {
 				const toastMessage = getSuccessMessage(action);
 				toast.success(toastMessage);
-				goto('/admin/OperationalTime');
+				goto('/a1-portal-a16-tlb/OperationalTime');
 			} else if (!form.valid && message) {
 				toast.error(message);
 			}
@@ -226,7 +226,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex justify-end gap-3 border-t border-gray-100 pt-6">
-			<CancelButton href="/admin/OperationalTime" disabled={isSubmitting} />
+			<CancelButton href="/a1-portal-a16-tlb/OperationalTime" disabled={isSubmitting} />
 
 			{#if action === 'view'}
 				<DeleteButton

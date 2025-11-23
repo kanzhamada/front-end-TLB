@@ -15,7 +15,7 @@
 	<div class="mx-auto max-w-7xl">
 		<div class="rounded-xl">
 			<div class=" mb-4 flex flex-col gap-4 sm:flex-row">
-				<Button href={`/admin/OperationalTime/Create`} class="ml-auto">
+				<Button href={`/a1-portal-a16-tlb/OperationalTime/Create`} class="ml-auto">
 					Add Date
 					<Plus />
 				</Button>
@@ -58,7 +58,7 @@
 						disabled={!value || !selectedTime}
 						class="w-full md:ml-auto md:w-auto"
 						variant="outline"
-						href={`/admin/OperationalTime/Edit/${value?.toString()}`}
+						href={`/a1-portal-a16-tlb/OperationalTime/Edit/${value?.toString()}`}
 					>
 						Continue
 					</Button>

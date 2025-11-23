@@ -196,7 +196,7 @@
 						</p>
 					</div>
 				</div>
-				<Button variant="outline" size="sm" onclick={() => goto('/admin/Chat')}>
+				<Button variant="outline" size="sm" onclick={() => goto('/a1-portal-a16-tlb/Chat')}>
 					<ArrowLeft class="mr-2 size-4" />
 					Kembali
 				</Button>

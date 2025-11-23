@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/table-core';
 import { createRawSnippet } from 'svelte';
-import { renderSnippet } from '$lib/components/ui/data-table/index.js';
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
+import { renderSnippet } from '$lib/components/ui/data-table/index';
+import { renderComponent } from '$lib/components/ui/data-table/index';
 import SortableHeaderButton from '$lib/components/Admin/Table/SortableHeaderButton.svelte';
 import DataTableActionReservation from '$lib/components/Admin/Table/DataTableActionReservation.svelte';
 import type { Reservation } from '$lib/types/adminTypes';
