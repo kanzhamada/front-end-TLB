@@ -555,7 +555,7 @@
 
 	<SheetContent
 		side="top"
-		class="mx-auto mt-16 w-full max-w-5xl rounded-2xl border bg-[#f7f3ee] p-6 shadow-2xl"
+		class="mx-auto mt-16 w-full max-w-5xl rounded-2xl border border-senary/20 bg-background/95 p-6 shadow-2xl backdrop-blur-xl"
 	>
 		<SheetHeader class="p-0">
 			<SheetTitle class="sr-only">Reservation</SheetTitle>
@@ -569,59 +569,67 @@
 						class={cn(
 							'flex size-10 items-center justify-center rounded-full border-2 transition-colors',
 							step === key
-								? 'border-emerald-700 bg-emerald-700 text-white'
+								? 'border-senary bg-senary text-primary'
 								: isPastStep(key)
-									? 'border-emerald-700 bg-emerald-700 text-white'
-									: 'border-emerald-900/30 bg-white text-emerald-900'
+									? 'border-senary bg-senary text-primary'
+									: 'border-white/10 bg-white/5 text-muted-foreground'
 						)}
 					>
 						{#if isPastStep(key)}
 							<CheckIcon class="size-5" />
 						{:else}
-							<span class="text-sm">{index + 1}</span>
+							<span class="text-sm font-bold">{index + 1}</span>
 						{/if}
 					</div>
-					<span class="ml-2 text-sm font-medium text-emerald-900/80">{label}</span>
+					<span
+						class={cn(
+							'ml-2 text-sm font-medium transition-colors',
+							step === key || isPastStep(key) ? 'text-senary' : 'text-muted-foreground'
+						)}>{label}</span
+					>
 				</div>
 				{#if index < steps.length - 1}
-					<ChevronRight class="mx-1 size-4 text-emerald-900/40" />
+					<ChevronRight class="mx-1 size-4 text-white/20" />
 				{/if}
 			{/each}
 		</div>
 
-		<div class="rounded-xl bg-white p-5 shadow-sm">
+		<div class="rounded-xl border border-white/10 bg-white/5 p-6 shadow-inner backdrop-blur-md">
 			{#if loadingData}
-				<div class="flex flex-col items-center justify-center gap-4 py-16 text-emerald-900/80">
+				<div class="flex flex-col items-center justify-center gap-4 py-16 text-senary">
 					<Loader2Icon class="size-8 animate-spin" />
-					<p class="text-sm font-medium">Sedang memuat data reservasi...</p>
+					<p class="text-sm font-medium text-secondary/80">Sedang memuat data reservasi...</p>
 				</div>
 			{:else if dataError}
 				<div class="space-y-4 text-center">
-					<p class="text-sm font-medium text-red-600">{dataError}</p>
-					<!-- Call the new retry function -->
-					<Button variant="outline" onclick={retryLoadReservationData}>Coba lagi</Button>
+					<p class="text-sm font-medium text-destructive">{dataError}</p>
+					<Button
+						variant="outline"
+						class="border-senary/50 text-senary hover:bg-senary hover:text-primary"
+						onclick={retryLoadReservationData}>Coba lagi</Button
+					>
 				</div>
 			{:else if step === 'date'}
 				<div class="space-y-6">
 					<div>
-						<h3 class="text-lg font-semibold text-stone-700">Pilih Tanggal Reservasi</h3>
-						<p class="text-sm text-stone-500">
+						<h3 class="text-lg font-semibold text-secondary">Pilih Tanggal Reservasi</h3>
+						<p class="text-sm text-secondary/60">
 							Pilih tahun, bulan, dan tanggal yang tersedia untuk melanjutkan.
 						</p>
 					</div>
 
 					<div class="space-y-4">
 						<div>
-							<Label class="mb-2 block text-sm font-semibold text-stone-700">Tahun</Label>
+							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tahun</Label>
 							<div class="flex flex-wrap gap-2">
 								{#each availableYears as year (year)}
 									<button
 										type="button"
 										class={cn(
-											'rounded-lg border px-4 py-2 text-sm font-medium transition',
+											'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
 											selectedYear === year
-												? 'border-emerald-700 bg-emerald-700 text-white'
-												: 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
+												? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+												: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 										)}
 										onclick={() => selectYear(year)}
 									>
@@ -632,19 +640,19 @@
 						</div>
 
 						<div>
-							<Label class="mb-2 block text-sm font-semibold text-stone-700">Bulan</Label>
+							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Bulan</Label>
 							{#if availableMonths.length === 0}
-								<p class="text-sm text-stone-400">Silakan pilih tahun terlebih dahulu.</p>
+								<p class="text-sm text-muted-foreground">Silakan pilih tahun terlebih dahulu.</p>
 							{:else}
 								<div class="flex flex-wrap gap-2">
 									{#each availableMonths as month (month)}
 										<button
 											type="button"
 											class={cn(
-												'rounded-lg border px-4 py-2 text-sm font-medium transition',
+												'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
 												selectedMonth === month
-													? 'border-emerald-700 bg-emerald-700 text-white'
-													: 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
+													? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+													: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 											)}
 											onclick={() => selectMonth(month)}
 										>
@@ -656,21 +664,21 @@
 						</div>
 
 						<div>
-							<Label class="mb-2 block text-sm font-semibold text-stone-700">Tanggal</Label>
+							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tanggal</Label>
 							{#if availableDays.length === 0}
-								<p class="text-sm text-stone-400">Tidak ada tanggal yang tersedia.</p>
+								<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
 							{:else}
 								<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
 									{#each availableDays as day (day.id)}
 										<button
 											type="button"
 											class={cn(
-												'rounded-xl border px-3 py-3 text-center transition',
+												'rounded-xl border px-3 py-3 text-center transition-all duration-300',
 												day.available
 													? selectedDayId === day.id
-														? 'border-emerald-700 bg-emerald-700 text-white'
-														: 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
-													: 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+														? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+														: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+													: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
 											)}
 											onclick={() => selectDay(day.id, day.available)}
 											disabled={!day.available}
@@ -685,16 +693,20 @@
 					</div>
 
 					<div class="flex justify-end">
-						<Button onclick={goNext} disabled={!selectedDayId}>Pilih Jam</Button>
+						<Button
+							class="bg-senary text-primary hover:bg-senary/90"
+							onclick={goNext}
+							disabled={!selectedDayId}>Pilih Jam</Button
+						>
 					</div>
 				</div>
 			{:else if step === 'time'}
 				<div class="space-y-6">
 					<div>
-						<h3 class="text-lg font-semibold text-stone-700">Pilih Jam Reservasi</h3>
-						<p class="text-sm text-stone-500">
+						<h3 class="text-lg font-semibold text-secondary">Pilih Jam Reservasi</h3>
+						<p class="text-sm text-secondary/60">
 							Tanggal dipilih:
-							<span class="font-medium text-emerald-800">
+							<span class="font-medium text-senary">
 								{selectedDateDisplay ?? '-'}
 							</span>
 						</p>
@@ -705,12 +717,12 @@
 							<button
 								type="button"
 								class={cn(
-									'rounded-lg border px-4 py-2 text-sm font-medium transition',
+									'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
 									hour.status === 'available'
 										? selectedTimeId === hour.id
-											? 'border-emerald-700 bg-emerald-700 text-white'
-											: 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
-										: 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+											? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+											: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+										: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
 								)}
 								onclick={() => selectTime(hour.id, hour.status === 'available')}
 								disabled={hour.status !== 'available'}
@@ -721,15 +733,23 @@
 					</div>
 
 					<div class="flex items-center justify-between">
-						<Button variant="outline" onclick={goBack}>Kembali</Button>
-						<Button onclick={goNext} disabled={!selectedTimeId}>Detail Janji</Button>
+						<Button
+							variant="outline"
+							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+							onclick={goBack}>Kembali</Button
+						>
+						<Button
+							class="bg-senary text-primary hover:bg-senary/90"
+							onclick={goNext}
+							disabled={!selectedTimeId}>Detail Janji</Button
+						>
 					</div>
 				</div>
 			{:else if step === 'details'}
 				<div class="space-y-6">
 					<div>
-						<h3 class="text-lg font-semibold text-stone-700">Detail Reservasi</h3>
-						<p class="text-sm text-stone-500">
+						<h3 class="text-lg font-semibold text-secondary">Detail Reservasi</h3>
+						<p class="text-sm text-secondary/60">
 							{#if reservationToReschedule}
 								Barber dan layanan tidak dapat diubah saat reschedule.
 							{:else}
@@ -738,88 +758,123 @@
 						</p>
 					</div>
 
-					<div class="space-y-4">
-						<div>
-							<h4 class="mb-2 text-sm font-semibold text-stone-700">Pilih Barber</h4>
-							{#if barbers.length === 0}
-								<p class="text-sm text-stone-400">Tidak ada barber yang tersedia saat ini.</p>
-							{:else}
-								<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-									{#each barbers as barber (barber.id)}
-										<button
-											type="button"
-											class={cn(
-												'rounded-xl border p-4 text-left transition',
-												selectedBarberId === barber.id
-													? 'border-emerald-700 bg-emerald-700/10'
-													: 'border-emerald-200 bg-white hover:border-emerald-400',
-												reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-											)}
-											onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
-											disabled={reservationToReschedule}
-										>
-											<div class="font-semibold text-emerald-900">{barber.name}</div>
-											{#if barber.experience}
-												<p class="text-xs text-stone-500">
-													Pengalaman: {barber.experience}
-												</p>
-											{/if}
-											{#if barber.skills}
-												<p class="text-xs text-stone-500">Keahlian: {barber.skills}</p>
-											{/if}
-										</button>
-									{/each}
-								</div>
-							{/if}
+					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+						<!-- Left Column: Barber Selection -->
+						<div class="flex flex-col gap-2">
+							<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
+							<div
+								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[400px] overflow-y-auto pr-2"
+							>
+								{#if barbers.length === 0}
+									<p class="text-sm text-muted-foreground">
+										Tidak ada barber yang tersedia saat ini.
+									</p>
+								{:else}
+									<div class="grid grid-cols-1 gap-3">
+										{#each barbers as barber (barber.id)}
+											<button
+												type="button"
+												class={cn(
+													'rounded-xl border p-4 text-left transition-all duration-300',
+													selectedBarberId === barber.id
+														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+												)}
+												onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
+												disabled={reservationToReschedule}
+											>
+												<div
+													class={cn(
+														'font-semibold',
+														selectedBarberId === barber.id ? 'text-senary' : 'text-secondary'
+													)}
+												>
+													{barber.name}
+												</div>
+												{#if barber.experience}
+													<p class="text-xs text-secondary/60">
+														Pengalaman: {barber.experience}
+													</p>
+												{/if}
+												{#if barber.skills}
+													<p class="text-xs text-secondary/60">Keahlian: {barber.skills}</p>
+												{/if}
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
 						</div>
 
-						<div>
-							<h4 class="mb-2 text-sm font-semibold text-stone-700">Pilih Layanan</h4>
-							{#if services.length === 0}
-								<p class="text-sm text-stone-400">Tidak ada layanan yang tersedia saat ini.</p>
-							{:else}
-								<div class="space-y-3">
-									{#each services as service (service.id)}
-										<button
-											type="button"
-											class={cn(
-												'flex w-full items-center justify-between rounded-xl border p-4 text-left transition',
-												selectedServiceId === service.id
-													? 'border-emerald-700 bg-emerald-700/10'
-													: 'border-emerald-200 bg-white hover:border-emerald-400',
-												reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-											)}
-											onclick={() => !reservationToReschedule && (selectedServiceId = service.id)}
-											disabled={reservationToReschedule}
-										>
-											<div>
-												<div class="font-semibold text-emerald-900">{service.name}</div>
-												<p class="text-xs text-stone-500">{service.description}</p>
-											</div>
-											<div class="text-sm font-semibold text-emerald-800">
-												{currencyFormatter.format(service.price)}
-											</div>
-										</button>
-									{/each}
-								</div>
-							{/if}
+						<!-- Right Column: Service Selection -->
+						<div class="flex flex-col gap-2">
+							<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
+							<div
+								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[400px] overflow-y-auto pr-2"
+							>
+								{#if services.length === 0}
+									<p class="text-sm text-muted-foreground">
+										Tidak ada layanan yang tersedia saat ini.
+									</p>
+								{:else}
+									<div class="space-y-3">
+										{#each services as service (service.id)}
+											<button
+												type="button"
+												class={cn(
+													'flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-300',
+													selectedServiceId === service.id
+														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+												)}
+												onclick={() => !reservationToReschedule && (selectedServiceId = service.id)}
+												disabled={reservationToReschedule}
+											>
+												<div>
+													<div
+														class={cn(
+															'font-semibold',
+															selectedServiceId === service.id ? 'text-senary' : 'text-secondary'
+														)}
+													>
+														{service.name}
+													</div>
+													<p class="text-xs text-secondary/60">{service.description}</p>
+												</div>
+												<div class="text-sm font-semibold text-senary">
+													{currencyFormatter.format(service.price)}
+												</div>
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
 						</div>
 
-						<div>
-							<Label class="mb-2 block text-sm font-semibold text-stone-700">
+						<!-- Bottom: Notes (Spanning Full Width) -->
+						<div class="col-span-1 md:col-span-2">
+							<Label class="mb-2 block text-sm font-semibold text-secondary/80">
 								Catatan (Opsional)
 							</Label>
 							<Textarea
 								rows={4}
 								placeholder="Tambahkan permintaan khusus..."
 								bind:value={specialRequest}
+								class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
 							/>
 						</div>
 					</div>
 
 					<div class="flex items-center justify-between">
-						<Button variant="outline" onclick={goBack}>Kembali</Button>
 						<Button
+							variant="outline"
+							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+							onclick={goBack}>Kembali</Button
+						>
+						<Button
+							class="bg-senary text-primary hover:bg-senary/90"
 							onclick={goNext}
 							disabled={!selectedBarberId ||
 								!selectedServiceId ||
@@ -838,62 +893,67 @@
 				<div class="space-y-6">
 					<div>
 						{#if reservationToReschedule}
-							<h3 class="text-lg font-semibold text-stone-700">Konfirmasi Reschedule</h3>
-							<p class="text-sm text-stone-500">
+							<h3 class="text-lg font-semibold text-secondary">Konfirmasi Reschedule</h3>
+							<p class="text-sm text-secondary/60">
 								Periksa kembali perubahan reservasi Anda sebelum dikonfirmasi.
 							</p>
 						{:else}
-							<h3 class="text-lg font-semibold text-stone-700">Pembayaran</h3>
-							<p class="text-sm text-stone-500">
+							<h3 class="text-lg font-semibold text-secondary">Pembayaran</h3>
+							<p class="text-sm text-secondary/60">
 								Periksa kembali detail reservasi sebelum dikonfirmasi.
 							</p>
 						{/if}
 					</div>
 
 					<div class="grid gap-4 md:grid-cols-2">
-						<div class="rounded-lg bg-orange-500 p-4 text-white">
+						<div class="rounded-lg border border-senary/20 bg-senary/10 p-4 text-secondary">
 							{#if reservationToReschedule}
-								<div class="font-semibold">Ringkasan Reschedule</div>
+								<div class="font-semibold text-senary">Ringkasan Reschedule</div>
 							{:else}
-								<div class="font-semibold">Ringkasan Reservasi</div>
+								<div class="font-semibold text-senary">Ringkasan Reservasi</div>
 							{/if}
 							<div class="mt-3 space-y-2 text-sm">
-								<div class="flex justify-between">
-									<span>Tanggal</span>
-									<span>{selectedDateDisplay ?? '-'}</span>
+								<div class="flex justify-between border-b border-senary/10 pb-2">
+									<span class="text-secondary/70">Tanggal</span>
+									<span class="font-medium">{selectedDateDisplay ?? '-'}</span>
+								</div>
+								<div class="flex justify-between border-b border-senary/10 pb-2">
+									<span class="text-secondary/70">Jam</span>
+									<span class="font-medium">{selectedTimeDisplay ?? '-'}</span>
+								</div>
+								<div class="flex justify-between border-b border-senary/10 pb-2">
+									<span class="text-secondary/70">Barber</span>
+									<span class="font-medium">{selectedBarber?.name ?? '-'}</span>
 								</div>
 								<div class="flex justify-between">
-									<span>Jam</span>
-									<span>{selectedTimeDisplay ?? '-'}</span>
-								</div>
-								<div class="flex justify-between">
-									<span>Barber</span>
-									<span>{selectedBarber?.name ?? '-'}</span>
-								</div>
-								<div class="flex justify-between">
-									<span>Layanan</span>
-									<span>{selectedService?.name ?? '-'}</span>
+									<span class="text-secondary/70">Layanan</span>
+									<span class="font-medium">{selectedService?.name ?? '-'}</span>
 								</div>
 							</div>
 						</div>
 
-						<div class="rounded-lg border p-4">
-							<div class="font-semibold text-stone-700">Voucher</div>
-							<p class="mt-2 text-xs text-stone-500">
+						<div class="rounded-lg border border-white/10 bg-white/5 p-4">
+							<div class="font-semibold text-secondary">Voucher</div>
+							<p class="mt-2 text-xs text-secondary/60">
 								Pilih voucher yang ingin digunakan (opsional).
 							</p>
 							<Select.Root type="single" bind:value={voucherSelection}>
-								<Select.Trigger class="mt-3 w-full justify-between">
+								<Select.Trigger
+									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary focus:ring-senary/50"
+								>
 									{selectedVoucher
 										? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
 										: 'Pilih voucher'}
 								</Select.Trigger>
-								<Select.Content class="w-full">
-									<Select.Item value="none">Tanpa Voucher</Select.Item>
+								<Select.Content class="border-white/10 bg-background text-secondary">
+									<Select.Item value="none" class="focus:bg-senary/20 focus:text-senary"
+										>Tanpa Voucher</Select.Item
+									>
 									{#each vouchers as voucher (voucher.voucherID)}
 										<Select.Item
 											value={voucher.voucherID}
 											label={voucher.title ?? voucher.name ?? 'Voucher'}
+											class="focus:bg-senary/20 focus:text-senary"
 										>
 											{voucher.title ?? voucher.name ?? 'Voucher'}
 										</Select.Item>
@@ -903,35 +963,47 @@
 						</div>
 					</div>
 
-					<Separator />
+					<Separator class="bg-white/10" />
 
 					<div class="space-y-2 text-sm">
-						<div class="flex justify-between text-stone-700">
+						<div class="flex justify-between text-secondary/80">
 							<span>{selectedService?.name ?? 'Subtotal'}</span>
 							<span>{currencyFormatter.format(subtotal)}</span>
 						</div>
-						<div class="flex justify-between text-emerald-700">
+						<div class="flex justify-between text-senary">
 							<span>Diskon Voucher</span>
 							<span>-{currencyFormatter.format(voucherDiscount)}</span>
 						</div>
-						<div class="flex justify-between text-red-600">
+						<div class="flex justify-between text-destructive">
 							<span>Biaya Admin</span>
 							<span>+{currencyFormatter.format(adminFee)}</span>
 						</div>
-						<div class="flex justify-between text-base font-semibold text-emerald-900">
+						<div class="flex justify-between text-base font-semibold text-secondary">
 							<span>Total</span>
-							<span>{currencyFormatter.format(total)}</span>
+							<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
 						</div>
 					</div>
 
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<Button variant="outline" onclick={goBack} class="sm:w-auto">Kembali</Button>
+						<Button
+							variant="outline"
+							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
+							onclick={goBack}>Kembali</Button
+						>
 						<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-							<label class="flex items-center gap-2 text-xs text-stone-600">
-								<input type="checkbox" bind:checked={agreeTnc} />
+							<label class="flex items-center gap-2 text-xs text-secondary/60 hover:text-secondary">
+								<input
+									type="checkbox"
+									bind:checked={agreeTnc}
+									class="rounded border-white/20 bg-white/5 text-senary focus:ring-senary"
+								/>
 								Saya telah membaca dan menyetujui syarat & ketentuan.
 							</label>
-							<Button class="sm:w-auto" disabled={loadingSubmit} onclick={handleSubmit}>
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
+								disabled={loadingSubmit}
+								onclick={handleSubmit}
+							>
 								{#if loadingSubmit}
 									<span class="flex items-center gap-2">
 										<Loader2Icon class="size-4 animate-spin" />

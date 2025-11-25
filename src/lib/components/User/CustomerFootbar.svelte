@@ -2,7 +2,7 @@
 	import MapPin from '@lucide/svelte/icons/map-pin';
 </script>
 
-<footer class="border-t border-secondary/20 bg-primary py-16 text-secondary/80">
+<footer class="border-t border-white/10 bg-primary/40 py-16 text-secondary/80 backdrop-blur-md">
 	<div class="container mx-auto px-4">
 		<div class="mb-12 grid grid-cols-1 gap-12 md:grid-cols-3">
 			<div>
@@ -42,7 +42,7 @@
 			</div>
 		</div>
 
-		<div class="border-t border-secondary/20 pt-8 text-center">
+		<div class="border-t border-white/10 pt-8 text-center">
 			<p class="text-sm text-secondary/60">© 2025 Three Lights Barbershop. All Rights Reserved.</p>
 		</div>
 	</div>

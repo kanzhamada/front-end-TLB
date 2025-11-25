@@ -6,7 +6,7 @@
 </script>
 
 <nav
-	class="fixed top-0 right-0 left-0 z-50 border-b border-secondary/20 bg-black/40 shadow-lg backdrop-blur-md transition-all duration-300"
+	class="fixed top-0 right-0 left-0 z-50 border-b border-white/5 bg-black/40 shadow-lg backdrop-blur-md transition-all duration-300"
 >
 	<div class="container mx-auto px-4">
 		<div class="flex h-20 items-center justify-between">
@@ -37,41 +37,43 @@
 
 			<!-- Reservation Button -->
 			{#if $authStore.session}
-				<ReservationSheet
-					triggerClass="bg-[#e8ddd4] text-[#2e6057] hover:bg-[#2e6057]/90 hover:text-[#e8ddd4]/90"
-					triggerText="Reservasi"
-				/>
-				<Button
-					variant="ghost"
-					class="ml-2 text-[#e8ddd4] hover:text-white"
-					onclick={() => {
-						authStore.clear();
-						goto('/');
-					}}
-				>
-					Keluar
-				</Button>
+				<div class="flex items-center gap-4">
+					<ReservationSheet
+						triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium"
+						triggerText="Reservasi"
+					/>
+					<Button
+						variant="ghost"
+						class="text-secondary hover:bg-white/5 hover:text-senary"
+						onclick={() => {
+							authStore.clear();
+							goto('/');
+						}}
+					>
+						Keluar
+					</Button>
+				</div>
 			{:else}
 				<div class="flex items-center gap-3">
 					<Button
-						variant="outline"
-						class="border-[#e8ddd4] text-[#e8ddd4] hover:bg-[#e8ddd4]/10"
+						variant="ghost"
+						class="text-secondary hover:bg-white/5 hover:text-senary"
 						onclick={() => goto('/auth/login')}
 					>
 						Masuk
 					</Button>
 					<Button
-						class="bg-[#e8ddd4] text-[#2e6057] hover:bg-[#2e6057]/90 hover:text-[#e8ddd4]/90"
+						class="bg-senary font-medium text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all hover:bg-senary/90 hover:shadow-[0_0_25px_rgba(212,175,55,0.5)]"
 						onclick={() => goto('/auth/register')}
 					>
 						Daftar
 					</Button>
+					<ReservationSheet
+						triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium"
+						triggerText="Reservasi"
+					/>
 				</div>
 			{/if}
-			<Button
-				class="bg-senary font-bold text-primary shadow-[0_0_20px_rgba(255,142,1,0.3)] transition-all hover:bg-senary/80 hover:shadow-[0_0_30px_rgba(255,142,1,0.5)]"
-				>Reservation</Button
-			>
 		</div>
 	</div>
 </nav>

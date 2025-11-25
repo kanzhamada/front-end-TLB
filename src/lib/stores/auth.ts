@@ -6,7 +6,7 @@ type UserProfile = {
 	email: string;
 	display_name: string;
 	phone?: string | null;
-	coins: number;
+	coin: number;
 };
 
 type Session = {

@@ -9,10 +9,12 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import { Calendar, Clock, User, Scissors } from 'lucide-svelte';
+	import { Calendar, Clock, User, Scissors, X, Send } from 'lucide-svelte';
 	import type { ChatDetail, Message } from '$lib/api/shared/chat';
 	import { getMessagesByReservation, sendMessage } from '$lib/api/shared/chat';
 	import { updateUnreadCount } from '$lib/stores/chat';
+	import { cn } from '$lib/utils';
+	import { fade, scale } from 'svelte/transition';
 
 	let { reservation, open, onClose } = $props<{
 		reservation: any;
@@ -199,120 +201,165 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-50 flex items-center justify-center">
-		<div class="fixed inset-0 bg-black/50" onclick={onClose}></div>
-		<div class="relative z-10 mx-4 h-[90vh] w-full max-w-4xl rounded-xl bg-white shadow-xl">
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+		in:fade={{ duration: 200 }}
+	>
+		<div class="absolute inset-0 rounded-2xl bg-black/80 backdrop-blur-sm" onclick={onClose}></div>
+		<div
+			class="relative z-10 h-[55vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-senary/20 bg-background/95 shadow-2xl backdrop-blur-xl"
+			in:scale={{ duration: 300, start: 0.95 }}
+		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b p-4">
-				<h2 class="text-lg font-semibold">Chat untuk Reservasi</h2>
-				<Button variant="ghost" class="size-8 p-0" onclick={onClose}>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="size-4"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
+			<div
+				class="flex items-center justify-between border-b border-white/10 bg-white/5 p-4 backdrop-blur-md"
+			>
+				<div class="flex items-center gap-3">
+					<div
+						class="flex size-10 items-center justify-center rounded-full bg-senary/10 text-senary"
 					>
-						<path d="M18 6 6 18" />
-						<path d="m6 6 12 12" />
-					</svg>
+						<Scissors class="size-5" />
+					</div>
+					<div>
+						<h2 class="text-lg font-semibold text-secondary">Chat Reservasi</h2>
+						<p class="text-xs text-secondary/60">
+							{reservation.invoice || reservation.reservationID}
+						</p>
+					</div>
+				</div>
+				<Button
+					variant="ghost"
+					class="size-8 rounded-full p-0 text-secondary/60 hover:bg-white/10 hover:text-white"
+					onclick={onClose}
+				>
+					<X class="size-5" onclick={onClose} />
 				</Button>
 			</div>
 
 			<!-- Main Content -->
-			<div class="flex h-[calc(100%-4rem)]">
+			<div class="flex h-[calc(100%-4.5rem)] flex-col md:flex-row">
 				<!-- Reservation Details Sidebar -->
-				<div class="hidden w-1/3 border-r md:block">
-					<Card class="m-4">
-						<CardHeader>
-							<CardTitle class="flex items-center gap-2">
-								<Scissors class="size-5" />
-								<span>Detail Reservasi</span>
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div class="space-y-3">
-								<div class="flex items-center gap-2">
-									<User class="size-4 text-gray-500" />
-									<span class="font-medium">ID Invoice:</span>
-									<span>{reservation.invoice || reservation.reservationID}</span>
+				<div class="hidden w-80 border-r border-white/10 bg-white/5 md:block">
+					<div class="p-4">
+						<h3 class="mb-4 text-sm font-semibold tracking-wider text-senary uppercase">
+							Detail Reservasi
+						</h3>
+						<div class="space-y-4">
+							<div
+								class="group rounded-lg border border-white/5 bg-white/5 p-3 transition-all hover:border-senary/20 hover:bg-white/10"
+							>
+								<div class="mb-1 flex items-center gap-2 text-xs text-secondary/60">
+									<Calendar class="size-3" />
+									<span>Tanggal</span>
 								</div>
-								<div class="flex items-center gap-2">
-									<Calendar class="size-4 text-gray-500" />
-									<span class="font-medium">Tanggal:</span>
-									<span>{reservation.dateTime?.date}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<Clock class="size-4 text-gray-500" />
-									<span class="font-medium">Waktu:</span>
-									<span>{reservation.dateTime?.hour}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<User class="size-4 text-gray-500" />
-									<span class="font-medium">Barber:</span>
-									<span>{reservation.barber?.name}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<Scissors class="size-4 text-gray-500" />
-									<span class="font-medium">Layanan:</span>
-									<span>{reservation.service?.name}</span>
-								</div>
-								<div class="mt-4">
-									<span class="font-medium">Status:</span>
-									<Badge class="ml-2">
-										{reservation.status}
-									</Badge>
-								</div>
+								<div class="font-medium text-secondary">{reservation.dateTime?.date}</div>
 							</div>
-						</CardContent>
-					</Card>
+
+							<div
+								class="group rounded-lg border border-white/5 bg-white/5 p-3 transition-all hover:border-senary/20 hover:bg-white/10"
+							>
+								<div class="mb-1 flex items-center gap-2 text-xs text-secondary/60">
+									<Clock class="size-3" />
+									<span>Waktu</span>
+								</div>
+								<div class="font-medium text-secondary">{reservation.dateTime?.hour}</div>
+							</div>
+
+							<div
+								class="group rounded-lg border border-white/5 bg-white/5 p-3 transition-all hover:border-senary/20 hover:bg-white/10"
+							>
+								<div class="mb-1 flex items-center gap-2 text-xs text-secondary/60">
+									<User class="size-3" />
+									<span>Barber</span>
+								</div>
+								<div class="font-medium text-secondary">{reservation.barber?.name}</div>
+							</div>
+
+							<div
+								class="group rounded-lg border border-white/5 bg-white/5 p-3 transition-all hover:border-senary/20 hover:bg-white/10"
+							>
+								<div class="mb-1 flex items-center gap-2 text-xs text-secondary/60">
+									<Scissors class="size-3" />
+									<span>Layanan</span>
+								</div>
+								<div class="font-medium text-secondary">{reservation.service?.name}</div>
+							</div>
+
+							<div class="mt-4">
+								<Badge
+									variant="outline"
+									class="w-full justify-center border-senary/30 bg-senary/10 py-1.5 text-senary"
+								>
+									{reservation.status}
+								</Badge>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<!-- Chat Area -->
-				<div class="flex h-full w-full flex-col">
+				<div class="flex h-full flex-1 flex-col bg-black/20">
 					<!-- Chat Messages -->
 					<div class="flex-1 overflow-hidden p-4">
 						{#if loading}
-							<div class="flex h-full items-center justify-center">
-								<p>Loading messages...</p>
+							<div class="flex h-full items-center justify-center text-senary">
+								<p class="animate-pulse">Memuat pesan...</p>
 							</div>
 						{:else if error}
-							<div class="flex h-full items-center justify-center text-red-500">
+							<div class="flex h-full items-center justify-center text-destructive">
 								<p>{error}</p>
 							</div>
 						{:else if messages.length === 0}
-							<div class="flex h-full items-center justify-center">
-								<p class="text-gray-500">Belum ada pesan. Kirim pesan pertama!</p>
+							<div class="flex h-full flex-col items-center justify-center gap-3 text-secondary/40">
+								<div class="flex size-16 items-center justify-center rounded-full bg-white/5">
+									<Send class="size-8" />
+								</div>
+								<p>Belum ada pesan. Mulai percakapan!</p>
 							</div>
 						{:else}
 							<ScrollArea class="h-full pr-4">
-								<div class="space-y-4">
+								<div class="space-y-6">
 									{#each messages as message (message.created_at + message.sender)}
 										<div
 											class="flex {isCurrentUserMessage(message.sender)
 												? 'justify-end'
 												: 'justify-start'}"
 										>
-											<div class="flex max-w-xs flex-col">
-												<div class="flex items-center gap-2">
+											<div class="flex max-w-[80%] flex-col gap-1 md:max-w-[70%]">
+												<div
+													class="flex items-end gap-2 {isCurrentUserMessage(message.sender)
+														? 'flex-row-reverse'
+														: 'flex-row'}"
+												>
 													{#if !isCurrentUserMessage(message.sender)}
-														<Avatar class="size-6">
-															<AvatarFallback class="bg-[#2e6057]/10 text-xs text-[#2e6057]">
+														<Avatar class="size-8 border border-white/10">
+															<AvatarFallback class="bg-senary/10 text-xs font-bold text-senary">
 																A
 															</AvatarFallback>
 														</Avatar>
 													{/if}
+
 													<div
-														class="rounded-lg px-3 py-2 {isCurrentUserMessage(message.sender)
-															? 'rounded-br-none bg-[#2e6057] text-white'
-															: 'rounded-bl-none bg-gray-100 text-gray-800'}"
+														class={cn(
+															'rounded-2xl px-4 py-3 shadow-sm',
+															isCurrentUserMessage(message.sender)
+																? 'rounded-br-sm bg-senary text-primary'
+																: 'rounded-bl-sm bg-white/10 text-secondary backdrop-blur-sm'
+														)}
 													>
-														<p>{message.content}</p>
+														<p class="text-sm leading-relaxed">{message.content}</p>
 													</div>
 												</div>
-												<div class="mt-1 flex justify-end text-xs text-gray-500">
-													{formatDate(message.created_at)}
+
+												<div
+													class={cn(
+														'flex text-[10px] text-secondary/40',
+														isCurrentUserMessage(message.sender)
+															? 'justify-end pr-1'
+															: 'justify-start pl-11'
+													)}
+												>
+													<span>{formatDate(message.created_at)}</span>
 													{#if !message.read && !isCurrentUserMessage(message.sender)}
 														<span class="ml-1">• belum dibaca</span>
 													{/if}
@@ -326,11 +373,12 @@
 					</div>
 
 					<!-- Message Input -->
-					<div class="border-t p-4">
-						<div class="flex gap-2">
+					<div class="border-t border-white/10 bg-white/5 p-4 backdrop-blur-md">
+						<div class="flex gap-3">
 							<Input
 								placeholder="Ketik pesan..."
 								value={newMessage}
+								class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
 								oninput={(e) => (newMessage = (e.target as HTMLInputElement).value)}
 								onkeypress={(e) => {
 									if (e.key === 'Enter' && !e.shiftKey) {
@@ -339,7 +387,14 @@
 									}
 								}}
 							/>
-							<Button onclick={handleSend} disabled={!newMessage.trim() || loading}>Kirim</Button>
+							<Button
+								onclick={handleSend}
+								disabled={!newMessage.trim() || loading}
+								class="bg-senary text-primary hover:bg-senary/90"
+							>
+								<Send class="size-4" />
+								<span class="ml-2 hidden sm:inline">Kirim</span>
+							</Button>
 						</div>
 					</div>
 				</div>

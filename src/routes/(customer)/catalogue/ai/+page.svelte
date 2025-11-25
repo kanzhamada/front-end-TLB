@@ -215,8 +215,6 @@
 	let selectedService = $state<(typeof catalogues)[0] | null>(null);
 </script>
 
-<CustomCursor />
-
 <!-- Luxury Theme Wrapper -->
 <div class="min-h-screen w-full font-sans text-secondary selection:bg-senary/30">
 	<!-- Gradient Overlay for readability -->

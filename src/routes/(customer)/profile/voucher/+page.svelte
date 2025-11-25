@@ -3,15 +3,9 @@
 	import { get } from 'svelte/store';
 	import { authStore } from '$lib/stores/auth';
 	import { getOwnedVouchers, type Voucher } from '$lib/api/customer/profile';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { Ticket, Calendar, Wallet, Clock } from 'lucide-svelte';
+	import { Ticket, Calendar, Wallet, Clock, Sparkles } from 'lucide-svelte';
+	import { fade, fly } from 'svelte/transition';
 
 	// State variables
 	let ownedVouchers: Voucher[] = $state([]);
@@ -48,7 +42,7 @@
 
 	// Helper function to format date
 	function formatDate(dateString: string) {
-		return new Date(dateString).toLocaleDateString('id-ID', {
+		return new Date(dateString).toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'long',
 			day: 'numeric'
@@ -57,86 +51,93 @@
 </script>
 
 {#if loading}
-	<div class="space-y-6">
-		<Card class="border border-gray-200">
-			<CardHeader class="bg-[#2e6057]/5">
-				<CardTitle class="flex items-center gap-2">
-					<Ticket class="size-5 text-[#2e6057]" />
-					<span class="text-[#2e6057]">Voucher Saya</span>
-				</CardTitle>
-				<CardDescription>Kelola voucher yang Anda miliki</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div class="animate-pulse space-y-4">
-					{#each [1, 2] as _}
-						<div class="rounded-lg border border-gray-200 p-4">
-							<div class="flex items-center justify-between">
-								<div class="space-y-2">
-									<div class="h-4 w-3/4 rounded bg-gray-200"></div>
-									<div class="h-3 w-full rounded bg-gray-200"></div>
-								</div>
-								<div class="h-6 w-16 rounded-full bg-gray-200"></div>
-							</div>
-							<div class="mt-3 flex items-center gap-2">
-								<div class="h-4 w-4 rounded bg-gray-200"></div>
-								<div class="h-3 w-1/2 rounded bg-gray-200"></div>
-							</div>
+	<div class="space-y-8">
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Ticket class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">My Vouchers</h2>
+				<p class="text-secondary/60">Manage your available vouchers</p>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+			{#each [1, 2, 3, 4] as _}
+				<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+					<div class="flex items-center justify-between">
+						<div class="w-full space-y-3">
+							<div class="h-6 w-3/4 animate-pulse rounded bg-white/10"></div>
+							<div class="h-4 w-full animate-pulse rounded bg-white/10"></div>
 						</div>
-					{/each}
+					</div>
+					<div class="mt-4 flex items-center gap-2">
+						<div class="h-4 w-4 animate-pulse rounded bg-white/10"></div>
+						<div class="h-4 w-1/2 animate-pulse rounded bg-white/10"></div>
+					</div>
 				</div>
-			</CardContent>
-		</Card>
+			{/each}
+		</div>
 	</div>
 {:else if error}
 	<div class="space-y-6">
-		<Card class="border border-gray-200">
-			<CardHeader class="bg-[#2e6057]/5">
-				<CardTitle class="flex items-center gap-2">
-					<Ticket class="size-5 text-[#2e6057]" />
-					<span class="text-[#2e6057]">Voucher Saya</span>
-				</CardTitle>
-				<CardDescription>Kelola voucher yang Anda miliki</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div class="rounded-lg bg-red-50 p-4 text-red-500">
-					{error}
-				</div>
-			</CardContent>
-		</Card>
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Ticket class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">My Vouchers</h2>
+				<p class="text-secondary/60">Manage your available vouchers</p>
+			</div>
+		</div>
+
+		<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
+			{error}
+		</div>
 	</div>
 {:else}
-	<div class="space-y-6">
-		<Card class="border border-gray-200">
-			<CardHeader class="bg-[#2e6057]/5">
-				<CardTitle class="flex items-center gap-2">
-					<Ticket class="size-5 text-[#2e6057]" />
-					<span class="text-[#2e6057]">Voucher Saya</span>
-				</CardTitle>
-				<CardDescription>Kelola voucher yang Anda miliki</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{#if ownedVouchers.length === 0}
-					<div class="flex flex-col items-center justify-center py-12 text-center">
-						<div class="mb-4 rounded-full bg-[#e8ddd4] p-4">
-							<Ticket class="size-8 text-[#2e6057]" />
-						</div>
-						<h3 class="mb-2 text-lg font-semibold">Voucher Belum Tersedia</h3>
-						<p class="mb-4 text-sm text-gray-500">
-							Anda belum memiliki voucher yang aktif saat ini
-						</p>
-						<Button class="bg-[#2e6057] hover:bg-[#2e6057]/80" disabled>Cek Kembali Nanti</Button>
+	<div class="space-y-10" in:fade>
+		<section>
+			<div class="mb-6 flex items-center gap-3">
+				<div class="rounded-lg bg-senary/10 p-2">
+					<Sparkles class="size-5 text-senary" />
+				</div>
+				<h3 class="text-xl font-bold text-secondary">Available Vouchers</h3>
+			</div>
+
+			{#if ownedVouchers.length === 0}
+				<div
+					class="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center backdrop-blur-sm"
+				>
+					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
+						<Ticket class="size-8 text-secondary/40" />
 					</div>
-				{:else}
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						{#each ownedVouchers as voucher (voucher.voucherID)}
-							<div class="rounded-lg border border-gray-200 p-4">
-								<div class="flex items-center justify-between">
+					<h3 class="mb-2 text-lg font-semibold text-secondary">No vouchers available</h3>
+					<p class="text-sm text-secondary/50">You don't have any active vouchers at the moment.</p>
+				</div>
+			{:else}
+				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+					{#each ownedVouchers as voucher (voucher.voucherID)}
+						<div
+							class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-senary/30 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
+							in:fly={{ y: 20, duration: 400 }}
+						>
+							<div
+								class="absolute -top-10 -right-10 size-32 rounded-full bg-senary/5 blur-3xl transition-all group-hover:bg-senary/10"
+							></div>
+
+							<div class="relative z-10 flex h-full flex-col justify-between gap-4">
+								<div class="flex items-start justify-between gap-4">
 									<div>
-										<h4 class="font-medium">{voucher.title}</h4>
-										<p class="text-sm text-gray-600">{voucher.description}</p>
+										<h4
+											class="text-lg font-bold text-secondary transition-colors group-hover:text-senary"
+										>
+											{voucher.title}
+										</h4>
+										<p class="mt-1 text-sm text-secondary/60">{voucher.description}</p>
 									</div>
 									<div
-										class="rounded-lg bg-[#2e6057]/10 px-3 py-1 text-sm font-semibold text-[#2e6057]"
+										class="shrink-0 rounded-lg border border-senary/20 bg-senary/10 px-3 py-1 text-sm font-bold text-senary backdrop-blur-md"
 									>
 										{#if voucher.value}
 											{voucher.value} OFF
@@ -147,23 +148,24 @@
 										{/if}
 									</div>
 								</div>
-								<div class="mt-3 space-y-2">
-									<div class="flex items-center gap-2 text-sm text-gray-600">
-										<Calendar class="size-4" />
-										<span>Berlaku hingga: {formatDate(voucher.expireDate)}</span>
+
+								<div class="mt-2 space-y-2 border-t border-white/5 pt-4">
+									<div class="flex items-center gap-2 text-sm text-secondary/50">
+										<Calendar class="size-4 text-senary/50" />
+										<span>Valid until: {formatDate(voucher.expireDate)}</span>
 									</div>
 									{#if voucher.buy_date}
-										<div class="flex items-center gap-2 text-sm text-gray-600">
-											<Clock class="size-4" />
-											<span>Dibeli: {formatDate(voucher.buy_date)}</span>
+										<div class="flex items-center gap-2 text-sm text-secondary/50">
+											<Clock class="size-4 text-senary/50" />
+											<span>Purchased: {formatDate(voucher.buy_date)}</span>
 										</div>
 									{/if}
 								</div>
 							</div>
-						{/each}
-					</div>
-				{/if}
-			</CardContent>
-		</Card>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
 	</div>
 {/if}

@@ -8,22 +8,16 @@
 	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import {
-		Table,
-		TableBody,
-		TableCell,
-		TableHead,
-		TableHeader,
-		TableRow
-	} from '$lib/components/ui/table';
 	import { Separator } from '$lib/components/ui/separator';
-	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { authStore } from '$lib/stores/auth';
 	import { getCoinHistory, type CoinHistoryItem } from '$lib/api/customer/profile';
 	import type { UserProfile } from '$lib/stores/auth';
-	import { Coins, TrendingUp, TrendingDown } from 'lucide-svelte';
+	import { Coins, TrendingUp, TrendingDown, Sparkles } from 'lucide-svelte';
+	import { fade, fly } from 'svelte/transition';
+
+	let user: UserProfile | null = get(authStore).session?.user || null;
 
 	// State variables
 	type CoinTransaction = {
@@ -36,7 +30,6 @@
 	};
 
 	let coinTransactions: CoinTransaction[] = $state([]);
-	let user: UserProfile | null = $state(null);
 	let activeTab = $state<'all' | 'earned' | 'spent'>('all');
 	let loading = $state(true);
 	let error = $state<string | null>(null);
@@ -84,229 +77,222 @@
 
 {#if loading}
 	<div class="space-y-6">
-		<Card>
-			<CardHeader class="bg-[#2e6057]/5 p-6">
-				<div class="flex items-center gap-4">
-					<div class="rounded-lg bg-[#2e6057]/10 p-3">
-						<Coins class="size-8 text-[#2e6057]" />
-					</div>
-					<div>
-						<CardTitle class="text-2xl">Riwayat Koin</CardTitle>
-						<CardDescription>Kelola dan pantau aktivitas koin Anda</CardDescription>
-					</div>
-				</div>
-			</CardHeader>
-			<CardContent class="p-6 pt-0">
-				<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-					{#each [1, 2, 3] as _}
-						<Card class="border border-[#e5e7eb] bg-[#f9fafb]">
-							<CardContent class="p-4 text-center">
-								<div class="mx-auto mb-2 h-4 w-3/4 animate-pulse rounded bg-gray-200"></div>
-								<div class="mx-auto h-8 w-1/2 animate-pulse rounded bg-gray-200"></div>
-							</CardContent>
-						</Card>
-					{/each}
-				</div>
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Coins class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">Coin History</h2>
+				<p class="text-secondary/60">Manage and track your coin activity</p>
+			</div>
+		</div>
 
-				<Separator class="my-6" />
-
-				<div class="animate-pulse space-y-4">
-					{#each [1, 2, 3, 4] as _}
-						<div class="h-16 w-full rounded bg-gray-200"></div>
-					{/each}
+		<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+			{#each [1, 2, 3] as _}
+				<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+					<div class="mx-auto mb-2 h-4 w-3/4 animate-pulse rounded bg-white/10"></div>
+					<div class="mx-auto h-8 w-1/2 animate-pulse rounded bg-white/10"></div>
 				</div>
-			</CardContent>
-		</Card>
+			{/each}
+		</div>
+
+		<div class="animate-pulse space-y-4">
+			{#each [1, 2, 3, 4] as _}
+				<div class="h-20 w-full rounded-xl border border-white/10 bg-white/5"></div>
+			{/each}
+		</div>
 	</div>
 {:else if error}
 	<div class="space-y-6">
-		<Card>
-			<CardHeader class="bg-[#2e6057]/5 p-6">
-				<div class="flex items-center gap-4">
-					<div class="rounded-lg bg-[#2e6057]/10 p-3">
-						<Coins class="size-8 text-[#2e6057]" />
-					</div>
-					<div>
-						<CardTitle class="text-2xl">Riwayat Koin</CardTitle>
-						<CardDescription>Kelola dan pantau aktivitas koin Anda</CardDescription>
-					</div>
-				</div>
-			</CardHeader>
-			<CardContent class="p-6 pt-0">
-				<div class="rounded-lg bg-red-50 p-4 text-red-500">
-					{error}
-				</div>
-			</CardContent>
-		</Card>
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Coins class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">Coin History</h2>
+				<p class="text-secondary/60">Manage and track your coin activity</p>
+			</div>
+		</div>
+
+		<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
+			{error}
+		</div>
 	</div>
 {:else}
-	<div class="space-y-6">
-		<!-- Mini Navigation for Profile Sections - Now handled in layout -->
+	<div class="space-y-8" in:fade>
+		<!-- Header -->
+		<div class="flex items-center gap-4">
+			<div
+				class="rounded-xl border border-senary/20 bg-senary/10 p-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+			>
+				<Coins class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">Coin History</h2>
+				<p class="text-secondary/60">Manage and track your coin activity</p>
+			</div>
+		</div>
 
-		<!-- User Coin Summary Card -->
-		<Card>
-			<CardHeader class="bg-[#2e6057]/5 p-6">
-				<div class="flex items-center gap-4">
-					<div class="rounded-lg bg-[#2e6057]/10 p-3">
-						<Coins class="size-8 text-[#2e6057]" />
-					</div>
-					<div>
-						<CardTitle class="text-2xl">Riwayat Koin</CardTitle>
-						<CardDescription>Kelola dan pantau aktivitas koin Anda</CardDescription>
-					</div>
-				</div>
-			</CardHeader>
-			<CardContent class="p-6 pt-0">
-				<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-					<Card class="border border-[#e5e7eb] bg-[#f9fafb]">
-						<CardContent class="p-4 text-center">
-							<p class="text-sm text-[#6b7280]">Total Koin Saat Ini</p>
-							<p class="flex items-center justify-center gap-1 text-2xl font-bold text-[#2e6057]">
-								<Coins class="size-5" />
-								{get(authStore).session?.user?.coins || 0}
-							</p>
-						</CardContent>
-					</Card>
-					<Card class="border border-[#e5e7eb] bg-[#f9fafb]">
-						<CardContent class="p-4 text-center">
-							<p class="text-sm text-[#6b7280]">Koin Diperoleh Bulan Ini</p>
-							<p class="flex items-center justify-center gap-1 text-2xl font-bold text-[#10b981]">
-								<TrendingUp class="size-5" />
-								+{coinTransactions
-									.filter((t) => t.amount > 0)
-									.reduce((sum, t) => sum + t.amount, 0)}
-							</p>
-						</CardContent>
-					</Card>
-					<Card class="border border-[#e5e7eb] bg-[#f9fafb]">
-						<CardContent class="p-4 text-center">
-							<p class="text-sm text-[#6b7280]">Koin Digunakan Bulan Ini</p>
-							<p class="flex items-center justify-center gap-1 text-2xl font-bold text-[#ef4444]">
-								<TrendingDown class="size-5" />
-								-{Math.abs(
-									coinTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum + t.amount, 0)
-								)}
-							</p>
-						</CardContent>
-					</Card>
-				</div>
-
-				<Separator class="my-6" />
-
-				<!-- Tab Navigation -->
-				<div class="mb-6 grid w-full grid-cols-3">
-					<button
-						class="border-b pb-2 text-sm font-medium {activeTab === 'all'
-							? 'border-[#2e6057] text-[#2e6057]'
-							: 'border-transparent text-[#6b7280] hover:border-[#2e6057] hover:text-[#2e6057]'}"
-						onclick={() => (activeTab = 'all')}
+		<!-- Summary Cards -->
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+			<div
+				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-senary/30 hover:bg-white/10"
+			>
+				<div class="relative z-10 text-center">
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
+						Current Balance
+					</p>
+					<p
+						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-senary drop-shadow-lg"
 					>
-						Semua
-					</button>
-					<button
-						class="border-b pb-2 text-sm font-medium {activeTab === 'earned'
-							? 'border-[#2e6057] text-[#2e6057]'
-							: 'border-transparent text-[#6b7280] hover:border-[#2e6057] hover:text-[#2e6057]'}"
-						onclick={() => (activeTab = 'earned')}
-					>
-						Diperoleh
-					</button>
-					<button
-						class="border-b pb-2 text-sm font-medium {activeTab === 'spent'
-							? 'border-[#2e6057] text-[#2e6057]'
-							: 'border-transparent text-[#6b7280] hover:border-[#2e6057] hover:text-[#2e6057]'}"
-						onclick={() => (activeTab = 'spent')}
-					>
-						Digunakan
-					</button>
+						<Coins class="size-6" />
+						{user?.coins ?? 0}
+					</p>
 				</div>
+				<div
+					class="absolute -top-4 -right-4 size-24 rounded-full bg-senary/5 blur-2xl transition-all group-hover:bg-senary/10"
+				></div>
+			</div>
 
+			<div
+				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-green-500/30 hover:bg-white/10"
+			>
+				<div class="relative z-10 text-center">
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
+						Earned This Month
+					</p>
+					<p
+						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-green-400 drop-shadow-lg"
+					>
+						<TrendingUp class="size-6" />
+						+{Math.abs(
+							coinTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum + t.amount, 0)
+						)}
+					</p>
+				</div>
+				<div
+					class="absolute -top-4 -right-4 size-24 rounded-full bg-green-500/5 blur-2xl transition-all group-hover:bg-green-500/10"
+				></div>
+			</div>
+
+			<div
+				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-red-500/30 hover:bg-white/10"
+			>
+				<div class="relative z-10 text-center">
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
+						Spent This Month
+					</p>
+					<p
+						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-red-400 drop-shadow-lg"
+					>
+						<TrendingDown class="size-6" />
+						-{coinTransactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)}
+					</p>
+				</div>
+				<div
+					class="absolute -top-4 -right-4 size-24 rounded-full bg-red-500/5 blur-2xl transition-all group-hover:bg-red-500/10"
+				></div>
+			</div>
+		</div>
+
+		<!-- Tab Navigation -->
+		<div class="flex w-full border-b border-white/10">
+			<button
+				class="relative px-6 py-3 text-sm font-medium transition-all {activeTab === 'all'
+					? 'text-senary'
+					: 'text-secondary/60 hover:text-secondary'}"
+				onclick={() => (activeTab = 'all')}
+			>
+				All Transactions
 				{#if activeTab === 'all'}
-					<div class="space-y-3">
-						{#each coinTransactions as transaction (transaction.id)}
-							<div class="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50">
-								<div class="flex items-center gap-4">
-									<div class="rounded-lg bg-[#2e6057]/10 p-2">
-										{#if transaction.type === 'earned' || transaction.type === 'bonus'}
-											<TrendingUp class="size-5 text-[#10b981]" />
-										{:else}
-											<TrendingDown class="size-5 text-[#ef4444]" />
-										{/if}
-									</div>
-									<div>
-										<p class="font-medium">{transaction.description}</p>
-										<p class="text-sm text-gray-500">
-											{new Date(transaction.date).toLocaleString()}
-										</p>
-									</div>
-								</div>
-								<div class="text-right">
-									<p
-										class={transaction.amount > 0
-											? 'font-medium text-[#10b981]'
-											: 'font-medium text-[#ef4444]'}
-									>
-										{transaction.amount > 0 ? '+' : ''}{transaction.amount}
-									</p>
-									<p class="text-sm text-gray-500">Sisa: {transaction.balanceAfter}</p>
-								</div>
-							</div>
-						{/each}
-					</div>
-				{:else if activeTab === 'earned'}
-					<div class="space-y-3">
-						{#each coinTransactions as transaction (transaction.id)}
-							{#if transaction.type === 'earned' || transaction.type === 'bonus'}
-								<div
-									class="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
-								>
-									<div class="flex items-center gap-4">
-										<div class="rounded-lg bg-[#2e6057]/10 p-2">
-											<TrendingUp class="size-5 text-[#10b981]" />
-										</div>
-										<div>
-											<p class="font-medium">{transaction.description}</p>
-											<p class="text-sm text-gray-500">
-												{new Date(transaction.date).toLocaleString()}
-											</p>
-										</div>
-									</div>
-									<div class="text-right">
-										<p class="font-medium text-[#10b981]">+{transaction.amount}</p>
-										<p class="text-sm text-gray-500">Sisa: {transaction.balanceAfter}</p>
-									</div>
-								</div>
-							{/if}
-						{/each}
-					</div>
-				{:else if activeTab === 'spent'}
-					<div class="space-y-3">
-						{#each coinTransactions as transaction (transaction.id)}
-							{#if transaction.type === 'spent' || transaction.type === 'redeemed'}
-								<div
-									class="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
-								>
-									<div class="flex items-center gap-4">
-										<div class="rounded-lg bg-[#2e6057]/10 p-2">
-											<TrendingDown class="size-5 text-[#ef4444]" />
-										</div>
-										<div>
-											<p class="font-medium">{transaction.description}</p>
-											<p class="text-sm text-gray-500">
-												{new Date(transaction.date).toLocaleString()}
-											</p>
-										</div>
-									</div>
-									<div class="text-right">
-										<p class="font-medium text-[#ef4444]">-{Math.abs(transaction.amount)}</p>
-										<p class="text-sm text-gray-500">Sisa: {transaction.balanceAfter}</p>
-									</div>
-								</div>
-							{/if}
-						{/each}
-					</div>
+					<div
+						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
+						in:fade={{ duration: 200 }}
+					></div>
 				{/if}
-			</CardContent>
-		</Card>
+			</button>
+			<button
+				class="relative px-6 py-3 text-sm font-medium transition-all {activeTab === 'earned'
+					? 'text-senary'
+					: 'text-secondary/60 hover:text-secondary'}"
+				onclick={() => (activeTab = 'earned')}
+			>
+				Earned
+				{#if activeTab === 'earned'}
+					<div
+						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
+						in:fade={{ duration: 200 }}
+					></div>
+				{/if}
+			</button>
+			<button
+				class="relative px-6 py-3 text-sm font-medium transition-all {activeTab === 'spent'
+					? 'text-senary'
+					: 'text-secondary/60 hover:text-secondary'}"
+				onclick={() => (activeTab = 'spent')}
+			>
+				Spent
+				{#if activeTab === 'spent'}
+					<div
+						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
+						in:fade={{ duration: 200 }}
+					></div>
+				{/if}
+			</button>
+		</div>
+
+		<!-- Transactions List -->
+		<div class="space-y-3">
+			{#each coinTransactions.filter((t) => {
+				if (activeTab === 'all') return true;
+				if (activeTab === 'earned') return t.amount < 0;
+				if (activeTab === 'spent') return t.amount > 0;
+				return true;
+			}) as transaction (transaction.id)}
+				<div
+					class="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-all hover:border-white/10 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
+					in:fly={{ y: 10, duration: 300 }}
+				>
+					<div class="flex items-center gap-4">
+						<div
+							class="rounded-lg p-2 transition-colors {transaction.amount < 0
+								? 'bg-green-500/10 text-green-400 group-hover:bg-green-500/20'
+								: 'bg-red-500/10 text-red-400 group-hover:bg-red-500/20'}"
+						>
+							{#if transaction.amount > 0}
+								<TrendingUp class="size-5" />
+							{:else}
+								<TrendingDown class="size-5" />
+							{/if}
+						</div>
+						<div>
+							<p class="font-medium text-secondary transition-colors group-hover:text-white">
+								{transaction.description}
+							</p>
+							<p class="text-sm text-secondary/50">
+								{new Date(transaction.date).toLocaleString()}
+							</p>
+						</div>
+					</div>
+					<div class="text-right">
+						<p
+							class="text-lg font-bold {transaction.amount < 0 ? 'text-green-400' : 'text-red-400'}"
+						>
+							{transaction.amount < 0 ? '+' : '-'}{transaction.amount}
+						</p>
+						<!-- <p class="text-sm text-secondary/50">Balance: {transaction.balanceAfter}</p> -->
+					</div>
+				</div>
+			{/each}
+
+			{#if coinTransactions.length === 0}
+				<div class="flex flex-col items-center justify-center py-12 text-center text-secondary/50">
+					<div class="mb-4 rounded-full bg-white/5 p-4">
+						<Coins class="size-8 opacity-50" />
+					</div>
+					<p>No transactions found</p>
+				</div>
+			{/if}
+		</div>
 	</div>
 {/if}
