@@ -36,7 +36,6 @@
 		{ day: 'Minggu', time: '17:00 - 21:00' }
 	];
 
-	
 	const serviceData = [
 		{
 			id: '1',
@@ -60,8 +59,6 @@
 
 	// Note: I've removed the commented-out Google Maps code for clarity.
 </script>
-
-<CustomCursor />
 
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<section class="relative h-screen w-full overflow-hidden">
@@ -163,7 +160,7 @@
 		<div class="container mx-auto px-4">
 			<div class="mb-16 flex flex-col items-center text-center">
 				<Sparkles class="mb-4 h-8 w-8 text-senary" />
-				<h2 class="mb-4 text-5xl font-bold text-secondary">The Experience</h2>
+				<h2 class="mb-4 text-5xl font-bold text-secondary">Tentang Barber</h2>
 				<div class="h-1 w-24 rounded-full bg-senary/50"></div>
 			</div>
 
@@ -184,31 +181,32 @@
 				</div>
 				<div class="space-y-8 text-lg leading-relaxed font-light text-secondary/80">
 					<p>
-						<span class="float-left mr-2 font-serif text-4xl text-senary">W</span>elcome to a
-						sanctuary of style where precision meets luxury. At Three Lights, we believe that a
-						haircut is not just a service, but a ritual of refinement.
+						<span class="float-left mr-4 font-serif text-5xl text-senary">T</span>hree Lights
+						Barbershop adalah barbershop yang berfokus pada pelayanan potong rambut pria yang rapi,
+						nyaman, dan sesuai karakter setiap pelanggan. Dengan suasana tempat yang santai dan
+						barber yang berpengalaman, kami berkomitmen untuk memberikan hasil terbaik melalui
+						konsultasi gaya, pemahaman bentuk wajah, serta teknik potong yang tepat.
 					</p>
 					<p>
-						Our master barbers blend traditional techniques with modern aesthetics to craft a look
-						that is uniquely yours. Immerse yourself in an atmosphere of sophistication, designed
-						for the modern gentleman.
+						Kami percaya bahwa potongan rambut bukan hanya soal gaya, tetapi juga tentang
+						kepercayaan diri. Karena itu, Three Lights Barbershop hadir untuk memberikan pengalaman
+						potong rambut yang menyenangkan, pelayanan yang ramah, dan hasil yang memuaskan bagi
+						setiap pelanggan.
 					</p>
-					<button
-						class="rounded-full border border-senary px-8 py-3 text-sm font-medium tracking-widest text-senary uppercase transition-all duration-300 hover:bg-senary hover:text-primary"
-					>
-						Read Our Story
-					</button>
 				</div>
 			</div>
 
 			<div class="mt-32 grid grid-cols-1 gap-12 md:grid-cols-1">
 				<Card
-					class="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-12 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10"
+					class=" group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-12 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10"
 				>
 					<div
 						class="absolute top-0 right-0 p-12 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12"
 					>
-						<Eye class="h-64 w-64 text-senary" stroke-width="0.5" />
+						<Eye
+							class="absolute top-1/2 left-[12.5%] z-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 text-senary"
+							stroke-width="1"
+						/>
 					</div>
 
 					<CardHeader
@@ -222,9 +220,8 @@
 						<p
 							class="col-span-3 border-l border-senary/20 pl-8 text-left text-xl leading-relaxed font-light text-secondary/80"
 						>
-							To redefine the standard of male grooming by creating an environment where artistry,
-							luxury, and relaxation converge. We envision a world where every man walks out with
-							confidence and class.
+							“Menjadi barbershop yang memberikan pelayanan rapi, nyaman, dan tepat bagi setiap
+							pelanggan dengan memberikan hasil potongan yang sesuai kebutuhan.”
 						</p>
 					</CardHeader>
 				</Card>
@@ -235,17 +232,22 @@
 					<div
 						class="absolute bottom-0 left-0 p-12 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-12"
 					>
-						<Goal class="h-64 w-64 text-senary" stroke-width="0.5" />
+						<Goal
+							class="absolute top-1/2 left-[87.5%] z-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 text-senary"
+							stroke-width="1"
+						/>
 					</div>
 					<CardHeader
-						class="relative z-10 col-span-1 grid grid-cols-1 items-center gap-12 md:grid-cols-4"
+						class=" relative z-10 col-span-1 grid grid-cols-1 items-center gap-12 md:grid-cols-4"
 					>
 						<p
 							class="order-2 col-span-3 border-r border-senary/20 pr-8 text-left text-xl leading-relaxed font-light text-secondary/80 md:order-1"
 						>
-							Our mission is to provide an unparalleled grooming experience through meticulous
-							attention to detail, premium products, and a commitment to excellence. We strive to be
-							more than a barbershop; we are a destination.
+							1. Memberikan layanan potong rambut yang rapi dan sesuai karakter wajah pelanggan.
+							<br />2. Meningkatkan kualitas pelayanan melalui rekomendasi model rambut yang lebih
+							personal.
+							<br />3. Menjaga kenyamanan dan kepuasan pelanggan melalui pelayanan yang ramah dan
+							profesional.
 						</p>
 						<h3
 							class="order-1 col-span-1 bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-5xl font-bold text-transparent md:order-2"

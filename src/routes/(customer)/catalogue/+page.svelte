@@ -92,8 +92,6 @@
 	let selectedService = $state<(typeof catalogues)[0] | null>(null);
 </script>
 
-<CustomCursor />
-
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Hero Section -->
 	<section class="relative h-[60vh] w-full overflow-hidden">

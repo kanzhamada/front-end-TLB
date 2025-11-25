@@ -35,11 +35,60 @@
 	}
 
 	// Menu items
+	// Menu items
 	const items = [
 		{
 			title: 'Dashboard',
-			url: '/admin',
+			url: '/a1-portal-a16-tlb',
 			icon: HouseIcon,
+			tooltip: 'Go to Dashboard'
+		},
+		{
+			title: 'Reservation',
+			url: '/a1-portal-a16-tlb/Reservation',
+			icon: CalendarCheckIcon,
+			tooltip: 'Manage Reservations'
+		},
+		{
+			title: 'Catalogue',
+			url: '/a1-portal-a16-tlb/Catalogue',
+			icon: ImagesIcon,
+			tooltip: 'View Catalogue'
+		},
+		{
+			title: 'Barber',
+			url: '/a1-portal-a16-tlb/Barber',
+			icon: UserRoundIcon,
+			tooltip: 'Manage Barbers'
+		},
+		{
+			title: 'Service',
+			url: '/a1-portal-a16-tlb/Service',
+			icon: ScissorsIcon,
+			tooltip: 'Manage Services'
+		},
+		{
+			title: 'Operational Time',
+			url: '/a1-portal-a16-tlb/OperationalTime',
+			icon: CalendarClockIcon,
+			tooltip: 'Set Operational Hours'
+		},
+		{
+			title: 'Chat',
+			url: '/a1-portal-a16-tlb/Chat',
+			icon: MessageCircleIcon,
+			tooltip: 'Chat with Customers'
+		},
+		{
+			title: 'Voucher',
+			url: '/a1-portal-a16-tlb/Voucher',
+			icon: TicketsIcon,
+			tooltip: 'Manage Vouchers'
+		}
+	];
+
+	// Get unread count value for display
+	let unreadCount = $state(0);
 
 	// Subscribe to the unreadChatCount store
 	$effect(() => {

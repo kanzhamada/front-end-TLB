@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/api/auth';
 	import { authStore } from '$lib/stores/auth';
@@ -27,7 +27,7 @@
 		cancel(); // Prevent default form submission
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
-		
+
 		performLogin(email, password);
 	};
 
@@ -69,60 +69,194 @@
 			submitting = false;
 		}
 	}
+</script> -->
+
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { login } from '$lib/api/auth';
+	import { authStore } from '$lib/stores/auth';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { toast } from 'svelte-sonner';
+	import { browser } from '$app/environment';
+	import { fade, fly } from 'svelte/transition';
+	import { Sparkles } from 'lucide-svelte';
+
+	let email = $state('');
+	let password = $state('');
+	let submitting = $state(false);
+	let formError = $state<string | null>(null);
+
+	function handleError(message: string) {
+		formError = message;
+		toast.error(message);
+	}
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		if (submitting) return;
+
+		formError = null;
+		submitting = true;
+
+		try {
+			console.log('Attempting login with:', { email, password });
+
+			const response = await login({ email, password });
+			console.log('Login response:', response);
+
+			const success = response.success ?? response.sucess ?? false;
+
+			if (!success || !response.data?.session) {
+				const errorMessage = response.message ?? 'Gagal masuk. Coba lagi.';
+				handleError(errorMessage);
+				console.log('Login failed:', response);
+				return;
+			}
+
+			authStore.setSession(response.data.session);
+			toast.success('Berhasil masuk!');
+			await goto('/');
+		} catch (error) {
+			console.error('Login error:', error);
+
+			if (browser) {
+				const customError = error as { response?: { message?: string } };
+				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
+				handleError(message);
+			} else {
+				handleError('Tidak dapat masuk. Coba lagi.');
+			}
+		} finally {
+			submitting = false;
+		}
+	}
 </script>
 
-<section class="flex min-h-screen items-center justify-center bg-[#e8ddd4] px-4 py-12">
-	<div class="w-full max-w-5xl rounded-3xl bg-white shadow-2xl">
-		<div class="grid gap-0 md:grid-cols-2">
-			<div class="relative hidden overflow-hidden rounded-l-3xl bg-[#032B24] md:block">
-				<div
-					class="absolute inset-0 bg-[url('/three_lights_barbershop_logo.svg')] bg-contain bg-center bg-no-repeat opacity-10"
-				></div>
-				<div class="relative flex h-full flex-col justify-between p-10 text-[#e8ddd4]">
-					<div>
-						<h2 class="text-4xl leading-tight font-bold">Selamat Datang Kembali!</h2>
-						<p class="mt-4 max-w-sm text-base text-[#e8ddd4]/80">
-							Masuk untuk mengatur reservasi Anda dan nikmati pelayanan terbaik dari Three Lights
-							Barbershop.
-						</p>
-					</div>
-					<div>
-						<p class="text-sm tracking-wide text-[#e8ddd4]/60 uppercase">Belum punya akun?</p>
-						<a
-							class="mt-2 inline-flex items-center text-lg font-semibold text-[#fcb13f] underline-offset-4 hover:underline"
-							href="/auth/register">Daftar Sekarang</a
-						>
-					</div>
-				</div>
+<div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
+	<!-- Background -->
+	<div
+		class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/30 via-transparent to-primary/90"
+	>
+		<!-- <img
+			src="https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+			alt=""
+			class="h-full w-full object-cover opacity-25"
+		/> -->
+	</div>
+
+	<div
+		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12"
+		in:fade={{ duration: 1000 }}
+	>
+		<!-- Logo/Brand -->
+		<div
+			class="mb-8 flex flex-col items-center gap-4 text-center"
+			in:fly={{ y: -20, duration: 800, delay: 200 }}
+		>
+			<div class="flex items-center gap-4">
+				<div class="h-[1px] w-12 bg-senary"></div>
+				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">
+					Three Lights Barbershop
+				</p>
+				<div class="h-[1px] w-12 bg-senary"></div>
+			</div>
+			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
+				Welcome <span class="text-gradient-gold">Back</span>
+			</h1>
+		</div>
+
+		<!-- Login Card -->
+		<div
+			class="w-full max-w-md transform rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10"
+			in:fly={{ y: 20, duration: 800, delay: 400 }}
+		>
+			<div class="mb-8 text-center">
+				<img
+					src="/three_lights_barbershop_logo.svg"
+					alt="three lights barbershop logo"
+					class="mx-auto mb-4"
+				/>
+				<p class="text-lg font-light text-secondary/80">Sign in to manage your reservations</p>
 			</div>
 
-			<div class="p-6 md:p-10">
-				<Card class="border-0 shadow-none">
-					<CardHeader class="space-y-2 p-0">
-						<CardTitle class="text-3xl font-semibold text-[#032B24]">Masuk</CardTitle>
-						<CardDescription class="text-base text-[#032B24]/70">
-							Mohon masukkan email dan kata sandi Anda untuk melanjutkan reservasi.
-						</CardDescription>
-					</CardHeader>
+			<form class="space-y-6" onsubmit={handleSubmit}>
+				<div class="space-y-2">
+					<Label for="email" class="text-sm font-medium text-senary">Email</Label>
+					<Input
+						id="email"
+						type="email"
+						placeholder="name@example.com"
+						bind:value={email}
+						required
+						autocomplete="email"
+						disabled={submitting}
+						class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
+					/>
+				</div>
 
-					<CardContent class="space-y-6 px-0 py-6">
-						<LoginForm 
-							actionUrl="?/login" 
-							showRegister={false} 
-							bind:submitting 
-							bind:formError 
-							enhanceHandler={handleLogin}
-						/>
-					</CardContent>
+				<CardContent class="space-y-6 px-0 py-6">
+					<LoginForm
+						actionUrl="?/login"
+						showRegister={false}
+						bind:submitting
+						bind:formError
+						enhanceHandler={handleLogin}
+					/>
+				</CardContent>
 
-					<CardFooter class="flex flex-col items-start gap-2 px-0 py-0">
-						<p class="text-sm text-[#032B24]/70">
-							Belum punya akun?
-							<a class="text-[#fcb13f] hover:underline" href="/auth/register">Daftar sekarang</a>
-						</p>
-					</CardFooter>
-				</Card>
+				<CardFooter class="flex flex-col items-start gap-2 px-0 py-0">
+					<p class="text-sm text-[#032B24]/70">
+						Belum punya akun?
+						<a class="text-[#fcb13f] hover:underline" href="/auth/register">Daftar sekarang</a>
+					</p>
+				</CardFooter>
+
+				<div class="space-y-2">
+					<div class="flex items-center justify-between">
+						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
+						<!-- Optional: Add Forgot Password link here later -->
+					</div>
+					<Input
+						id="password"
+						type="password"
+						placeholder="Enter your password"
+						bind:value={password}
+						required
+						autocomplete="current-password"
+						disabled={submitting}
+						class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
+					/>
+				</div>
+
+				{#if formError}
+					<div class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-center" in:fade>
+						<p class="text-sm font-medium text-red-400">{formError}</p>
+					</div>
+				{/if}
+
+				<Button
+					type="submit"
+					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
+					disabled={submitting}
+				>
+					{submitting ? 'Signing In...' : 'Sign In'}
+				</Button>
+			</form>
+
+			<div class="mt-8 text-center">
+				<p class="text-sm text-secondary/60">
+					Don't have an account?
+					<a
+						href="/auth/register"
+						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
+					>
+						Register here
+					</a>
+				</p>
+				>>>>>>> 48b37be (redesign):src/routes/auth/login/+page.svelte
 			</div>
 		</div>
 	</div>
-</section>
+</div>

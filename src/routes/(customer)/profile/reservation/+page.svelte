@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { authStore } from '$lib/stores/auth';
+	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
 	import {
 		getReservations,
 		type ReservationResponse,
@@ -20,13 +21,6 @@
 		AlertDialogTitle
 	} from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import {
 		Calendar,
@@ -38,9 +32,12 @@
 		CreditCard,
 		Eye,
 		AlertCircle,
-		MessageCircle
+		MessageCircle,
+		Sparkles,
+		History
 	} from 'lucide-svelte';
 	import CustomerChatModal from '$lib/components/User/Chat/CustomerChatModal.svelte';
+	import { fade, fly } from 'svelte/transition';
 
 	let reservations: ReservationResponse[] = $state([]);
 	let activeReservations: ReservationResponse[] = $state([]);
@@ -101,23 +98,23 @@
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Menunggu';
+				return 'Waiting';
 			case 'onGoing':
-				return 'Sedang Berlangsung';
+				return 'On Going';
 			case 'waitingForPayment':
-				return 'Menunggu Pembayaran';
+				return 'Waiting Payment';
 			case 'completed':
-				return 'Selesai';
+				return 'Completed';
 			case 'canceledByUser':
-				return 'Dibatalkan oleh Pengguna';
+				return 'Canceled by User';
 			case 'canceledByAdmin':
-				return 'Dibatalkan oleh Admin';
+				return 'Canceled by Admin';
 			case 'declined':
-				return 'Ditolak';
+				return 'Declined';
 			case 'expired':
-				return 'Kedaluwarsa';
+				return 'Expired';
 			case 'requestToReschedule':
-				return 'Permintaan Reschedule';
+				return 'Reschedule Request';
 			default:
 				return status;
 		}
@@ -126,22 +123,22 @@
 	function getStatusColor(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'bg-blue-100 text-blue-800';
+				return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
 			case 'onGoing':
-				return 'bg-yellow-100 text-yellow-800';
+				return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
 			case 'waitingForPayment':
-				return 'bg-orange-100 text-orange-800';
+				return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
 			case 'completed':
-				return 'bg-green-100 text-green-800';
+				return 'bg-green-500/20 text-green-300 border-green-500/30';
 			case 'canceledByUser':
 			case 'canceledByAdmin':
 			case 'declined':
 			case 'expired':
-				return 'bg-red-100 text-red-800';
+				return 'bg-red-500/20 text-red-300 border-red-500/30';
 			case 'requestToReschedule':
-				return 'bg-purple-100 text-purple-800';
+				return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
 			default:
-				return 'bg-gray-100 text-gray-800';
+				return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
 		}
 	}
 
@@ -224,134 +221,146 @@
 </script>
 
 {#if loading}
-	<div class="space-y-6">
-		<Card class="border border-gray-200">
-			<CardHeader>
-				<CardTitle class="flex items-center gap-2">
-					<Calendar class="size-5" />
-					<span>Reservasi Aktif</span>
-				</CardTitle>
-				<CardDescription>Memuat data reservasi Anda</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{#each [1, 2] as _}
-					<div class="mb-4 rounded-lg border border-gray-200 p-4 last:mb-0">
-						<div class="flex flex-wrap items-center justify-between">
-							<div>
-								<div class="h-4 w-32 rounded bg-gray-200"></div>
-								<div class="mt-2 flex items-center gap-2">
-									<Calendar class="size-4 text-gray-500" />
-									<div class="h-3 w-24 rounded bg-gray-200"></div>
-								</div>
-								<div class="mt-1 flex items-center gap-2">
-									<User class="size-4 text-gray-500" />
-									<div class="h-3 w-24 rounded bg-gray-200"></div>
-								</div>
-								<div class="mt-1 flex items-center gap-2">
-									<Scissors class="size-4 text-gray-500" />
-									<div class="h-3 w-24 rounded bg-gray-200"></div>
-								</div>
-							</div>
-							<div class="mt-2 flex flex-wrap gap-2 sm:mt-0">
-								<div class="h-6 w-16 rounded-full bg-gray-200"></div>
-							</div>
+	<div class="space-y-8">
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Calendar class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">Reservations</h2>
+				<p class="text-secondary/60">Manage your appointments</p>
+			</div>
+		</div>
+
+		<div class="space-y-4">
+			{#each [1, 2] as _}
+				<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+					<div class="flex flex-wrap items-center justify-between gap-4">
+						<div class="space-y-3">
+							<div class="h-6 w-32 animate-pulse rounded bg-white/10"></div>
+							<div class="h-4 w-48 animate-pulse rounded bg-white/10"></div>
+							<div class="h-4 w-40 animate-pulse rounded bg-white/10"></div>
 						</div>
-						<div class="mt-3 flex flex-wrap gap-2">
-							<div class="h-8 w-24 rounded-md bg-gray-200"></div>
-						</div>
+						<div class="h-8 w-24 animate-pulse rounded-full bg-white/10"></div>
 					</div>
-				{/each}
-			</CardContent>
-		</Card>
+					<div class="mt-6 flex gap-3">
+						<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
+						<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 {:else if error}
 	<div class="space-y-6">
-		<Card class="border border-gray-200">
-			<CardContent class="pt-6">
-				<div class="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700">
-					<AlertCircle class="size-5" />
-					<span>{error}</span>
-				</div>
-			</CardContent>
-		</Card>
+		<div class="flex items-center gap-4">
+			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+				<Calendar class="size-8 text-senary" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-secondary">Reservations</h2>
+				<p class="text-secondary/60">Manage your appointments</p>
+			</div>
+		</div>
+
+		<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
+			<div class="flex items-center justify-center gap-2">
+				<AlertCircle class="size-5" />
+				<span>{error}</span>
+			</div>
+		</div>
 	</div>
 {:else}
-	<div class="space-y-6">
+	<div class="space-y-10" in:fade>
 		<!-- Active Reservations Section -->
-		<Card class="border border-gray-200">
-			<CardHeader>
-				<CardTitle class="flex items-center gap-2">
-					<Calendar class="size-5" />
-					<span>Reservasi Aktif</span>
-				</CardTitle>
-				<CardDescription>Reservasi yang sedang dalam proses</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{#if activeReservations.length === 0}
-					<div class="flex flex-col items-center justify-center py-12 text-center">
-						<div class="mb-4 rounded-full bg-[#e8ddd4] p-4">
-							<Calendar class="size-8 text-[#2e6057]" />
-						</div>
-						<h3 class="mb-2 text-lg font-semibold">Tidak ada reservasi aktif</h3>
-						<p class="text-sm text-gray-500">Anda belum memiliki reservasi aktif saat ini</p>
+		<section>
+			<div class="mb-6 flex items-center gap-3">
+				<div class="rounded-lg bg-senary/10 p-2">
+					<Sparkles class="size-5 text-senary" />
+				</div>
+				<h3 class="text-xl font-bold text-secondary">Active Reservations</h3>
+			</div>
+
+			{#if activeReservations.length === 0}
+				<div
+					class="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center backdrop-blur-sm"
+				>
+					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
+						<Calendar class="size-8 text-secondary/40" />
 					</div>
-				{:else}
-					<div class="space-y-4">
-						{#each activeReservations as reservation (reservation.reservationID)}
-							<div class="rounded-lg border border-gray-200 p-5 hover:bg-gray-50">
-								<div class="flex flex-wrap items-center justify-between">
+					<h3 class="mb-2 text-lg font-semibold text-secondary">No active reservations</h3>
+					<p class="text-sm text-secondary/50">You don't have any upcoming appointments.</p>
+
+					<ReservationSheet
+						triggerClass="mt-6 bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:bg-senary/90"
+						triggerText="Reservasi Sekarang"
+					/>
+				</div>
+			{:else}
+				<div class="space-y-4">
+					{#each activeReservations as reservation (reservation.reservationID)}
+						<div
+							class="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-senary/30 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
+							in:fly={{ y: 20, duration: 400 }}
+						>
+							<div
+								class="absolute -top-10 -right-10 size-40 rounded-full bg-senary/5 blur-3xl transition-all group-hover:bg-senary/10"
+							></div>
+
+							<div class="relative z-10 flex flex-wrap items-start justify-between gap-4">
+								<div class="space-y-4">
 									<div>
-										<h3 class="flex items-center gap-2 font-semibold text-gray-800">
-											<Scissors class="size-4 text-[#2e6057]" />
+										<h3 class="flex items-center gap-2 text-lg font-bold text-secondary">
+											<Scissors class="size-5 text-senary" />
 											#{reservation.invoice || reservation.reservationID}
 										</h3>
-										<div class="mt-2 space-y-1">
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Calendar class="size-4" />
-												<span>{reservation.dateTime.date}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Clock class="size-4" />
-												<span>{reservation.dateTime.hour}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<User class="size-4" />
-												<span>Barber: {reservation.barber.name}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Scissors class="size-4" />
-												<span>Layanan: {reservation.service.name}</span>
-											</div>
-										</div>
-									</div>
-									<div class="mt-2 flex flex-wrap gap-2 sm:mt-0">
 										<span
-											class="rounded-full px-3 py-1 text-xs font-medium {getStatusColor(
+											class="mt-2 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium backdrop-blur-md {getStatusColor(
 												reservation.status
 											)}"
 										>
 											{getStatusText(reservation.status)}
 										</span>
 									</div>
+
+									<div class="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+										<div class="flex items-center gap-2 text-sm text-secondary/70">
+											<Calendar class="size-4 text-senary/70" />
+											<span>{reservation.dateTime.date}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/70">
+											<Clock class="size-4 text-senary/70" />
+											<span>{reservation.dateTime.hour}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/70">
+											<User class="size-4 text-senary/70" />
+											<span>Barber: {reservation.barber.name}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/70">
+											<Scissors class="size-4 text-senary/70" />
+											<span>Service: {reservation.service.name}</span>
+										</div>
+									</div>
 								</div>
-								<div class="mt-4 flex flex-wrap gap-2">
+
+								<div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
 									{#if reservation.status === 'waiting'}
 										<Button
 											variant="outline"
-											class="border-red-500 text-red-500 hover:bg-red-50"
+											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
 											onclick={() => handleCancelReservation(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16" />
+												<Skeleton class="h-4 w-16 bg-white/10" />
 											{:else}
 												<X class="mr-2 size-4" />
-												Batalkan
+												Cancel
 											{/if}
 										</Button>
 										<Button
 											variant="outline"
-											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
+											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
 											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
@@ -360,12 +369,12 @@
 									{:else if reservation.status === 'onGoing'}
 										<Button
 											variant="outline"
-											class="border-blue-500 text-blue-500 hover:bg-blue-50"
+											class="border-blue-500/30 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10"
 											onclick={() => handleRescheduleReservation(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-20" />
+												<Skeleton class="h-4 w-20 bg-white/10" />
 											{:else}
 												<RotateCcw class="mr-2 size-4" />
 												Reschedule
@@ -373,20 +382,20 @@
 										</Button>
 										<Button
 											variant="outline"
-											class="border-red-500 text-red-500 hover:bg-red-50"
+											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
 											onclick={() => handleCancelReservation(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16" />
+												<Skeleton class="h-4 w-16 bg-white/10" />
 											{:else}
 												<X class="mr-2 size-4" />
-												Batalkan
+												Cancel
 											{/if}
 										</Button>
 										<Button
 											variant="outline"
-											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
+											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
 											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
@@ -395,20 +404,20 @@
 									{:else if reservation.status === 'requestToReschedule'}
 										<Button
 											variant="outline"
-											class="border-red-500 text-red-500 hover:bg-red-50"
+											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
 											onclick={() => handleCancelReservation(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16" />
+												<Skeleton class="h-4 w-16 bg-white/10" />
 											{:else}
 												<X class="mr-2 size-4" />
-												Batalkan
+												Cancel
 											{/if}
 										</Button>
 										<Button
 											variant="outline"
-											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
+											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
 											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
@@ -416,33 +425,33 @@
 										</Button>
 									{:else if reservation.status === 'waitingForPayment'}
 										<Button
-											class="bg-green-500 text-white hover:bg-green-600"
+											class="bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-500"
 											onclick={() => handlePayNow(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-20" />
+												<Skeleton class="h-4 w-20 bg-white/20" />
 											{:else}
 												<CreditCard class="mr-2 size-4" />
-												Bayar Sekarang
+												Pay Now
 											{/if}
 										</Button>
 										<Button
 											variant="outline"
-											class="border-red-500 text-red-500 hover:bg-red-50"
+											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
 											onclick={() => handleCancelReservation(reservation)}
 											disabled={processingReservationId === reservation.reservationID}
 										>
 											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16" />
+												<Skeleton class="h-4 w-16 bg-white/10" />
 											{:else}
 												<X class="mr-2 size-4" />
-												Batalkan
+												Cancel
 											{/if}
 										</Button>
 										<Button
 											variant="outline"
-											class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
+											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
 											onclick={() => openChatModal(reservation)}
 										>
 											<MessageCircle class="mr-2 size-4" />
@@ -451,120 +460,129 @@
 									{/if}
 								</div>
 							</div>
-						{/each}
-					</div>
-				{/if}
-			</CardContent>
-		</Card>
-
-		<!-- Customer Chat Modal -->
-		<CustomerChatModal
-			reservation={selectedReservation}
-			open={showChatModal}
-			onClose={() => (showChatModal = false)}
-		/>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
 
 		<!-- Reservation History Section -->
-		<Card class="border border-gray-200">
-			<CardHeader>
-				<CardTitle class="flex items-center gap-2">
-					<Calendar class="size-5" />
-					<span>Riwayat Reservasi</span>
-				</CardTitle>
-				<CardDescription>Reservasi yang telah selesai atau dibatalkan</CardDescription>
-			</CardHeader>
-			<CardContent>
-				{#if historyReservations.length === 0}
-					<div class="flex flex-col items-center justify-center py-12 text-center">
-						<div class="mb-4 rounded-full bg-[#e8ddd4] p-4">
-							<Calendar class="size-8 text-[#2e6057]" />
-						</div>
-						<h3 class="mb-2 text-lg font-semibold">Tidak ada riwayat reservasi</h3>
-						<p class="text-sm text-gray-500">Anda belum memiliki riwayat reservasi</p>
+		<section>
+			<div class="mb-6 flex items-center gap-3">
+				<div class="rounded-lg bg-white/5 p-2">
+					<History class="size-5 text-secondary/70" />
+				</div>
+				<h3 class="text-xl font-bold text-secondary">History</h3>
+			</div>
+
+			{#if historyReservations.length === 0}
+				<div
+					class="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center backdrop-blur-sm"
+				>
+					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
+						<History class="size-8 text-secondary/40" />
 					</div>
-				{:else}
-					<div class="space-y-4">
-						{#each historyReservations as reservation (reservation.reservationID)}
-							<div class="rounded-lg border border-gray-200 p-5 hover:bg-gray-50">
-								<div class="flex flex-wrap items-center justify-between">
+					<h3 class="mb-2 text-lg font-semibold text-secondary">No history found</h3>
+					<p class="text-sm text-secondary/50">You don't have any past reservations.</p>
+				</div>
+			{:else}
+				<div class="space-y-4">
+					{#each historyReservations as reservation (reservation.reservationID)}
+						<div
+							class="group rounded-2xl border border-white/5 bg-white/5 p-6 transition-all hover:border-white/10 hover:bg-white/10"
+						>
+							<div class="flex flex-wrap items-center justify-between gap-4">
+								<div class="space-y-4">
 									<div>
-										<h3 class="flex items-center gap-2 font-semibold text-gray-800">
-											<Scissors class="size-4 text-[#2e6057]" />
+										<h3 class="flex items-center gap-2 font-semibold text-secondary/80">
+											<Scissors class="size-4 text-senary/50" />
 											#{reservation.invoice || reservation.reservationID}
 										</h3>
-										<div class="mt-2 space-y-1">
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Calendar class="size-4" />
-												<span>{reservation.dateTime.date}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Clock class="size-4" />
-												<span>{reservation.dateTime.hour}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<User class="size-4" />
-												<span>Barber: {reservation.barber.name}</span>
-											</div>
-											<div class="flex items-center gap-2 text-sm text-gray-600">
-												<Scissors class="size-4" />
-												<span>Layanan: {reservation.service.name}</span>
-											</div>
-										</div>
-									</div>
-									<div class="mt-2 flex flex-wrap gap-2 sm:mt-0">
 										<span
-											class="rounded-full px-3 py-1 text-xs font-medium {getStatusColor(
+											class="mt-2 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium {getStatusColor(
 												reservation.status
 											)}"
 										>
 											{getStatusText(reservation.status)}
 										</span>
 									</div>
+
+									<div class="grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2">
+										<div class="flex items-center gap-2 text-sm text-secondary/60">
+											<Calendar class="size-3" />
+											<span>{reservation.dateTime.date}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/60">
+											<Clock class="size-3" />
+											<span>{reservation.dateTime.hour}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/60">
+											<User class="size-3" />
+											<span>Barber: {reservation.barber.name}</span>
+										</div>
+										<div class="flex items-center gap-2 text-sm text-secondary/60">
+											<Scissors class="size-3" />
+											<span>Service: {reservation.service.name}</span>
+										</div>
+									</div>
 								</div>
-								<div class="mt-4">
+
+								<div>
 									<Button
 										variant="outline"
-										class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
+										class="border-white/10 text-secondary/70 hover:bg-white/10 hover:text-secondary"
 										onclick={() => goto(`/profile/reservation/${reservation.reservationID}`)}
 									>
 										<Eye class="mr-2 size-4" />
-										Lihat Detail
+										Details
 									</Button>
 								</div>
 							</div>
-						{/each}
-					</div>
-				{/if}
-			</CardContent>
-		</Card>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
 	</div>
+	<CustomerChatModal
+		reservation={selectedReservation}
+		open={showChatModal}
+		onClose={() => (showChatModal = false)}
+	/>
 {/if}
+<!-- Customer Chat Modal -->
 
 <!-- Cancel Reservation Dialog -->
 <AlertDialog open={showCancelDialog}>
-	<AlertDialogContent>
+	<AlertDialogContent class="border border-white/10 bg-[#05120e] text-secondary">
 		<AlertDialogHeader>
-			<AlertDialogTitle>Konfirmasi Pembatalan</AlertDialogTitle>
-			<AlertDialogDescription>
+			<AlertDialogTitle class="text-white">Cancel Reservation?</AlertDialogTitle>
+			<AlertDialogDescription class="text-secondary/70">
 				{#if showDownPaymentWarning}
-					<div class="mt-2 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
-						<p>Peringatan: Pembayaran awal tidak dapat dikembalikan.</p>
+					<div
+						class="mt-2 mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300"
+					>
+						<p>Warning: Down payment cannot be refunded.</p>
 					</div>
 				{/if}
-				Apakah Anda yakin ingin membatalkan reservasi ini?
+				Are you sure you want to cancel this reservation? This action cannot be undone.
 			</AlertDialogDescription>
 		</AlertDialogHeader>
 		<AlertDialogFooter>
 			<AlertDialogCancel
+				class="border-white/10 bg-transparent text-secondary hover:bg-white/10 hover:text-white"
 				onclick={() => {
 					showCancelDialog = false;
 					reservationToCancel = null;
 				}}
 			>
-				Batal
+				No, Keep It
 			</AlertDialogCancel>
-			<AlertDialogAction class="bg-red-600 hover:bg-red-700" onclick={confirmCancelReservation}>
-				Konfirmasi Pembatalan
+			<AlertDialogAction
+				class="bg-red-600 text-white hover:bg-red-700"
+				onclick={confirmCancelReservation}
+			>
+				Yes, Cancel It
 			</AlertDialogAction>
 		</AlertDialogFooter>
 	</AlertDialogContent>
