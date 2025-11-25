@@ -48,6 +48,8 @@
 		});
 		return unsubscribe;
 	});
+}
+]
 </script>
 
 <Tooltip.Provider>
