@@ -1,76 +1,73 @@
-import { faker } from '@faker-js/faker';
-import type { Barber } from '$lib/types/adminTypes';
-import { userId } from '$lib/zod/schema';
+import type { Barber } from '$lib/api/shared/api';
+import {
+	getBarbers as getBarbersApi,
+	postToApi,
+	putToApi,
+	deleteFromApi,
+	type ApiResponse
+} from '$lib/api/shared/api';
 
-const barbers: Barber[] = Array.from({ length: 71 }, () => ({
-	id: userId(),
-	name: faker.person.fullName(),
-	phoneNumber: `08${Math.floor(Math.random() * 100000000)}`,
-	description: faker.lorem.paragraph(),
-	skills: faker.lorem.paragraph(),
-	experience: faker.lorem.paragraph()
-}));
+// Re-export the Barber type for convenience
+export type { Barber };
 
-// Define the response type
-interface BarberResponse {
-	success: boolean;
-	data?: Barber;
-	error?: string;
-}
-
-export const getBarberById = (id: string): BarberResponse => {
-	try {
-		const barber = barbers.find((b) => b.id === id);
-
-		if (!barber) {
-			return {
-				success: false,
-				error: 'Barber not found'
-			};
-		}
-
-		const cleanBarber: Barber = {
-			id: barber.id,
-			name: barber.name,
-			phoneNumber: barber.phoneNumber,
-			description: barber.description,
-			skills: barber.skills,
-			experience: barber.experience
-		};
-
-		return {
-			success: true,
-			data: cleanBarber
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: 'Failed to fetch barber' + error
-		};
-	}
+export const getBarbers = async (fetch: typeof window.fetch): Promise<ApiResponse<Barber[]>> => {
+	return getBarbersApi(fetch);
 };
 
-export const getBarber = () => {
+export const getBarberById = async (
+	fetch: typeof window.fetch,
+	id: string
+): Promise<ApiResponse<Barber>> => {
+	// Since there isn't a specific get-barber-by-id endpoint documented,
+	// we'll fetch all and find one, or we could assume GET /shared/view-barber/:id exists.
+	// Given the pattern, let's try to fetch all and filter for now to be safe,
+	// unless we want to infer GET /admin/view-barber/:id
+	// Let's stick to fetching all and filtering as a fallback if no specific ID endpoint is confirmed.
+	// However, for admin edit pages, we usually need a single fetch.
+	// Let's try to infer GET /shared/view-barber/:id or just filter from the list.
+	// Filtering from list is safer if the list is small.
+	const result = await getBarbersApi(fetch);
+	if (!result.success || !result.data) {
+		return {
+			success: false,
+			message: result.message,
+			error: result.error
+		};
+	}
+	const barber = result.data.find((b) => b.id === id);
+	if (!barber) {
+		return {
+			success: false,
+			message: 'Barber not found'
+		};
+	}
 	return {
-		barbers
+		success: true,
+		data: barber
 	};
 };
 
-export const editBarber = (updatedBarber: Barber): boolean => {
-	const index = barbers.findIndex((b) => b.id === updatedBarber.id);
-	if (index !== -1) {
-		barbers[index] = updatedBarber;
-		return true;
-	}
-	return false; // not found
+export const createBarber = async (
+	fetch: typeof window.fetch,
+	barber: Omit<Barber, 'id'>,
+	token: string
+): Promise<ApiResponse<Barber>> => {
+	return postToApi<Barber>(fetch, '/admin/create-barber', barber, token);
 };
 
-export const createBarber = (newBarber: Barber): boolean => {
-	try {
-		barbers.push(newBarber); // actually add the new barber to the array
-		return true;
-	} catch (e) {
-		console.error('Failed to create barber:', e);
-		return false;
-	}
+export const editBarber = async (
+	fetch: typeof window.fetch,
+	id: string,
+	barber: Partial<Barber>,
+	token: string
+): Promise<ApiResponse<Barber>> => {
+	return putToApi<Barber>(fetch, `/admin/update-barber/${id}`, barber, token);
+};
+
+export const deleteBarber = async (
+	fetch: typeof window.fetch,
+	id: string,
+	token: string
+): Promise<ApiResponse<void>> => {
+	return deleteFromApi<void>(fetch, `/admin/delete-barber/${id}`, token);
 };

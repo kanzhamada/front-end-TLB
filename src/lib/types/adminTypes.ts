@@ -5,6 +5,7 @@ export type Barber = {
 	description?: string;
 	skills?: string;
 	experience?: string;
+	active?: boolean;
 };
 
 export type Reservation = {
@@ -18,7 +19,7 @@ export type Reservation = {
 
 export type Service = {
 	id: string;
-	serviceName: string;
+	name: string; // Changed from serviceName to match API
 	price: number;
 	description: string;
 	attainableCoin?: number;
@@ -50,8 +51,38 @@ export type Catalogue = {
 
 export type OperationalTime = {
 	id: string;
-	dateTime: {
-		date: string;
-		time: string[];
+	date: string; // Changed structure to match API
+	hour: string[];
+};
+
+// Finance Types
+export type OfflineIncome = {
+	id: string;
+	date: string;
+	type: 'Tunai' | 'QRIS';
+	price: number;
+	service: {
+		id: string;
+		name: string;
 	};
+};
+
+export type Expense = {
+	id: string;
+	date: string;
+	description: string;
+	nominal: number;
+};
+
+export type CashFlowStats = {
+	daily: CashFlowDetail;
+	weekly: CashFlowDetail;
+	monthly: CashFlowDetail;
+};
+
+export type CashFlowDetail = {
+	offline_income: number;
+	online_income: number;
+	expenses: number;
+	cash_flow: number;
 };

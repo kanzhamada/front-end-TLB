@@ -1,73 +1,114 @@
-import type { Catalogue } from '$lib/types/adminTypes';
-import { userId } from '$lib/zod/schema';
-import { faker } from '@faker-js/faker';
+import {
+	getFromApi,
+	postToApi,
+	putToApi,
+	deleteFromApi,
+	type ApiResponse
+} from '$lib/api/shared/api';
 
-const catalogues: Catalogue[] = Array.from({ length: 69 }, () => ({
-	id: userId(),
-	name: faker.word.noun(),
-	type: faker.helpers.arrayElement(['Long', 'Short', 'Medium']),
-	description: faker.lorem.paragraph(),
-	image: faker.image.url()
-}));
+// We need to keep the mutations here.
 
-interface CatalogueResponse {
-	success: boolean;
-	data?: Catalogue;
-	error?: string;
-}
+export { getCatalogues, getCatalogueById, type Catalogue } from '$lib/api/shared/catalogue';
+import type { Catalogue } from '$lib/api/shared/catalogue';
 
-export const getCatalogueById = (id: string): CatalogueResponse => {
+const API_URL = import.meta.env.PUBLIC_API_URL;
+
+// ... mutations follow ...
+
+export const createCatalogue = async (
+	fetch: typeof window.fetch,
+	formData: FormData,
+	token: string
+): Promise<ApiResponse<Catalogue>> => {
+	if (!API_URL) {
+		return { success: false, message: 'PUBLIC_API_URL is not configured' };
+	}
+
 	try {
-		const catalogue = catalogues.find((b) => b.id === id);
+		const response = await fetch(`${API_URL}/admin/create-catalogue`, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`
+				// Content-Type is automatically set by browser for FormData
+			},
+			body: formData
+		});
 
-		if (!catalogue) {
+		const json = await response.json();
+		if (!response.ok || !json.success) {
 			return {
 				success: false,
-				error: 'Catalogue not found'
+				message: json.message || 'Failed to create catalogue',
+				error: json.error
 			};
 		}
 
-		const cleanCatalogue: Catalogue = {
-			id: catalogue.id,
-			name: catalogue.name,
-			type: catalogue.type,
-			description: catalogue.description,
-			image: catalogue.image
+		return {
+			success: true,
+			message: json.message,
+			data: {
+				id: json.data.catalogueID || json.data.id,
+				name: json.data.name,
+				type: json.data.type,
+				description: json.data.description,
+				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
+				catalogueImages: json.data.catalogueImages || []
+			}
 		};
+	} catch (error) {
+		return { success: false, message: 'Network error', error };
+	}
+};
+
+export const editCatalogue = async (
+	fetch: typeof window.fetch,
+	id: string,
+	formData: FormData,
+	token: string
+): Promise<ApiResponse<Catalogue>> => {
+	if (!API_URL) {
+		return { success: false, message: 'PUBLIC_API_URL is not configured' };
+	}
+
+	try {
+		const response = await fetch(`${API_URL}/admin/update-catalogue/${id}`, {
+			method: 'PUT',
+			headers: {
+				Authorization: `Bearer ${token}`
+			},
+			body: formData
+		});
+
+		const json = await response.json();
+		if (!response.ok || !json.success) {
+			return {
+				success: false,
+				message: json.message || 'Failed to update catalogue',
+				error: json.error
+			};
+		}
 
 		return {
 			success: true,
-			data: cleanCatalogue
+			message: json.message,
+			data: {
+				id: json.data.catalogueID || json.data.id,
+				name: json.data.name,
+				type: json.data.type,
+				description: json.data.description,
+				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
+				catalogueImages: json.data.catalogueImages || []
+			}
 		};
 	} catch (error) {
-		return {
-			success: false,
-			error: 'Failed to fetch catalogue' + error
-		};
+		return { success: false, message: 'Network error', error };
 	}
 };
 
-export const getCatalogue = () => {
-	return {
-		catalogues
-	};
-};
-
-export const editCatalogue = (updatedCatalogue: Catalogue): boolean => {
-	const index = catalogues.findIndex((b) => b.id === updatedCatalogue.id);
-	if (index !== -1) {
-		catalogues[index] = updatedCatalogue;
-		return true;
-	}
-	return false; // not found
-};
-
-export const createCatalogue = (newCatalogue: Catalogue): boolean => {
-	try {
-		catalogues.push(newCatalogue); // actually add the new Catalogue to the array
-		return true;
-	} catch (e) {
-		console.error('Failed to create Catalogue:', e);
-		return false;
-	}
+export const deleteCatalogue = async (
+	fetch: typeof window.fetch,
+	id: string,
+	token: string
+): Promise<ApiResponse<void>> => {
+	return deleteFromApi<void>(fetch, `/admin/delete-catalogue/${id}`, token);
 };

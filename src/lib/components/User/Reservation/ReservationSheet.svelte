@@ -504,52 +504,55 @@
 		}
 	}
 
-	$effect(async () => {
-		if (open) {
-			if (!loadAttempted) {
-				// Only load data if it hasn't been attempted yet in this session
-				resetSelections();
+	$effect(() => {
+		const init = async () => {
+			if (open) {
+				if (!loadAttempted) {
+					// Only load data if it hasn't been attempted yet in this session
+					resetSelections();
 
-				// Load reservation data
-				await loadReservationData();
-				loadAttempted = true; // Mark that loading has been attempted
+					// Load reservation data
+					await loadReservationData();
+					loadAttempted = true; // Mark that loading has been attempted
 
-				// If we're rescheduling, pre-fill data from the existing reservation
-				// after the data has been loaded and the state has been updated
-				if (reservationToReschedule) {
-					// Find barber by name - need to wait for barbers to be loaded
-					const matchingBarber = barbers.find(
-						(b) => b.name === reservationToReschedule.barber.name
-					);
-					if (matchingBarber) {
-						selectedBarberId = matchingBarber.id;
+					// If we're rescheduling, pre-fill data from the existing reservation
+					// after the data has been loaded and the state has been updated
+					if (reservationToReschedule) {
+						// Find barber by name - need to wait for barbers to be loaded
+						const matchingBarber = barbers.find(
+							(b) => b.name === reservationToReschedule.barber.name
+						);
+						if (matchingBarber) {
+							selectedBarberId = matchingBarber.id;
+						}
+
+						// Find service by name and price
+						const matchingService = services.find(
+							(s) =>
+								s.name === reservationToReschedule.service.name &&
+								s.price === reservationToReschedule.service.price
+						);
+						if (matchingService) {
+							selectedServiceId = matchingService.id;
+						}
+
+						// Pre-fill other details
+						specialRequest = reservationToReschedule.notes || '';
+						voucherSelection = reservationToReschedule.voucherId || 'none';
 					}
-
-					// Find service by name and price
-					const matchingService = services.find(
-						(s) =>
-							s.name === reservationToReschedule.service.name &&
-							s.price === reservationToReschedule.service.price
-					);
-					if (matchingService) {
-						selectedServiceId = matchingService.id;
-					}
-
-					// Pre-fill other details
-					specialRequest = reservationToReschedule.notes || '';
-					voucherSelection = reservationToReschedule.voucherId || 'none';
 				}
+				// If loadAttempted is true, do nothing here, wait for user action or sheet close/reopen
+			} else {
+				// If sheet is closed, reset the attempt flag
+				loadAttempted = false;
 			}
-			// If loadAttempted is true, do nothing here, wait for user action or sheet close/reopen
-		} else {
-			// If sheet is closed, reset the attempt flag
-			loadAttempted = false;
-		}
+		};
+		init();
 	});
 </script>
 
 <Sheet bind:open>
-	<SheetTrigger>
+	<SheetTrigger asChild>
 		<Button class={cn(triggerClass)}>{triggerText}</Button>
 	</SheetTrigger>
 

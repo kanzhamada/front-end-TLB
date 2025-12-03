@@ -1,90 +1,60 @@
-import type { Service } from '$lib/types/adminTypes';
-import { userId } from '$lib/zod/schema';
-import { faker } from '@faker-js/faker';
+import {
+	postToApi,
+	putToApi,
+	deleteFromApi,
+	type ApiResponse,
+	type Service,
+	getServices
+} from '$lib/api/shared/api';
 
-const services: Service[] = Array.from({ length: 69 }, () => ({
-	id: userId(),
-	serviceName: faker.word.noun(),
-	price: Math.floor(Math.random() * 10000) + 1000,
-	description: faker.lorem.paragraph(),
-	attainableCoin: Math.floor(Math.random() * 10000)
-}));
+export { type Service, getServices };
 
-interface ServiceResponse {
-	success: boolean;
-	data?: Service;
-	error?: string;
-}
-
-export const getServiceById = (id: string): ServiceResponse => {
-	try {
-		const service = services.find((b) => b.id === id);
-
-		if (!service) {
-			return {
-				success: false,
-				error: 'Service not found'
-			};
-		}
-
-		const cleanService: Service = {
-			id: service.id,
-			serviceName: service.serviceName,
-			price: service.price,
-			description: service.description,
-			attainableCoin: service.attainableCoin
-		};
-
-		return {
-			success: true,
-			data: cleanService
-		};
-	} catch (error) {
+export const getServiceById = async (
+	fetch: typeof window.fetch,
+	id: string
+): Promise<ApiResponse<Service>> => {
+	const result = await getServices(fetch);
+	if (!result.success || !result.data) {
 		return {
 			success: false,
-			error: 'Failed to fetch service' + error
+			message: result.message,
+			error: result.error
 		};
 	}
-};
-
-export const getService = async () => {
-	// try {
-	// 	const response = await fetch(env.BACKEND_HOST + '/admin/view-service', {
-	// 		method: 'GET',
-	// 		headers: {
-	// 			'Content-Type': 'application/json'
-	// 		}
-	// 	});
-	// 	if (response.ok) {
-	// 		const services = await response.json();
-	// 		return {
-	// 			success: true,
-	// 			data: services
-	// 		};
-	// 	}
-	// } catch (error) {
-	// 	return {
-	// 		success: false,
-	// 		error: 'Failed to fetch service' + error
-	// 	};
-	// }
-};
-
-export const editService = (updatedService: Service): boolean => {
-	const index = services.findIndex((b) => b.id === updatedService.id);
-	if (index !== -1) {
-		services[index] = updatedService;
-		return true;
+	const service = result.data.find((s) => s.id === id);
+	if (!service) {
+		return {
+			success: false,
+			message: 'Service not found'
+		};
 	}
-	return false; // not found
+	return {
+		success: true,
+		data: service
+	};
 };
 
-export const createService = (newService: Service): boolean => {
-	try {
-		services.push(newService); // actually add the new Service to the array
-		return true;
-	} catch (e) {
-		console.error('Failed to create Service:', e);
-		return false;
-	}
+export const createService = async (
+	fetch: typeof window.fetch,
+	service: Omit<Service, 'id'>,
+	token: string
+): Promise<ApiResponse<Service>> => {
+	return postToApi<Service>(fetch, '/admin/create-service', service, token);
+};
+
+export const editService = async (
+	fetch: typeof window.fetch,
+	id: string,
+	service: Partial<Service>,
+	token: string
+): Promise<ApiResponse<Service>> => {
+	return putToApi<Service>(fetch, `/admin/update-service/${id}`, service, token);
+};
+
+export const deleteService = async (
+	fetch: typeof window.fetch,
+	id: string,
+	token: string
+): Promise<ApiResponse<void>> => {
+	return deleteFromApi<void>(fetch, `/admin/delete-service/${id}`, token);
 };

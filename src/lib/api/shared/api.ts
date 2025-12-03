@@ -32,6 +32,8 @@ export type Barber = {
 	experience?: string;
 	skills?: string;
 	phoneNumber?: string;
+	active?: boolean;
+	image?: string;
 };
 
 export type OperationalHourStatus = 'available' | 'booked' | 'unavailable';
@@ -74,7 +76,7 @@ function createError<T>(message: string, error?: unknown): ApiResponse<T> {
 }
 
 // Update getFromApi to accept fetch and handle potential empty JSON bodies
-async function getFromApi<T>(
+export async function getFromApi<T>(
 	fetch: typeof window.fetch, // Accept fetch as a parameter
 	path: string,
 	accessToken?: string
@@ -85,12 +87,24 @@ async function getFromApi<T>(
 
 	try {
 		// Use the passed-in fetch
+		console.log(`[API Request] GET ${path}`, {
+			url: `${API_URL}${path}`,
+			hasToken: !!accessToken,
+			tokenPrefix: accessToken ? accessToken.substring(0, 10) + '...' : 'none'
+		});
+
 		const response = await fetch(`${API_URL}${path}`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
 				...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
 			}
+		});
+
+		console.log(`[API Response] GET ${path}`, {
+			status: response.status,
+			statusText: response.statusText,
+			ok: response.ok
 		});
 
 		// Check if the response status indicates an error *before* trying to parse JSON
@@ -154,6 +168,137 @@ async function getFromApi<T>(
 	}
 }
 // --- End Helper Functions ---
+
+// --- Helper Functions for Mutations ---
+async function sendToApi<T>(
+	fetch: typeof window.fetch,
+	method: 'POST' | 'PUT' | 'DELETE',
+	path: string,
+	data?: unknown,
+	accessToken?: string
+): Promise<ApiResponse<T>> {
+	if (!API_URL) {
+		return createError<T>('PUBLIC_API_URL is not configured');
+	}
+
+	try {
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json'
+		};
+		if (accessToken) {
+			headers['Authorization'] = `Bearer ${accessToken}`;
+		}
+
+		const options: RequestInit = {
+			method,
+			headers
+		};
+
+		console.log(`[API Request] ${method} ${path}`, {
+			url: `${API_URL}${path}`,
+			headers,
+			hasToken: !!accessToken,
+			tokenPrefix: accessToken ? accessToken.substring(0, 10) + '...' : 'none',
+			data
+		});
+
+		if (data !== undefined) {
+			options.body = JSON.stringify(data);
+		}
+
+		const response = await fetch(`${API_URL}${path}`, options);
+		
+		console.log(`[API Response] ${method} ${path}`, {
+			status: response.status,
+			statusText: response.statusText,
+			ok: response.ok
+		});
+
+		if (!response.ok) {
+			let errorBody = {};
+			try {
+				const bodyText = await response.text();
+				console.log(`[API Error Body]`, bodyText);
+				if (bodyText && bodyText.trim().startsWith('{')) {
+					errorBody = JSON.parse(bodyText);
+				} else {
+					errorBody = { message: bodyText || response.statusText };
+				}
+			} catch (jsonError) {
+				console.warn('Failed to parse error response body:', jsonError);
+				errorBody = { message: response.statusText };
+			}
+			const message = (errorBody as { message?: string }).message ?? response.statusText;
+
+			return {
+				success: false,
+				message,
+				error: errorBody
+			};
+		}
+
+		// Handle 204 No Content or empty responses
+		if (response.status === 204) {
+			return {
+				success: true,
+				message: 'Operation successful'
+			};
+		}
+
+		const text = await response.text();
+		if (!text) {
+			return {
+				success: true,
+				message: 'Operation successful'
+			};
+		}
+
+		const json = JSON.parse(text) as Envelope<T>;
+		const successFlag = Boolean(json.success ?? json.sucess);
+
+		if (!successFlag) {
+			return {
+				success: false,
+				message: json.message ?? 'Request failed',
+				error: json.error ?? json
+			};
+		}
+
+		return {
+			success: true,
+			message: json.message,
+			data: json.data
+		};
+	} catch (error) {
+		return createError<T>(`Failed to ${method} data to API`, error);
+	}
+}
+
+export async function postToApi<T>(
+	fetch: typeof window.fetch,
+	path: string,
+	data: unknown,
+	accessToken?: string
+): Promise<ApiResponse<T>> {
+	return sendToApi<T>(fetch, 'POST', path, data, accessToken);
+}
+
+export async function putToApi<T>(
+	fetch: typeof window.fetch,
+	path: string,
+	data: unknown,
+	accessToken?: string
+): Promise<ApiResponse<T>> {
+	return sendToApi<T>(fetch, 'PUT', path, data, accessToken);
+}
+
+export async function deleteFromApi<T>(
+	fetch: typeof window.fetch,
+	path: string,
+	accessToken?: string
+): Promise<ApiResponse<T>> {
+	return sendToApi<T>(fetch, 'DELETE', path, undefined, accessToken);
+}
 
 // --- API Functions ---
 // Update API functions to accept fetch

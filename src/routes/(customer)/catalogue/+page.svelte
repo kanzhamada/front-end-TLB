@@ -4,7 +4,7 @@
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { getCatalogue } from '$lib/api/shared/catalogue';
+	import { getCatalogues, type Catalogue } from '$lib/api/shared/catalogue';
 	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -19,9 +19,16 @@
 	import CatalogueCard from '$lib/components/ui/CatalogueCard.svelte';
 	import ServiceDetailModal from '$lib/components/ui/ServiceDetailModal.svelte';
 	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
+	import { onMount } from 'svelte';
 
-	let response = getCatalogue();
-	let catalogues = response.catalogues;
+	let catalogues = $state<Catalogue[]>([]);
+
+	onMount(async () => {
+		const res = await getCatalogues(fetch);
+		if (res.success && res.data) {
+			catalogues = res.data;
+		}
+	});
 
 	let tablePagination = $state({ pageIndex: 0, pageSize: 8 });
 	let tableColumnFilters = $state<ColumnFiltersState>([]);

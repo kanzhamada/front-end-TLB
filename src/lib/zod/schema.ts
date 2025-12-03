@@ -24,13 +24,15 @@ export const barberSchema = z.object({
 
 	skills: z.string().trim().max(255, 'Skills must be at most 255 characters').optional(),
 
-	experience: z.string().trim().max(255, 'Experience must be at most 255 characters').optional()
+	experience: z.string().trim().max(255, 'Experience must be at most 255 characters').optional(),
+
+	active: z.boolean().default(true)
 });
 
 export const serviceSchema = z.object({
 	id: z.string().regex(/^\d+$/),
 
-	serviceName: z
+	name: z
 		.string()
 		.trim()
 		.min(1, 'Service name is required')
@@ -50,7 +52,7 @@ export const serviceSchema = z.object({
 });
 
 export const voucherSchema = z.object({
-	id: z.string().regex(/^\d+$/).optional().or(z.literal('')),
+	id: z.string().optional(),
 
 	title: z
 		.string()
@@ -80,7 +82,7 @@ export const voucherSchema = z.object({
 });
 
 export const catalogueSchema = z.object({
-	id: z.string().regex(/^\d+$/),
+	id: z.string().optional(),
 
 	name: z.string().trim().min(1, 'Name is required').max(50, 'Name must be at most 50 characters'),
 
@@ -88,16 +90,16 @@ export const catalogueSchema = z.object({
 
 	description: z.string().trim().max(255, 'Description must be at most 255 characters'),
 
-	image: z.string().trim().max(255, 'Image must be at most 255 characters')
+	image: z.string().optional(),
+	
+	file: z.any().optional()
 });
 
 export const operationalTimeSchema = z.object({
-	id: z.string().regex(/^\d+$/).optional().or(z.literal('')),
+	id: z.string().optional(),
 
-	dateTime: z.object({
-		date: z.string().refine((v) => v, { message: 'A date is required.' }),
-		time: z.array(z.string()).refine((v) => v, { message: 'A time is required.' })
-	})
+	date: z.string().refine((v) => v, { message: 'A date is required.' }),
+	hour: z.array(z.string()).refine((v) => v.length > 0, { message: 'At least one hour is required.' })
 });
 
 export type BarberSchema = typeof barberSchema;

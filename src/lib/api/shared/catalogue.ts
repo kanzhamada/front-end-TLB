@@ -1,54 +1,76 @@
-import type { Catalogue } from '$lib/types/adminTypes';
-import { userId } from '$lib/zod/schema';
-import { faker } from '@faker-js/faker';
+import { getFromApi, type ApiResponse } from '$lib/api/shared/api';
 
-const catalogues: Catalogue[] = Array.from({ length: 69 }, () => ({
-	id: userId(),
-	name: faker.word.noun(),
-	type: faker.helpers.arrayElement(['Long', 'Short', 'Medium']),
-	description: faker.lorem.paragraph(),
-	image: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => faker.image.url())
-}));
-
-interface CatalogueResponse {
-	success: boolean;
-	data?: Catalogue;
-	error?: string;
-}
-
-export const getCatalogueById = (id: string): CatalogueResponse => {
-	try {
-		const catalogue = catalogues.find((b) => b.id === id);
-
-		if (!catalogue) {
-			return {
-				success: false,
-				error: 'Catalogue not found'
-			};
-		}
-
-		const cleanCatalogue: Catalogue = {
-			id: catalogue.id,
-			name: catalogue.name,
-			type: catalogue.type,
-			description: catalogue.description,
-			image: catalogue.image
-		};
-
-		return {
-			success: true,
-			data: cleanCatalogue
-		};
-	} catch (error) {
-		return {
-			success: false,
-			error: 'Failed to fetch catalogue' + error
-		};
-	}
+export type Catalogue = {
+	id: string;
+	name: string;
+	type: string;
+	description: string;
+	image: string; // Fallback or first image
+	catalogueImages: { imageID?: string; imageUrl: string }[];
 };
 
-export const getCatalogue = () => {
+export const getCatalogues = async (
+	fetch: typeof window.fetch,
+	token?: string
+): Promise<ApiResponse<Catalogue[]>> => {
+	console.log('Fetching catalogues from /shared/view-catalogue');
+	const result = await getFromApi<any[]>(fetch, '/shared/view-catalogue', token);
+	console.log('Get catalogues result:', result);
+
+	if (!result.success || !result.data) {
+		return {
+			success: false,
+			message: result.message,
+			error: result.error
+		};
+	}
+
+	if (result.data.length > 0) {
+		console.log('First catalogue item:', result.data[0]);
+	}
+
+	const catalogues: Catalogue[] = result.data.map((item) => ({
+		id: item.catalogueID || item.id,
+		name: item.name,
+		type: item.type,
+		description: item.description,
+		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+		catalogueImages: item.catalogueImages || []
+	}));
+
 	return {
-		catalogues
+		success: true,
+		message: result.message,
+		data: catalogues
+	};
+};
+
+export const getCatalogueById = async (
+	fetch: typeof window.fetch,
+	id: string
+): Promise<ApiResponse<Catalogue>> => {
+	const result = await getFromApi<any>(fetch, `/shared/view-catalogue/${id}`);
+
+	if (!result.success || !result.data) {
+		return {
+			success: false,
+			message: result.message,
+			error: result.error
+		};
+	}
+
+	const item = result.data;
+	const catalogue: Catalogue = {
+		id: item.catalogueID || item.id,
+		name: item.name,
+		type: item.type,
+		description: item.description,
+		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+		catalogueImages: item.catalogueImages || []
+	};
+
+	return {
+		success: true,
+		data: catalogue
 	};
 };
