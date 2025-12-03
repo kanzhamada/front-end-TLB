@@ -91,7 +91,6 @@ export const catalogueSchema = z.object({
 	description: z.string().trim().max(255, 'Description must be at most 255 characters'),
 
 	image: z.string().optional(),
-
 	file: z.any().optional()
 });
 

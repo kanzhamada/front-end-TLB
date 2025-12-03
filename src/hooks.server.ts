@@ -29,7 +29,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			access_token: accessToken,
 			refresh_token: refreshToken || ''
 		});
-
 		// Only call getSession if we have a token to validate
 		const { data } = await supabase.auth.getSession();
 		session = data.session;
