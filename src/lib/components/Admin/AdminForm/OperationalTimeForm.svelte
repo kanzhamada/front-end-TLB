@@ -57,10 +57,8 @@
 	// Default form data with proper typing
 	const defaultFormData: Infer<OperationalTimeSchema> = {
 		id: '',
-		dateTime: {
-			date: '',
-			time: []
-		}
+		date: '',
+		hour: []
 	};
 
 	// Initialize form with better error handling
@@ -104,8 +102,8 @@
 	// Initialize form data if detail data exists
 	if (detailData) {
 		$formData.id = detailData.id ?? '';
-		$formData.dateTime.date = detailData.dateTime.date ?? '';
-		$formData.dateTime.time = detailData.dateTime.time ?? [];
+		$formData.date = detailData.date ?? '';
+		$formData.hour = detailData.hour ?? [];
 	}
 
 	const df = new DateFormatter('id-ID', {
@@ -114,7 +112,7 @@
 	});
 
 	let valueExpiredDate = $derived(
-		$formData.dateTime.date ? parseDate($formData.dateTime.date) : undefined
+		$formData.date ? parseDate($formData.date) : undefined
 	);
 
 	let placeholder = $state<DateValue>(today(getLocalTimeZone()));
@@ -137,11 +135,11 @@
 		</Form.Field>
 
 		<!-- Date -->
-		<Form.Field {form} name="dateTime.date">
+		<Form.Field {form} name="date">
 			<Form.Control>
 				{#snippet children({ props })}
 					<div class="group space-y-2">
-						<Form.Label class="mb-2 block text-sm font-semibold text-gray-700" for="dateTime.date">
+						<Form.Label class="mb-2 block text-sm font-semibold text-gray-700" for="date">
 							Select Date
 							<span class="ml-1 text-red-500" aria-label="Required">*</span>
 						</Form.Label>
@@ -174,9 +172,9 @@
 											minValue={today(getLocalTimeZone())}
 											onValueChange={(v) => {
 												if (v) {
-													$formData.dateTime.date = v.toString();
+													$formData.date = v.toString();
 												} else {
-													$formData.dateTime.date = '';
+													$formData.date = '';
 												}
 											}}
 										/>
@@ -188,23 +186,23 @@
 							Please enter the expired date of the operational date.
 						</Form.Description>
 						<Form.FieldErrors />
-						<input hidden value={$formData.dateTime.date} name={props.name} id="dateTime.date" />
+						<input hidden value={$formData.date} name={props.name} id="date" />
 					</div>
 				{/snippet}
 			</Form.Control>
 		</Form.Field>
 
 		<!-- Time Field -->
-		<Form.Field {form} name="dateTime.time">
+		<Form.Field {form} name="hour">
 			<Form.Control>
 				{#snippet children({ props })}
 					<div class="group space-y-2">
-						<Form.Label class="mb-2 block text-sm font-semibold text-gray-700" for="dateTime.time">
+						<Form.Label class="mb-2 block text-sm font-semibold text-gray-700" for="hour">
 							Select Times
 							<span class="ml-1 text-red-500" aria-label="Required">*</span>
 						</Form.Label>
 
-						<Chip bind:value={$formData.dateTime.time}>
+						<Chip bind:value={$formData.hour}>
 							<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
 								{#each times as time (time)}
 									<ChipItem value={time}>
@@ -218,7 +216,7 @@
 							Please enter the start date of the operational time.
 						</Form.Description>
 						<Form.FieldErrors />
-						<input hidden value={$formData.dateTime.time} name={props.name} id="dateTime.time" />
+						<input hidden value={$formData.hour} name={props.name} id="hour" />
 					</div>
 				{/snippet}
 			</Form.Control>
@@ -231,7 +229,7 @@
 			{#if action === 'view'}
 				<DeleteButton
 					description="This action cannot be undone. This will permanently delete the operational time's information from the system."
-					descriptionHighlight="Operational Time Title: {detailData?.dateTime.date}"
+					descriptionHighlight="Operational Time Title: {detailData?.date}"
 					disabled={isSubmitting}
 				/>
 				<EditButton {id} entityName="OperationalTime" disabled={isSubmitting} />

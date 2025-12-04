@@ -30,7 +30,7 @@
 	// Default form data with proper typing
 	const defaultFormData: Infer<ServiceSchema> = {
 		id: '',
-		serviceName: '',
+		name: '',
 		price: 0,
 		description: '',
 		attainableCoin: 0
@@ -76,7 +76,7 @@
 	// Initialize form data if detail data exists
 	if (detailData) {
 		$formData.id = detailData.id ?? '';
-		$formData.serviceName = detailData.serviceName;
+		$formData.name = detailData.name;
 		$formData.price = detailData.price;
 		$formData.description = detailData.description;
 		$formData.attainableCoin = detailData.attainableCoin ?? 0;
@@ -99,8 +99,8 @@
 			</Form.Control>
 		</Form.Field>
 
-		<!-- Service Name Field -->
-		<Form.Field {form} name="serviceName">
+		<!-- Name Field -->
+		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
 					<div class="group">
@@ -111,7 +111,7 @@
 						<Input
 							required
 							{...props}
-							bind:value={$formData.serviceName}
+							bind:value={$formData.name}
 							readonly={isReadonly}
 							disabled={isSubmitting}
 							class="w-full rounded-lg border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 transition-all duration-200 hover:border-gray-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50"
@@ -119,7 +119,7 @@
 							autocomplete="name"
 						/>
 						<div class="mt-1 text-right text-xs text-gray-400">
-							{$formData.serviceName?.length || 0}/50 characters
+							{$formData.name?.length || 0}/50 characters
 						</div>
 					</div>
 				{/snippet}
@@ -248,7 +248,7 @@
 			{#if action === 'view'}
 				<DeleteButton
 					description="This action cannot be undone. This will permanently delete the service's information from the system."
-					descriptionHighlight="Service Name: {detailData?.serviceName}"
+					descriptionHighlight="Service Name: {detailData?.name}"
 					disabled={isSubmitting}
 				/>
 				<EditButton {id} entityName="Service" disabled={isSubmitting} />

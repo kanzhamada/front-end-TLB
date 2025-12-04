@@ -22,44 +22,53 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const accessToken = event.cookies.get('sb-access-token');
 	const refreshToken = event.cookies.get('sb-refresh-token');
 
+	let session = null;
+
 	if (accessToken) {
 		await supabase.auth.setSession({
 			access_token: accessToken,
 			refresh_token: refreshToken || ''
 		});
+		
+		// Only call getSession if we have a token to validate
+		const { data } = await supabase.auth.getSession();
+		session = data.session;
 	}
 
-	// Check for session
-	const {
-		data: { session }
-	} = await supabase.auth.getSession();
+	event.locals.session = session;
 
 	// Admin Route Protection
 	if (event.url.pathname.startsWith('/a1-portal-a16-tlb')) {
 		const isLoginPage = event.url.pathname === '/a1-portal-a16-tlb/login';
 
 		if (!session) {
-			if (isLoginPage) {
-				// Allow access to login page
-			} else {
+			if (!isLoginPage) {
 				// Unauthorized access to admin portal -> 404 to hide it
+				// This effectively hides the admin routes from public view
 				error(404, 'Not Found');
 			}
+			// Allow access to login page for unauthenticated users
 		} else {
 			// Check role
-			// Assuming role is in user_metadata or a separate table. 
-            // For now, let's check user_metadata.role or app_metadata.role
 			const role = session.user.user_metadata?.role || session.user.app_metadata?.role;
 
 			if (role !== 'admin') {
-				// Logged in but not admin -> 404
-				error(404, 'Not Found');
+				// User is logged in but NOT an admin
+				// If they try to access any admin page (except login), return 404
+				// This ensures that even logged-in customers cannot see admin routes
+				if (!isLoginPage) {
+					error(404, 'Not Found');
+				}
+				// If they are on login page, we allow it (publicly accessible)
+				// They might want to logout and login as admin
+			} else {
+				// User IS an admin
+				// If they are on the login page, redirect them to the dashboard
+				if (isLoginPage) {
+					redirect(303, '/a1-portal-a16-tlb');
+				}
+				// Otherwise allow access to admin pages
 			}
-
-            // If logged in as admin and on login page, redirect to dashboard
-            if (isLoginPage) {
-                redirect(303, '/a1-portal-a16-tlb');
-            }
 		}
 	}
 

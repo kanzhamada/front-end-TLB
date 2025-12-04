@@ -33,7 +33,8 @@
 		phoneNumber: '',
 		description: '',
 		skills: '',
-		experience: ''
+		experience: '',
+		active: true
 	};
 
 	// Initialize form with better error handling
@@ -81,6 +82,7 @@
 		$formData.description = detailData.description ?? '';
 		$formData.skills = detailData.skills ?? '';
 		$formData.experience = detailData.experience ?? '';
+		$formData.active = detailData.active ?? true;
 	}
 </script>
 

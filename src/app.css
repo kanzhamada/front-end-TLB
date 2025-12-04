@@ -177,9 +177,6 @@
 	}
 
 	.text-gradient-gold {
-		/* Updated: Now using 'animate-shimmer' which is a valid utility 
-           registered in the @theme block above.
-        */
 		@apply bg-gradient-to-r from-[#F5F5DC] via-[#D4AF37] to-[#F5F5DC] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer;
 	}
 
@@ -194,5 +191,14 @@
 		border: 1px solid var(--admin-glass-border);
 		box-shadow: var(--admin-glass-shadow);
 		border-radius: var(--admin-radius-xl);
+	}
+
+	/* Hide Scrollbar Utility */
+	.no-scrollbar::-webkit-scrollbar {
+		display: none !important;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none !important;
+		scrollbar-width: none !important;
 	}
 }
