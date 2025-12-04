@@ -60,7 +60,16 @@ export type OwnedVoucher = {
 	description?: string;
 	expiredAt?: string;
 	expiredDate?: string;
+	serviceID?: string;
+	serviceName?: string;
 	[key: string]: unknown;
+};
+
+export type Schedule = {
+	day: string;
+	hours: string[];
+	created_at: string;
+	updated_at: string;
 };
 // --- End Type Definitions ---
 
@@ -279,6 +288,23 @@ export const getOperational = async (
 	};
 };
 
+export const getSchedule = async (fetch: typeof window.fetch): Promise<ApiResponse<Schedule[]>> => {
+	const result = await getFromApi<Schedule[]>(fetch, '/shared/view-schedule');
+
+	if (!result.success || !result.data || result.data.length === 0) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<Schedule[]>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
+	};
+};
+
 export const getOwnedVouchers = async (
 	fetch: typeof window.fetch, // Accept fetch
 	accessToken: string
@@ -310,6 +336,57 @@ export const getOwnedVouchers = async (
 	// The `loadReservationData` function will handle an empty array of vouchers gracefully.
 	return {
 		...result // Includes success: true, message, and data (which could be [])
+	};
+};
+
+export type CatalogueImage = {
+	imageUrl: string;
+};
+
+export type Catalogue = {
+	catalogueID: string;
+	name: string;
+	type: string;
+	description: string;
+	catalogueImages: CatalogueImage[];
+};
+
+export const getCatalogue = async (
+	fetch: typeof window.fetch
+): Promise<ApiResponse<Catalogue[]>> => {
+	const result = await getFromApi<Catalogue[]>(fetch, '/shared/view-catalogue');
+
+	if (!result.success || !result.data) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<Catalogue[]>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
+	};
+};
+
+export const getCatalogueById = async (
+	fetch: typeof window.fetch,
+	id: string
+): Promise<ApiResponse<Catalogue>> => {
+	const result = await getFromApi<Catalogue>(fetch, `/shared/view-catalogue/${id}`);
+
+	if (!result.success || !result.data) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<Catalogue>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
 	};
 };
 // --- End API Functions ---

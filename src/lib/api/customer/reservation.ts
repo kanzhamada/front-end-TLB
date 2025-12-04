@@ -78,6 +78,7 @@ export const getReservations = async (
 		});
 
 		const json = await response.json();
+		console.log(json)
 		const successFlag = Boolean(json.success ?? json.sucess);
 
 		if (!response.ok || !successFlag) {
@@ -122,6 +123,8 @@ export const getReservationDetails = async (
 				Authorization: `Bearer ${accessToken}`
 			}
 		});
+
+		console.log(response)
 
 		const json = await response.json();
 		const successFlag = Boolean(json.success ?? json.sucess);

@@ -13,9 +13,8 @@
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { getCatalogue } from '$lib/api/shared/catalogue';
+	import { getCatalogue, type Catalogue } from '$lib/api/shared/api';
 	import * as Accordion from '$lib/components/ui/accordion';
-	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import {
@@ -31,6 +30,8 @@
 	import CatalogueCard from '$lib/components/ui/CatalogueCard.svelte';
 	import ServiceDetailModal from '$lib/components/ui/ServiceDetailModal.svelte';
 	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
+	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
+	import { onMount } from 'svelte';
 
 	let avatar = $state(null);
 	let isDragging = $state(false);
@@ -135,8 +136,16 @@
 	});
 
 	// Get catalogue data
-	let response = getCatalogue();
-	let catalogues = response.catalogues;
+	let catalogues = $state<Catalogue[]>([]);
+	let showReservationSheet = $state(false);
+	let selectedCatalogueNote = $state('');
+
+	onMount(async () => {
+		const response = await getCatalogue(fetch);
+		if (response.success && response.data) {
+			catalogues = response.data;
+		}
+	});
 
 	// Table state for pagination
 	let tablePagination = $state({ pageIndex: 0, pageSize: 8 });
@@ -212,14 +221,19 @@
 
 	// State
 	let selectedFilter = $state('All');
-	let selectedService = $state<(typeof catalogues)[0] | null>(null);
+	let selectedService = $state<Catalogue | null>(null);
+
+	function handleBook(catalogue: Catalogue) {
+		selectedCatalogueNote = catalogue.name;
+		showReservationSheet = true;
+	}
 </script>
 
 <!-- Luxury Theme Wrapper -->
-<div class="min-h-screen w-full font-sans text-secondary selection:bg-senary/30">
+<div class="min-h-screen w-full text-secondary selection:bg-senary/30">
 	<!-- Gradient Overlay for readability -->
 	<div
-		class="pointer-events-none fixed inset-0 -z-5 bg-gradient-to-b from-primary/30 via-transparent to-primary/80"
+		class="pointer-events-none fixed inset-0 -z-5 bg-gradient-to-b from-primary/30 via-transparent to-primary/90"
 	></div>
 
 	<div class="relative z-10 container mx-auto px-4 py-24">
@@ -251,7 +265,7 @@
 				<div
 					class="glass-panel glass-panel-hover group relative overflow-hidden rounded-[2rem] p-1"
 				>
-					<div class="relative rounded-[1.8rem] bg-black/20 p-8">
+					<div class="relative rounded-[1.8rem] bg-white/5 p-8">
 						<h3 class="mb-6 flex items-center gap-3 font-serif text-xl text-secondary">
 							<div
 								class="flex h-8 w-8 items-center justify-center rounded-full bg-senary/10 ring-1 ring-senary/30"
@@ -288,7 +302,7 @@
 						{:else}
 							<!-- Drag & Drop View -->
 							<div
-								class="relative mb-6 flex h-[24rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-black/20 transition-all duration-500 hover:border-senary/40 hover:bg-senary/5"
+								class="relative mb-6 flex h-[24rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all duration-500 hover:border-senary/40 hover:bg-senary/5"
 								class:border-senary={isDragging}
 								class:bg-senary_5={isDragging}
 								on:dragover={handleDragOver}
@@ -373,7 +387,7 @@
 
 						<!-- Submit Button -->
 						<button
-							class="group relative flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl bg-senary px-6 py-4 text-sm font-bold tracking-widest text-primary uppercase shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all duration-500 hover:bg-white hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-senary disabled:hover:shadow-none"
+							class="group relative flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl bg-secondary px-6 py-4 text-sm font-bold tracking-widest text-primary uppercase shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all duration-500 hover:bg-white hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-secondary disabled:hover:shadow-none"
 							disabled={!avatar}
 							on:click={() => {
 								// Submit logic here
@@ -402,14 +416,14 @@
 					<Accordion.Root type="multiple" bind:value={accordionValue} class="mb-10 w-full">
 						<Accordion.Item
 							value="contoh-foto"
-							class="overflow-hidden rounded-xl border border-white/10 bg-black/20"
+							class="overflow-hidden rounded-xl border border-white/10 bg-white/5"
 						>
 							<Accordion.Trigger
 								class="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-secondary/80 transition-all hover:bg-white/5 hover:text-secondary hover:no-underline data-[state=open]:bg-white/5 data-[state=open]:text-secondary"
 							>
 								<span class="text-sm font-medium tracking-wide uppercase">View Guidelines</span>
 							</Accordion.Trigger>
-							<Accordion.Content class="w-full border-t border-white/5 bg-black/20 px-6 py-8">
+							<Accordion.Content class="w-full border-t border-white/5 bg-white/5 px-6 py-8">
 								<div
 									class="mb-8 flex items-start gap-4 rounded-lg border border-senary/20 bg-senary/5 p-5"
 								>
@@ -536,7 +550,7 @@
 									{catalogue}
 									index={i}
 									onSelect={(c) => (selectedService = c)}
-									onBook={(c) => console.log('Book', c)}
+									onBook={(c) => handleBook(c)}
 								/>
 							{/each}
 						</div>
@@ -610,4 +624,14 @@
 </div>
 
 <!-- Detail Modal -->
-<ServiceDetailModal bind:selectedService onClose={() => (selectedService = null)} />
+<ServiceDetailModal
+	bind:selectedService
+	onClose={() => (selectedService = null)}
+	onBook={(c) => handleBook(c)}
+/>
+
+<ReservationSheet
+	bind:open={showReservationSheet}
+	initialNote={selectedCatalogueNote}
+	triggerClass="hidden"
+/>

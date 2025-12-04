@@ -14,9 +14,22 @@
 	import { Label } from '$lib/components/ui/label';
 	import { cn } from '$lib/utils';
 	import CheckIcon from '@lucide/svelte/icons/check';
+	import Calendar from '@lucide/svelte/icons/calendar';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Loader2Icon from '@lucide/svelte/icons/loader-2';
 	import * as Select from '$lib/components/ui/select';
+	import * as Accordion from '$lib/components/ui/accordion';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import {
+		AlertDialog,
+		AlertDialogAction,
+		AlertDialogCancel,
+		AlertDialogContent,
+		AlertDialogDescription,
+		AlertDialogFooter,
+		AlertDialogHeader,
+		AlertDialogTitle
+	} from '$lib/components/ui/alert-dialog';
 	import type {
 		Barber,
 		OperationalDay,
@@ -34,15 +47,30 @@
 		getServices as getServicesApi // Import with alias
 	} from '$lib/api/shared/api';
 	import { createReservation } from '$lib/api/customer/reservation';
+	import {
+		getAvailableVouchers,
+		buyVoucher,
+		getProfile,
+		type Voucher
+	} from '$lib/api/customer/profile';
+	import VoucherSelectionModal from './VoucherSelectionModal.svelte';
 	import { authStore } from '$lib/stores/auth';
 	import { get } from 'svelte/store';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
-	let { triggerClass = '', triggerText = 'Reservasi', reservationToReschedule = null } = $props();
+	let {
+		triggerClass = '',
+		triggerText = 'Reservasi',
+		reservationToReschedule = null,
+		initialNote = '',
+		open = $bindable(false)
+	} = $props();
 	const dispatch = createEventDispatcher();
 
+	console.log(initialNote);
 	type Step = 'date' | 'time' | 'details' | 'payment';
 	const stepOrder: Step[] = ['date', 'time', 'details', 'payment'];
 	const steps = [
@@ -52,7 +80,6 @@
 		{ key: 'payment', label: 'Payment' }
 	] satisfies { key: Step; label: string }[];
 
-	let open = $state(false);
 	let step: Step = $state('date');
 
 	let loadingData = $state(false);
@@ -63,6 +90,8 @@
 	let barbers = $state<Barber[]>([]);
 	let services = $state<Service[]>([]);
 	let vouchers = $state<OwnedVoucher[]>([]);
+	let availableVouchers = $state<Voucher[]>([]);
+	let userCoins = $state(0);
 
 	let selectedYear = $state<number | null>(null);
 	let selectedMonth = $state<number | null>(null);
@@ -71,10 +100,29 @@
 	let selectedBarberId = $state<string | null>(null);
 	let selectedServiceId = $state<string | null>(null);
 	let specialRequest = $state('');
+	$effect(() => {
+		specialRequest = initialNote;
+		console.log(specialRequest);
+	});
 	let voucherSelection = $state('none');
+	let redeemCode = $state<string | null>(null);
+	let redeemCodeDiscount = $state(0);
+	let showVoucherModal = $state(false);
+	let showReservationModal = $state(false);
 	let agreeTnc = $state(false);
 
 	let loadAttempted = $state(false);
+	let showLoginAlert = $state(false);
+
+	function openVoucherModal() {
+		showVoucherModal = true;
+		showReservationModal = false;
+	}
+
+	function closeVoucherModal() {
+		showVoucherModal = false;
+		showReservationModal = true;
+	}
 
 	const adminFee = 4000;
 	const currencyFormatter = new Intl.NumberFormat('id-ID', {
@@ -139,6 +187,76 @@
 	let selectedDateDisplay = $state<string | null>(null);
 	let selectedTimeDisplay = $state<string | null>(null);
 
+	// Persistence Logic
+	const STORAGE_KEY = 'reservation_state';
+
+	function saveState() {
+		if (!browser) return;
+		const state = {
+			step,
+			selectedYear,
+			selectedMonth,
+			selectedDayId,
+			selectedTimeId,
+			selectedBarberId,
+			selectedServiceId,
+			specialRequest,
+			voucherSelection,
+			redeemCode,
+			redeemCodeDiscount,
+			agreeTnc
+		};
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	}
+
+	function loadState() {
+		if (!browser) return;
+		const saved = localStorage.getItem(STORAGE_KEY);
+		if (saved) {
+			try {
+				const state = JSON.parse(saved);
+				step = state.step || 'date';
+				selectedYear = state.selectedYear;
+				selectedMonth = state.selectedMonth;
+				selectedDayId = state.selectedDayId;
+				selectedTimeId = state.selectedTimeId;
+				selectedBarberId = state.selectedBarberId;
+				selectedServiceId = state.selectedServiceId;
+				specialRequest = state.specialRequest || '';
+				voucherSelection = state.voucherSelection || 'none';
+				redeemCode = state.redeemCode || null;
+				redeemCodeDiscount = state.redeemCodeDiscount || 0;
+				agreeTnc = state.agreeTnc || false;
+
+				// If we have saved state, we should open the modal automatically if it was closed during flow
+				// But user requirement says "This behavior also applies when the user closes the modal"
+				// which implies we just save it. We don't necessarily auto-open unless redirected back.
+				// We'll handle auto-open logic if needed, but for now just restoring values.
+			} catch (e) {
+				console.error('Failed to load reservation state', e);
+				localStorage.removeItem(STORAGE_KEY);
+			}
+		}
+	}
+
+	function clearState() {
+		if (!browser) return;
+		localStorage.removeItem(STORAGE_KEY);
+	}
+
+	$effect(() => {
+		// Save state whenever relevant variables change
+		if (open) {
+			saveState();
+		}
+	});
+
+	$effect(() => {
+		if (initialNote) {
+			specialRequest = initialNote;
+		}
+	});
+
 	$effect(() => {
 		availableYears = Array.from(
 			new Set(
@@ -196,10 +314,17 @@
 	});
 
 	$effect(() => {
-		selectedVoucher =
-			voucherSelection === 'none'
-				? null
-				: (vouchers.find((voucher) => voucher.voucherID === voucherSelection) ?? null);
+		if (voucherSelection === 'none') {
+			selectedVoucher = null;
+		} else {
+			const matchingVouchers = vouchers.filter((v) => v.voucherID === voucherSelection);
+			matchingVouchers.sort((a, b) => {
+				const dateA = new Date((a.created_at as string) || 0).getTime();
+				const dateB = new Date((b.created_at as string) || 0).getTime();
+				return dateB - dateA;
+			});
+			selectedVoucher = matchingVouchers[0] ?? null;
+		}
 	});
 
 	$effect(() => {
@@ -224,7 +349,7 @@
 	});
 
 	$effect(() => {
-		total = Math.max(subtotal - voucherDiscount + adminFee, 0);
+		total = Math.max(subtotal - voucherDiscount - redeemCodeDiscount + adminFee, 0);
 	});
 
 	$effect(() => {
@@ -240,6 +365,13 @@
 		selectedTimeDisplay = selectedTime?.time ?? null;
 	});
 
+	let error = $state<string | null>(null);
+	$effect(() => {
+		if (error) {
+			toast.error(error);
+		}
+	});
+
 	function resetSelections() {
 		step = 'date';
 		selectedYear = null;
@@ -249,8 +381,11 @@
 		selectedBarberId = null;
 		selectedServiceId = null;
 		voucherSelection = 'none';
+		redeemCode = null;
+		redeemCodeDiscount = 0;
 		specialRequest = '';
 		agreeTnc = false;
+		clearState();
 	}
 
 	function initializeDateSelection(days: OperationalDay[]) {
@@ -260,6 +395,9 @@
 			selectedDayId = null;
 			return;
 		}
+
+		// Only initialize if not already selected (e.g. from restored state)
+		if (selectedYear && selectedMonth && selectedDayId) return;
 
 		const dayWithAvailability =
 			days.find((day) => day.hours.some((hour) => hour.status === 'available')) ?? days[0];
@@ -275,40 +413,27 @@
 	async function loadReservationData() {
 		if (loadingData) return;
 		loadingData = true;
-		// Reset error state when starting a new load attempt
 		dataError = null;
 
 		try {
 			const [operationalRes, barbersRes, servicesRes] = await Promise.all([
-				getOperationalApi(fetch), // Pass fetch here
-				getBarbersApi(fetch), // Pass fetch here
-				getServicesApi(fetch) // Pass fetch here
+				getOperationalApi(fetch),
+				getBarbersApi(fetch),
+				getServicesApi(fetch)
 			]);
 
-			console.log('Operational Data:', operationalRes); // Add this for debugging
-			console.log('Barbers Data:', barbersRes); // Add this for debugging
-			console.log('Services Data:', servicesRes); // Add this for debugging
-
-			// --- CORRECTED LOGIC ---
-			// Check if the API call itself failed (success: false)
 			if (!operationalRes.success) {
 				throw new Error(
 					operationalRes.message ?? 'Tidak dapat memuat jadwal operasional. Coba lagi nanti.'
 				);
 			}
 
-			// Check if the API call succeeded but returned no data ( undefined or [])
-			// This is the case we now handle correctly in getOperational
 			if (!operationalRes.data || operationalRes.data.length === 0) {
-				// Instead of throwing, maybe show an error message or disable the sheet
-				// For now, let's throw an error with a clearer message
 				throw new Error('Tidak ada jadwal operasional yang tersedia saat ini.');
 			}
 
-			// If we reach here, operational data is available and non-empty
 			operational = operationalRes.data;
 			initializeDateSelection(operationalRes.data);
-			// --- END CORRECTED LOGIC ---
 
 			if (barbersRes.success && barbersRes.data) {
 				barbers = barbersRes.data;
@@ -326,36 +451,44 @@
 
 			const token = get(authStore).session?.access_token;
 			if (token) {
-				const vouchersRes = await getOwnedVouchersApi(fetch, token);
-				console.log('Vouchers Data:', vouchersRes); // Add this for debugging
+				const [vouchersRes, availableRes, profileRes] = await Promise.all([
+					getOwnedVouchersApi(fetch, token),
+					getAvailableVouchers(token),
+					getProfile(token)
+				]);
+
 				if (vouchersRes.success && vouchersRes.data) {
 					vouchers = vouchersRes.data;
 				} else {
 					vouchers = [];
-					if (vouchersRes.message) toast.warning(vouchersRes.message);
+				}
+
+				if (availableRes.success && availableRes.data) {
+					availableVouchers = availableRes.data;
+				} else {
+					availableVouchers = [];
+				}
+
+				if (profileRes.success && profileRes.data) {
+					userCoins = profileRes.data.coin;
 				}
 			} else {
 				vouchers = [];
+				availableVouchers = [];
+				userCoins = 0;
 			}
 		} catch (error) {
-			console.error('Error in loadReservationData:', error); // More specific logging
-			// Use the error's message if it's an Error instance, otherwise a generic one
+			console.error('Error in loadReservationData:', error);
 			dataError =
 				error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat data reservasi.';
 		} finally {
 			loadingData = false;
-			// Note: We don't reset loadAttempted here because we want the effect to know loading was attempted.
-			// The effect will reset loadAttempted only when the sheet is closed.
 		}
 	}
 
 	async function retryLoadReservationData() {
-		// Ensure the sheet is open and reset the attempt flag to allow reloading
 		if (open) {
-			loadAttempted = false; // Allow the $effect to trigger loading again
-			// The $effect will call loadReservationData again on its next run
-			// Or, you could call loadReservationData() directly here if preferred
-			// loadReservationData();
+			loadAttempted = false;
 		}
 	}
 
@@ -419,44 +552,47 @@
 		else if (step === 'time') step = 'date';
 	}
 
+	async function handleLoginRedirect() {
+		saveState();
+		showLoginAlert = false;
+		open = false;
+		await goto('/auth/login');
+	}
+
 	async function handleSubmit() {
+		error = null;
 		if (!selectedBarberId || !selectedServiceId || !selectedTimeId) {
-			toast.error('Data reservasi belum lengkap.');
+			error = 'Data reservasi belum lengkap.';
 			return;
 		}
 
 		if (!agreeTnc) {
-			toast.error('Silakan setujui syarat dan ketentuan terlebih dahulu.');
+			error = 'Silakan setujui syarat dan ketentuan terlebih dahulu.';
 			return;
 		}
 
 		const token = get(authStore).session?.access_token;
 		if (!token) {
-			toast.error('Sesi tidak ditemukan. Silakan masuk kembali.');
-			console.error('No access token found in authStore:', get(authStore)); // Debug log
+			showLoginAlert = true;
 			return;
 		}
 
-		console.log('Sending access token:', token); // Debug log - Be careful with real tokens in logs
-		// Consider logging just the token's validity (e.g., check expiry) instead of the full token
 		const session = get(authStore).session;
 		if (session?.expires_at && Date.now() >= session.expires_at * 1000) {
-			console.warn('Access token appears to be expired:', session.expires_at);
-			// Optionally, attempt refresh here or clear session
 			authStore.clear();
-			toast.error('Sesi telah habis. Silakan masuk kembali.');
+			showLoginAlert = true;
+			error = 'Sesi login Anda telah berakhir. Silakan login kembali.';
 			return;
 		}
 
 		loadingSubmit = true;
 		try {
 			if (reservationToReschedule) {
-				// Handle rescheduling
 				const { rescheduleReservation } = await import('$lib/api/customer/reservation');
 				const response = await rescheduleReservation(
 					reservationToReschedule.reservationID,
 					selectedTimeId,
-					token // Pass the token here
+					token
 				);
 
 				if (!response.success) {
@@ -466,39 +602,42 @@
 
 				toast.success('Reservasi berhasil direschedule!');
 				open = false;
+				clearState();
 
-				// Dispatch event to notify parent component
 				const event = new CustomEvent('reservationCompleted', {
 					detail: { success: true, type: 'reschedule' }
 				});
 				dispatch('reservationCompleted', { success: true, type: 'reschedule' });
 			} else {
-				// Handle new reservation
 				const response = await createReservation(
 					{
 						barberId: selectedBarberId,
 						serviceId: selectedServiceId,
 						dateTimeId: selectedTimeId,
 						notes: specialRequest ? specialRequest.trim() : undefined,
-						voucherId: voucherSelection !== 'none' ? voucherSelection : undefined
+						voucherId: voucherSelection !== 'none' ? voucherSelection : undefined,
+						redeemCode: redeemCode ?? undefined
 					},
-					token // Pass the token here
+					token
 				);
 
+				console.log(response);
+
 				if (!response.success) {
-					toast.error(response.message ?? 'Gagal membuat reservasi.');
+					toast.error(response.error.message ?? 'Gagal membuat reservasi.');
 					return;
 				}
 
 				toast.success('Reservasi berhasil dibuat!');
-				open = false;
 
-				// Redirect to success page after successful reservation
-				await goto('/reservation/success');
+				open = false;
+				clearState();
+				await goto('/profile/reservation');
+				window.location.reload();
 			}
 		} catch (error) {
-			console.error('Error in handleSubmit:', error); // More specific logging
-			toast.error('Terjadi kesalahan saat memproses reservasi.');
+			console.error('Error in handleSubmit:', error);
+			error = 'Terjadi kesalahan saat memproses reservasi.';
 		} finally {
 			loadingSubmit = false;
 		}
@@ -507,17 +646,18 @@
 	$effect(async () => {
 		if (open) {
 			if (!loadAttempted) {
-				// Only load data if it hasn't been attempted yet in this session
-				resetSelections();
+				// Try to load state first
+				loadState();
 
-				// Load reservation data
+				// If no state loaded (e.g. new session), reset selections only if not already set by loadState
+				if (!selectedYear) {
+					resetSelections();
+				}
+
 				await loadReservationData();
-				loadAttempted = true; // Mark that loading has been attempted
+				loadAttempted = true;
 
-				// If we're rescheduling, pre-fill data from the existing reservation
-				// after the data has been loaded and the state has been updated
 				if (reservationToReschedule) {
-					// Find barber by name - need to wait for barbers to be loaded
 					const matchingBarber = barbers.find(
 						(b) => b.name === reservationToReschedule.barber.name
 					);
@@ -525,7 +665,6 @@
 						selectedBarberId = matchingBarber.id;
 					}
 
-					// Find service by name and price
 					const matchingService = services.find(
 						(s) =>
 							s.name === reservationToReschedule.service.name &&
@@ -535,14 +674,11 @@
 						selectedServiceId = matchingService.id;
 					}
 
-					// Pre-fill other details
 					specialRequest = reservationToReschedule.notes || '';
 					voucherSelection = reservationToReschedule.voucherId || 'none';
 				}
 			}
-			// If loadAttempted is true, do nothing here, wait for user action or sheet close/reopen
 		} else {
-			// If sheet is closed, reset the attempt flag
 			loadAttempted = false;
 		}
 	});
@@ -550,7 +686,7 @@
 
 <Sheet bind:open>
 	<SheetTrigger>
-		<Button class={cn(triggerClass)}>{triggerText}</Button>
+		<Button class={cn(triggerClass)}><Calendar class="size-5" />{triggerText}</Button>
 	</SheetTrigger>
 
 	<SheetContent
@@ -668,25 +804,29 @@
 							{#if availableDays.length === 0}
 								<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
 							{:else}
-								<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-									{#each availableDays as day (day.id)}
-										<button
-											type="button"
-											class={cn(
-												'rounded-xl border px-3 py-3 text-center transition-all duration-300',
-												day.available
-													? selectedDayId === day.id
-														? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-														: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-													: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
-											)}
-											onclick={() => selectDay(day.id, day.available)}
-											disabled={!day.available}
-										>
-											<div class="text-lg font-semibold">{day.day}</div>
-											<div class="text-xs capitalize">{day.weekday}</div>
-										</button>
-									{/each}
+								<div
+									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[500px] overflow-y-auto pr-2"
+								>
+									<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+										{#each availableDays as day (day.id)}
+											<button
+												type="button"
+												class={cn(
+													'rounded-xl border px-3 py-3 text-center transition-all duration-300',
+													day.available
+														? selectedDayId === day.id
+															? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+															: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+														: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+												)}
+												onclick={() => selectDay(day.id, day.available)}
+												disabled={!day.available}
+											>
+												<div class="text-lg font-semibold">{day.day}</div>
+												<div class="text-xs capitalize">{day.weekday}</div>
+											</button>
+										{/each}
+									</div>
 								</div>
 							{/if}
 						</div>
@@ -763,7 +903,7 @@
 						<div class="flex flex-col gap-2">
 							<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
 							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[400px] overflow-y-auto pr-2"
+								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
 							>
 								{#if barbers.length === 0}
 									<p class="text-sm text-muted-foreground">
@@ -811,7 +951,7 @@
 						<div class="flex flex-col gap-2">
 							<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
 							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[400px] overflow-y-auto pr-2"
+								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
 							>
 								{#if services.length === 0}
 									<p class="text-sm text-muted-foreground">
@@ -937,29 +1077,24 @@
 							<p class="mt-2 text-xs text-secondary/60">
 								Pilih voucher yang ingin digunakan (opsional).
 							</p>
-							<Select.Root type="single" bind:value={voucherSelection}>
-								<Select.Trigger
-									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary focus:ring-senary/50"
-								>
-									{selectedVoucher
-										? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
-										: 'Pilih voucher'}
-								</Select.Trigger>
-								<Select.Content class="border-white/10 bg-background text-secondary">
-									<Select.Item value="none" class="focus:bg-senary/20 focus:text-senary"
-										>Tanpa Voucher</Select.Item
-									>
-									{#each vouchers as voucher (voucher.voucherID)}
-										<Select.Item
-											value={voucher.voucherID}
-											label={voucher.title ?? voucher.name ?? 'Voucher'}
-											class="focus:bg-senary/20 focus:text-senary"
-										>
-											{voucher.title ?? voucher.name ?? 'Voucher'}
-										</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
+
+							<Button
+								variant="outline"
+								class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+								disabled={reservationToReschedule}
+								onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
+							>
+								<span>
+									{#if redeemCode}
+										Redeem Code Applied
+									{:else}
+										{selectedVoucher
+											? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
+											: 'Pilih / Beli Voucher'}
+									{/if}
+								</span>
+								<ChevronRight class="h-4 w-4 opacity-50" />
+							</Button>
 						</div>
 					</div>
 
@@ -974,6 +1109,12 @@
 							<span>Diskon Voucher</span>
 							<span>-{currencyFormatter.format(voucherDiscount)}</span>
 						</div>
+						{#if redeemCode}
+							<div class="flex justify-between text-senary">
+								<span>Redeem Code ({redeemCode})</span>
+								<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
+							</div>
+						{/if}
 						<div class="flex justify-between text-destructive">
 							<span>Biaya Admin</span>
 							<span>+{currencyFormatter.format(adminFee)}</span>
@@ -984,6 +1125,26 @@
 						</div>
 					</div>
 
+					<!-- Terms and Conditions Accordion -->
+					<Accordion.Root type="single" collapsible class="w-full">
+						<Accordion.Item value="tnc" class="border-white/10">
+							<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+								Syarat & Ketentuan
+							</Accordion.Trigger>
+							<Accordion.Content class="text-sm text-secondary/70">
+								<ul class="list-disc space-y-1 pl-4">
+									<li>
+										Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
+										maksimal 1 kali.
+									</li>
+									<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
+									<li>Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.</li>
+									<li>Biaya admin tidak dapat dikembalikan.</li>
+								</ul>
+							</Accordion.Content>
+						</Accordion.Item>
+					</Accordion.Root>
+
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<Button
 							variant="outline"
@@ -991,14 +1152,19 @@
 							onclick={goBack}>Kembali</Button
 						>
 						<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-							<label class="flex items-center gap-2 text-xs text-secondary/60 hover:text-secondary">
-								<input
-									type="checkbox"
+							<div class="flex items-center space-x-2">
+								<Checkbox
+									id="tnc"
 									bind:checked={agreeTnc}
-									class="rounded border-white/20 bg-white/5 text-senary focus:ring-senary"
+									class="border-white/20 data-[state=checked]:bg-senary data-[state=checked]:text-primary"
 								/>
-								Saya telah membaca dan menyetujui syarat & ketentuan.
-							</label>
+								<Label
+									for="tnc"
+									class="text-xs leading-none text-secondary/60 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+								>
+									Saya menyetujui syarat & ketentuan
+								</Label>
+							</div>
 							<Button
 								class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
 								disabled={loadingSubmit}
@@ -1017,6 +1183,7 @@
 									Konfirmasi Reschedule
 								{:else}
 									Konfirmasi Reservasi
+									<div></div>
 								{/if}
 							</Button>
 						</div>
@@ -1026,6 +1193,75 @@
 		</div>
 	</SheetContent>
 </Sheet>
+
+<VoucherSelectionModal
+	bind:open={showVoucherModal}
+	ownedVouchers={vouchers}
+	{availableVouchers}
+	{services}
+	{userCoins}
+	{selectedServiceId}
+	selectedVoucherId={voucherSelection === 'none' ? null : voucherSelection}
+	onClose={() => (showVoucherModal = false)}
+	onSelect={(voucherId) => {
+		voucherSelection = voucherId ?? 'none';
+		if (voucherSelection !== 'none') {
+			redeemCode = null;
+			redeemCodeDiscount = 0;
+		}
+		showVoucherModal = false;
+	}}
+	onRedeemApply={(code, discount) => {
+		redeemCode = code;
+		redeemCodeDiscount = discount;
+		voucherSelection = 'none';
+		showVoucherModal = false;
+	}}
+	onBuy={async (voucher) => {
+		const token = get(authStore).session?.access_token;
+		if (!token) return;
+
+		try {
+			const response = await buyVoucher(voucher.voucherID, token);
+			if (response.success) {
+				toast.success('Voucher purchased successfully!');
+				// Reload data
+				await loadReservationData();
+			} else {
+				toast.error(response.message || 'Failed to purchase voucher');
+			}
+		} catch (e) {
+			console.error('Error buying voucher:', e);
+			toast.error('An error occurred while purchasing the voucher');
+		}
+	}}
+/>
+
+<AlertDialog open={showLoginAlert} onOpenChange={(open) => (showLoginAlert = open)}>
+	<AlertDialogContent class="border border-white/10 bg-primary text-secondary">
+		<AlertDialogHeader>
+			<AlertDialogTitle class="text-white">Login Diperlukan</AlertDialogTitle>
+			<AlertDialogDescription class="text-secondary/70">
+				Anda perlu masuk ke akun Anda untuk melanjutkan proses reservasi. Data reservasi Anda akan
+				disimpan.
+			</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel
+				class="border-white/10 bg-transparent text-secondary hover:bg-white/10 hover:text-white"
+				onclick={() => (showLoginAlert = false)}
+			>
+				Batal
+			</AlertDialogCancel>
+			<AlertDialogAction
+				class="bg-senary text-primary hover:bg-senary/90"
+				onclick={handleLoginRedirect}
+			>
+				Masuk Sekarang
+			</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>
 
 <style>
 	:global([data-slot='sheet-content']) {

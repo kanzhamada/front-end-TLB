@@ -1,17 +1,16 @@
 import { browser } from '$app/environment';
-import { getOperational, getServices } from '$lib/api/shared/api';
+import { getOperational, getServices, getSchedule } from '$lib/api/shared/api';
 
-export const load = async () => {
+export const load = async ({ fetch }) => {
 	// Only run on client side since SSR is disabled
 	if (browser) {
 		try {
 			// Fetch services and schedule in parallel
 			const [servicesResponse, scheduleResponse] = await Promise.all([
-				getServices(),
-				getOperational()
+				getServices(fetch),
+				getSchedule(fetch)
 			]);
 
-			// Return data with fallbacks for errors
 			return {
 				services: servicesResponse.success ? servicesResponse.data : [],
 				schedule: scheduleResponse.success ? scheduleResponse.data : [],

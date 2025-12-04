@@ -4,7 +4,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
-	let { selectedService = $bindable(), onClose } = $props();
+	let { selectedService = $bindable(), onClose, onBook } = $props();
 </script>
 
 {#if selectedService}
@@ -27,17 +27,17 @@
 			<div class="relative">
 				<Carousel.Root opts={{ loop: true }}>
 					<Carousel.Content>
-						{#each selectedService.image as src, i}
+						{#each selectedService.catalogueImages as img, i}
 							<Carousel.Item>
 								<img
-									{src}
+									src={img.imageUrl}
 									alt={`${selectedService.name} ${i + 1}`}
 									class="h-128 w-full object-cover"
 								/>
 							</Carousel.Item>
 						{/each}
 					</Carousel.Content>
-					{#if selectedService.image.length > 1}
+					{#if selectedService.catalogueImages.length > 1}
 						<Carousel.Previous
 							class="absolute top-1/2 left-4 -translate-y-1/2 border-white/10 bg-black/40 text-white hover:bg-white hover:text-black"
 						/>
@@ -70,6 +70,7 @@
 					</p>
 				</div>
 				<button
+					onclick={() => onBook?.(selectedService)}
 					class="w-full rounded-xl bg-senary py-4 text-sm font-bold tracking-widest text-primary uppercase transition hover:bg-white hover:shadow-lg"
 				>
 					Book Appointment

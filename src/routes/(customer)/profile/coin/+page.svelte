@@ -16,6 +16,44 @@
 	import type { UserProfile } from '$lib/stores/auth';
 	import { Coins, TrendingUp, TrendingDown, Sparkles } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
+	import * as Pagination from '$lib/components/ui/pagination';
+	import { getProfile } from '$lib/api/customer/profile';
+	import type { ProfileData } from '$lib/api/customer/profile';
+
+	let profileData = $state<ProfileData | null>(null);
+	// Load profile for editing
+	async function loadProfile() {
+		loading = true;
+		error = null;
+		profileData = null;
+
+		try {
+			console.debug('Getting token from authStore...');
+			const token = get(authStore).session?.access_token;
+			console.debug('Token:', token);
+			if (!token) {
+				console.debug('No token found, throwing error.');
+				throw new Error('User not authenticated');
+			}
+
+			console.debug('Calling getProfile with token...');
+			const response = await getProfile(token);
+			console.debug('getProfile response:', response);
+			if (!response.success || !response.data) {
+				console.debug('Response unsuccessful or missing data, throwing error.');
+				throw new Error(response.message || 'Failed to load profile');
+			}
+
+			console.debug('Setting profileData to response.data:', response.data);
+			profileData = response.data;
+		} catch (err) {
+			console.error('Error loading profile:', err);
+			error = err instanceof Error ? err.message : 'An error occurred while loading profile';
+		} finally {
+			console.debug('Setting loading to false.');
+			loading = false;
+		}
+	}
 
 	let user: UserProfile | null = get(authStore).session?.user || null;
 
@@ -31,6 +69,21 @@
 
 	let coinTransactions: CoinTransaction[] = $state([]);
 	let activeTab = $state<'all' | 'earned' | 'spent'>('all');
+	let currentPage = $state(1);
+	let itemsPerPage = 10;
+
+	let filteredTransactions = $derived(
+		coinTransactions.filter((t) => {
+			if (activeTab === 'all') return true;
+			if (activeTab === 'earned') return t.amount < 0;
+			if (activeTab === 'spent') return t.amount > -1;
+			return true;
+		})
+	);
+
+	let paginatedTransactions = $derived(
+		filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+	);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -73,32 +126,61 @@
 			loading = false;
 		}
 	}
+
+	onMount(async () => {
+		await loadProfile();
+	});
 </script>
 
 {#if loading}
-	<div class="space-y-6">
+	<div class="space-y-8" in:fade>
+		<!-- Header Skeleton -->
 		<div class="flex items-center gap-4">
-			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
-				<Coins class="size-8 text-senary" />
-			</div>
-			<div>
-				<h2 class="text-2xl font-bold text-secondary">Coin History</h2>
-				<p class="text-secondary/60">Manage and track your coin activity</p>
+			<div class="h-12 w-12 animate-pulse rounded-xl bg-white/10"></div>
+			<div class="space-y-2">
+				<div class="h-8 w-48 animate-pulse rounded bg-white/10"></div>
+				<div class="h-4 w-64 animate-pulse rounded bg-white/10"></div>
 			</div>
 		</div>
 
-		<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+		<!-- Summary Cards Skeleton -->
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 			{#each [1, 2, 3] as _}
 				<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-					<div class="mx-auto mb-2 h-4 w-3/4 animate-pulse rounded bg-white/10"></div>
-					<div class="mx-auto h-8 w-1/2 animate-pulse rounded bg-white/10"></div>
+					<div class="flex flex-col items-center gap-4">
+						<div class="h-4 w-24 animate-pulse rounded bg-white/10"></div>
+						<div class="h-10 w-32 animate-pulse rounded bg-white/10"></div>
+					</div>
 				</div>
 			{/each}
 		</div>
 
-		<div class="animate-pulse space-y-4">
-			{#each [1, 2, 3, 4] as _}
-				<div class="h-20 w-full rounded-xl border border-white/10 bg-white/5"></div>
+		<!-- Tab Navigation Skeleton -->
+		<div class="flex w-full border-b border-white/10">
+			{#each [1, 2, 3] as _}
+				<div class="px-6 py-3">
+					<div class="h-5 w-24 animate-pulse rounded bg-white/10"></div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Transactions List Skeleton -->
+		<div class="space-y-3">
+			{#each [1, 2, 3, 4, 5] as _}
+				<div
+					class="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4"
+				>
+					<div class="flex items-center gap-4">
+						<div class="h-10 w-10 animate-pulse rounded-lg bg-white/10"></div>
+						<div class="space-y-2">
+							<div class="h-5 w-48 animate-pulse rounded bg-white/10"></div>
+							<div class="h-3 w-32 animate-pulse rounded bg-white/10"></div>
+						</div>
+					</div>
+					<div class="flex flex-col items-end gap-1">
+						<div class="h-6 w-16 animate-pulse rounded bg-white/10"></div>
+					</div>
+				</div>
 			{/each}
 		</div>
 	</div>
@@ -146,7 +228,7 @@
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-senary drop-shadow-lg"
 					>
 						<Coins class="size-6" />
-						{user?.coins ?? 0}
+						{profileData?.coin ?? 0}
 					</p>
 				</div>
 				<div
@@ -158,9 +240,7 @@
 				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-green-500/30 hover:bg-white/10"
 			>
 				<div class="relative z-10 text-center">
-					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
-						Earned This Month
-					</p>
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">Total Earned</p>
 					<p
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-green-400 drop-shadow-lg"
 					>
@@ -179,9 +259,7 @@
 				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-red-500/30 hover:bg-white/10"
 			>
 				<div class="relative z-10 text-center">
-					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
-						Spent This Month
-					</p>
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">Total Spent</p>
 					<p
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-red-400 drop-shadow-lg"
 					>
@@ -243,12 +321,7 @@
 
 		<!-- Transactions List -->
 		<div class="space-y-3">
-			{#each coinTransactions.filter((t) => {
-				if (activeTab === 'all') return true;
-				if (activeTab === 'earned') return t.amount < 0;
-				if (activeTab === 'spent') return t.amount > 0;
-				return true;
-			}) as transaction (transaction.id)}
+			{#each paginatedTransactions as transaction (transaction.id)}
 				<div
 					class="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-all hover:border-white/10 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20"
 					in:fly={{ y: 10, duration: 300 }}
@@ -259,7 +332,7 @@
 								? 'bg-green-500/10 text-green-400 group-hover:bg-green-500/20'
 								: 'bg-red-500/10 text-red-400 group-hover:bg-red-500/20'}"
 						>
-							{#if transaction.amount > 0}
+							{#if transaction.amount < -1}
 								<TrendingUp class="size-5" />
 							{:else}
 								<TrendingDown class="size-5" />
@@ -285,7 +358,7 @@
 				</div>
 			{/each}
 
-			{#if coinTransactions.length === 0}
+			{#if filteredTransactions.length === 0}
 				<div class="flex flex-col items-center justify-center py-12 text-center text-secondary/50">
 					<div class="mb-4 rounded-full bg-white/5 p-4">
 						<Coins class="size-8 opacity-50" />
@@ -294,5 +367,39 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if filteredTransactions.length > itemsPerPage}
+			<div class="mt-8">
+				<Pagination.Root
+					count={filteredTransactions.length}
+					perPage={itemsPerPage}
+					bind:page={currentPage}
+				>
+					{#snippet children({ pages, currentPage })}
+						<Pagination.Content>
+							<Pagination.Item>
+								<Pagination.PrevButton />
+							</Pagination.Item>
+							{#each pages as page (page.key)}
+								{#if page.type === 'ellipsis'}
+									<Pagination.Item>
+										<Pagination.Ellipsis />
+									</Pagination.Item>
+								{:else}
+									<Pagination.Item>
+										<Pagination.Link {page} isActive={currentPage === page.value}>
+											{page.value}
+										</Pagination.Link>
+									</Pagination.Item>
+								{/if}
+							{/each}
+							<Pagination.Item>
+								<Pagination.NextButton />
+							</Pagination.Item>
+						</Pagination.Content>
+					{/snippet}
+				</Pagination.Root>
+			</div>
+		{/if}
 	</div>
 {/if}

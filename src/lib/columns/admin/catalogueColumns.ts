@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/table-core';
 
-import type { Catalogue } from '$lib/types/adminTypes';
+import type { Catalogue } from '$lib/api/shared/api';
 
 export const catalogueColumns: ColumnDef<Catalogue>[] = [
 	{
@@ -13,6 +13,6 @@ export const catalogueColumns: ColumnDef<Catalogue>[] = [
 		accessorKey: 'description'
 	},
 	{
-		accessorKey: 'image'
+		accessorKey: 'catalogueImages'
 	}
 ];

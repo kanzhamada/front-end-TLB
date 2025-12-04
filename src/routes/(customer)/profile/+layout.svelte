@@ -15,10 +15,14 @@
 		Mail,
 		Phone,
 		Lock,
-		Sparkles
+		Sparkles,
+		Eye,
+		EyeOff
 	} from 'lucide-svelte';
 	import { getProfile, updateProfile, type ProfileData } from '$lib/api/customer/profile';
 	import { fade, fly } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { profileSchema } from '$lib/zod/schema';
 
 	let { children } = $props();
 
@@ -34,9 +38,14 @@
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
+	let showCurrentPassword = $state(false);
+	let showNewPassword = $state(false);
+	let showConfirmPassword = $state(false);
 
 	// Get user profile from auth store
 	const userProfile: UserProfile | null = get(authStore).session?.user || null;
+
+	console.log(userProfile);
 
 	function handleLogout() {
 		authStore.clear();
@@ -44,7 +53,7 @@
 	}
 
 	// Load profile for editing
-	async function loadProfileForEdit() {
+	async function loadProfile() {
 		loading = true;
 		error = null;
 		profileData = null;
@@ -77,15 +86,30 @@
 		}
 	}
 
+	onMount(() => {
+		loadProfile();
+	});
+
 	// Handle opening edit modal
 	function openEditModal() {
-		loadProfileForEdit();
 		showEditModal = true;
 	}
 
 	// Handle profile update
 	async function handleUpdateProfile() {
 		if (!profileData) return;
+
+		// Validate using Zod schema
+		const validationResult = profileSchema.safeParse({
+			displayName: profileData.displayName,
+			phone: profileData.phone
+		});
+
+		if (!validationResult.success) {
+			// Get the first error message
+			error = validationResult.error.errors[0].message;
+			return;
+		}
 
 		isUpdating = true;
 		try {
@@ -204,35 +228,29 @@
 						<div class="relative">
 							<Avatar class="size-24 border-2 border-senary shadow-[0_0_15px_rgba(212,175,55,0.3)]">
 								<AvatarFallback class="bg-primary text-2xl text-senary">
-									{userProfile?.display_name?.charAt(0) ?? 'U'}
+									{profileData?.displayName.charAt(0) ?? 'U'}
 								</AvatarFallback>
 							</Avatar>
-							<div
-								class="absolute -right-2 -bottom-2 rounded-full bg-senary p-1.5 text-primary shadow-lg"
-							>
-								<Sparkles class="size-4" />
-							</div>
 						</div>
 
 						<div class="mt-4 w-full">
 							<h2 class="truncate text-xl font-bold text-secondary">
-								{userProfile?.display_name ?? 'Pengguna'}
+								{profileData?.displayName ?? 'Pengguna'}
 							</h2>
-							<p class="truncate text-sm text-secondary/60">{userProfile?.email}</p>
+							<p class="truncate text-sm text-secondary/60">{profileData?.email}</p>
 
 							<div class="mt-4 space-y-2 rounded-xl bg-black/20 p-3 text-sm">
-								{#if userProfile?.phone}
+								{#if profileData?.phone}
 									<p class="flex items-center justify-between text-secondary/80">
 										<span class="text-xs tracking-wider text-secondary/50 uppercase">Phone</span>
-										<span>{userProfile.phone}</span>
+										<span>{profileData?.phone}</span>
 									</p>
 								{/if}
-								<div class="h-[1px] w-full bg-white/5"></div>
 								<p class="flex items-center justify-between">
 									<span class="text-xs tracking-wider text-secondary/50 uppercase">Balance</span>
 									<span class="flex items-center gap-1 font-bold text-senary">
 										<Wallet class="size-3" />
-										{userProfile?.coin ?? 0}
+										{profileData?.coin ?? 0}
 									</span>
 								</p>
 							</div>
@@ -251,6 +269,14 @@
 									onclick={() => (showChangePasswordModal = true)}
 								>
 									Change Password
+								</Button>
+								<Button
+									variant="outline"
+									class="w-full border-white/10 bg-transparent text-red-500 transition-all hover:border-red-500/30 hover:bg-white/5 hover:text-red-500"
+									onclick={handleLogout}
+								>
+									<LogOut class="mr-2 size-4" />
+									Sign Out
 								</Button>
 							</div>
 						</div>
@@ -295,18 +321,6 @@
 						</a>
 					</nav>
 				</div>
-
-				<!-- Logout Section -->
-				<div class="mt-6">
-					<Button
-						variant="ghost"
-						class="w-full justify-start text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
-						onclick={handleLogout}
-					>
-						<LogOut class="mr-2 size-4" />
-						Sign Out
-					</Button>
-				</div>
 			</div>
 
 			<!-- Main Content Area -->
@@ -340,10 +354,6 @@
 							<div class="h-12 w-full rounded-lg bg-white/5"></div>
 						{/each}
 					</div>
-				{:else if error}
-					<div class="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-400">
-						{error} suelet
-					</div>
 				{:else if profileData}
 					<div class="space-y-4">
 						<div class="space-y-2">
@@ -363,18 +373,6 @@
 						</div>
 						<div class="space-y-2">
 							<div class="flex items-center gap-2 text-sm text-senary">
-								<Mail class="size-4" />
-								<label class="font-medium">Email</label>
-							</div>
-							<input
-								type="text"
-								class="w-full rounded-lg border border-white/10 bg-black/40 p-3 text-secondary/50"
-								value={profileData.email}
-								disabled
-							/>
-						</div>
-						<div class="space-y-2">
-							<div class="flex items-center gap-2 text-sm text-senary">
 								<Phone class="size-4" />
 								<label class="font-medium">Phone Number</label>
 							</div>
@@ -388,6 +386,11 @@
 								}}
 							/>
 						</div>
+						{#if error}
+							<div class="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+								{error}
+							</div>
+						{/if}
 					</div>
 
 					<div class="mt-8 flex justify-end gap-3">
@@ -441,48 +444,87 @@
 							<Lock class="size-4" />
 							<label class="font-medium">Current Password</label>
 						</div>
-						<input
-							type="password"
-							class="w-full rounded-lg border border-white/10 bg-black/20 p-3 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-							placeholder="Enter current password"
-							value={currentPassword}
-							oninput={(e) => {
-								const target = e.target as HTMLInputElement;
-								currentPassword = target.value;
-							}}
-						/>
+						<div class="relative">
+							<input
+								type={showCurrentPassword ? 'text' : 'password'}
+								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
+								placeholder="Enter current password"
+								value={currentPassword}
+								oninput={(e) => {
+									const target = e.target as HTMLInputElement;
+									currentPassword = target.value;
+								}}
+							/>
+							<button
+								type="button"
+								class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+								onclick={() => (showCurrentPassword = !showCurrentPassword)}
+							>
+								{#if showCurrentPassword}
+									<EyeOff class="size-4" />
+								{:else}
+									<Eye class="size-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 					<div class="space-y-2">
 						<div class="flex items-center gap-2 text-sm text-senary">
 							<Lock class="size-4" />
 							<label class="font-medium">New Password</label>
 						</div>
-						<input
-							type="password"
-							class="w-full rounded-lg border border-white/10 bg-black/20 p-3 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-							placeholder="Enter new password"
-							value={newPassword}
-							oninput={(e) => {
-								const target = e.target as HTMLInputElement;
-								newPassword = target.value;
-							}}
-						/>
+						<div class="relative">
+							<input
+								type={showNewPassword ? 'text' : 'password'}
+								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
+								placeholder="Enter new password"
+								value={newPassword}
+								oninput={(e) => {
+									const target = e.target as HTMLInputElement;
+									newPassword = target.value;
+								}}
+							/>
+							<button
+								type="button"
+								class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+								onclick={() => (showNewPassword = !showNewPassword)}
+							>
+								{#if showNewPassword}
+									<EyeOff class="size-4" />
+								{:else}
+									<Eye class="size-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 					<div class="space-y-2">
 						<div class="flex items-center gap-2 text-sm text-senary">
 							<Lock class="size-4" />
 							<label class="font-medium">Confirm New Password</label>
 						</div>
-						<input
-							type="password"
-							class="w-full rounded-lg border border-white/10 bg-black/20 p-3 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-							placeholder="Confirm new password"
-							value={confirmPassword}
-							oninput={(e) => {
-								const target = e.target as HTMLInputElement;
-								confirmPassword = target.value;
-							}}
-						/>
+						<div class="relative">
+							<input
+								type={showConfirmPassword ? 'text' : 'password'}
+								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
+								placeholder="Confirm new password"
+								value={confirmPassword}
+								oninput={(e) => {
+									const target = e.target as HTMLInputElement;
+									confirmPassword = target.value;
+								}}
+							/>
+							<button
+								type="button"
+								class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+								onclick={() => (showConfirmPassword = !showConfirmPassword)}
+							>
+								{#if showConfirmPassword}
+									<EyeOff class="size-4" />
+								{:else}
+									<Eye class="size-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 				</div>
 

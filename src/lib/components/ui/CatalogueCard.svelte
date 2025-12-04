@@ -16,7 +16,7 @@
 >
 	<div class="relative aspect-[3/4] overflow-hidden">
 		<img
-			src={catalogue.image[0]}
+			src={catalogue.catalogueImages?.[0]?.imageUrl}
 			alt={catalogue.name}
 			class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
 		/>

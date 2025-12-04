@@ -38,12 +38,31 @@
 	} from 'lucide-svelte';
 	import CustomerChatModal from '$lib/components/User/Chat/CustomerChatModal.svelte';
 	import { fade, fly } from 'svelte/transition';
+	import Countdown from '$lib/components/User/Reservation/Countdown.svelte';
+	import * as Pagination from '$lib/components/ui/pagination';
+	import { toast } from 'svelte-sonner';
 
 	let reservations: ReservationResponse[] = $state([]);
 	let activeReservations: ReservationResponse[] = $state([]);
 	let historyReservations: ReservationResponse[] = $state([]);
+	let historyPage = $state(1);
+	let historyItemsPerPage = 5;
+	let paginatedHistoryReservations = $derived(
+		historyReservations.slice(
+			(historyPage - 1) * historyItemsPerPage,
+			historyPage * historyItemsPerPage
+		)
+	);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	$effect(() => {
+		if (error) {
+			toast.error(error);
+			goto('/auth/login');
+			error = null;
+		}
+	});
+
 	let showChatModal = $state(false);
 	let selectedReservation: any = $state(null);
 
@@ -221,35 +240,89 @@
 </script>
 
 {#if loading}
-	<div class="space-y-8">
-		<div class="flex items-center gap-4">
-			<div class="rounded-xl border border-white/10 bg-white/5 p-3">
-				<Calendar class="size-8 text-senary" />
+	<div class="space-y-10" in:fade>
+		<!-- Active Reservations Skeleton -->
+		<section>
+			<div class="mb-6 flex items-center gap-3">
+				<div class="h-12 w-12 animate-pulse rounded-lg bg-white/10"></div>
+				<div class="h-6 w-48 animate-pulse rounded bg-white/10"></div>
 			</div>
-			<div>
-				<h2 class="text-2xl font-bold text-secondary">Reservations</h2>
-				<p class="text-secondary/60">Manage your appointments</p>
-			</div>
-		</div>
 
-		<div class="space-y-4">
-			{#each [1, 2] as _}
-				<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-					<div class="flex flex-wrap items-center justify-between gap-4">
-						<div class="space-y-3">
-							<div class="h-6 w-32 animate-pulse rounded bg-white/10"></div>
-							<div class="h-4 w-48 animate-pulse rounded bg-white/10"></div>
-							<div class="h-4 w-40 animate-pulse rounded bg-white/10"></div>
+			<div class="space-y-4">
+				{#each [1, 2] as _}
+					<div
+						class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+					>
+						<div class="flex flex-wrap items-start justify-between gap-4">
+							<div class="space-y-4">
+								<div>
+									<div class="mb-2 h-4 w-48 animate-pulse rounded bg-white/10"></div>
+									<div class="flex items-center gap-2">
+										<div class="h-6 w-6 animate-pulse rounded bg-white/10"></div>
+										<div class="h-6 w-32 animate-pulse rounded bg-white/10"></div>
+									</div>
+									<div class="mt-2 h-6 w-24 animate-pulse rounded-full bg-white/10"></div>
+								</div>
+
+								<div class="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
+									{#each [1, 2, 3, 4] as _}
+										<div class="flex items-center gap-2">
+											<div class="h-4 w-4 animate-pulse rounded bg-white/10"></div>
+											<div class="h-4 w-32 animate-pulse rounded bg-white/10"></div>
+										</div>
+									{/each}
+								</div>
+							</div>
 						</div>
-						<div class="h-8 w-24 animate-pulse rounded-full bg-white/10"></div>
+
+						<div class="mt-4 flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+							<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
+							<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
+						</div>
 					</div>
-					<div class="mt-6 flex gap-3">
-						<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
-						<div class="h-10 w-24 animate-pulse rounded-lg bg-white/10"></div>
+				{/each}
+			</div>
+		</section>
+
+		<!-- History Skeleton -->
+		<section>
+			<div class="mb-6 flex items-center gap-3">
+				<div class="h-10 w-10 animate-pulse rounded-lg bg-white/10"></div>
+				<div class="h-6 w-32 animate-pulse rounded bg-white/10"></div>
+			</div>
+
+			<div class="space-y-4">
+				{#each [1, 2, 3] as _}
+					<div class="rounded-2xl border border-white/5 bg-white/5 p-6">
+						<div class="flex flex-wrap items-center justify-between gap-4">
+							<div class="space-y-4">
+								<div>
+									<div class="mb-2 h-4 w-48 animate-pulse rounded bg-white/10"></div>
+									<div class="flex items-center gap-2">
+										<div class="h-5 w-5 animate-pulse rounded bg-white/10"></div>
+										<div class="h-5 w-24 animate-pulse rounded bg-white/10"></div>
+									</div>
+									<div class="mt-2 h-5 w-20 animate-pulse rounded-full bg-white/10"></div>
+								</div>
+
+								<div class="grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2">
+									{#each [1, 2, 3, 4] as _}
+										<div class="flex items-center gap-2">
+											<div class="h-3 w-3 animate-pulse rounded bg-white/10"></div>
+											<div class="h-3 w-24 animate-pulse rounded bg-white/10"></div>
+										</div>
+									{/each}
+								</div>
+							</div>
+
+							<div>
+								<div class="h-9 w-24 animate-pulse rounded-lg bg-white/10"></div>
+							</div>
+						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		</section>
 	</div>
 {:else if error}
 	<div class="space-y-6">
@@ -266,7 +339,7 @@
 		<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
 			<div class="flex items-center justify-center gap-2">
 				<AlertCircle class="size-5" />
-				<span>{error}</span>
+				<span>{error} tes</span>
 			</div>
 		</div>
 	</div>
@@ -276,7 +349,7 @@
 		<section>
 			<div class="mb-6 flex items-center gap-3">
 				<div class="rounded-lg bg-senary/10 p-2">
-					<Sparkles class="size-5 text-senary" />
+					<Calendar class="size-8 text-senary" />
 				</div>
 				<h3 class="text-xl font-bold text-secondary">Active Reservations</h3>
 			</div>
@@ -310,6 +383,17 @@
 							<div class="relative z-10 flex flex-wrap items-start justify-between gap-4">
 								<div class="space-y-4">
 									<div>
+										<p class="text-sm font-medium text-secondary/70">
+											Pesanan Dibuat pada: {new Date(reservation.created_at)
+												.toLocaleString('id-ID', {
+													year: 'numeric',
+													month: 'numeric',
+													day: 'numeric',
+													hour: '2-digit',
+													minute: '2-digit'
+												})
+												.replace(/\//g, '-')}
+										</p>
 										<h3 class="flex items-center gap-2 text-lg font-bold text-secondary">
 											<Scissors class="size-5 text-senary" />
 											#{reservation.invoice || reservation.reservationID}
@@ -341,124 +425,155 @@
 											<span>Service: {reservation.service.name}</span>
 										</div>
 									</div>
-								</div>
 
-								<div class="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-									{#if reservation.status === 'waiting'}
-										<Button
-											variant="outline"
-											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
-											onclick={() => handleCancelReservation(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
+									{#if reservation.status === 'waitingForPayment'}
+										<div
+											class="mt-4 mb-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-4"
 										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16 bg-white/10" />
-											{:else}
-												<X class="mr-2 size-4" />
-												Cancel
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
-											onclick={() => openChatModal(reservation)}
-										>
-											<MessageCircle class="mr-2 size-4" />
-											Chat
-										</Button>
-									{:else if reservation.status === 'onGoing'}
-										<Button
-											variant="outline"
-											class="border-blue-500/30 text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/10"
-											onclick={() => handleRescheduleReservation(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
-										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-20 bg-white/10" />
-											{:else}
-												<RotateCcw class="mr-2 size-4" />
-												Reschedule
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
-											onclick={() => handleCancelReservation(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
-										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16 bg-white/10" />
-											{:else}
-												<X class="mr-2 size-4" />
-												Cancel
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
-											onclick={() => openChatModal(reservation)}
-										>
-											<MessageCircle class="mr-2 size-4" />
-											Chat
-										</Button>
-									{:else if reservation.status === 'requestToReschedule'}
-										<Button
-											variant="outline"
-											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
-											onclick={() => handleCancelReservation(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
-										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16 bg-white/10" />
-											{:else}
-												<X class="mr-2 size-4" />
-												Cancel
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
-											onclick={() => openChatModal(reservation)}
-										>
-											<MessageCircle class="mr-2 size-4" />
-											Chat
-										</Button>
-									{:else if reservation.status === 'waitingForPayment'}
-										<Button
-											class="bg-green-600 text-white shadow-lg shadow-green-900/20 hover:bg-green-500"
-											onclick={() => handlePayNow(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
-										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-20 bg-white/20" />
-											{:else}
-												<CreditCard class="mr-2 size-4" />
-												Pay Now
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
-											onclick={() => handleCancelReservation(reservation)}
-											disabled={processingReservationId === reservation.reservationID}
-										>
-											{#if processingReservationId === reservation.reservationID}
-												<Skeleton class="h-4 w-16 bg-white/10" />
-											{:else}
-												<X class="mr-2 size-4" />
-												Cancel
-											{/if}
-										</Button>
-										<Button
-											variant="outline"
-											class="border-senary/30 text-senary hover:border-senary/50 hover:bg-senary/10"
-											onclick={() => openChatModal(reservation)}
-										>
-											<MessageCircle class="mr-2 size-4" />
-											Chat
-										</Button>
+											<div class="mb-2 flex items-center gap-2 text-orange-300">
+												<Clock class="size-4 animate-pulse" />
+												<span class="text-sm font-medium">Payment Deadline</span>
+											</div>
+											<Countdown
+												date={reservation.updated_at ||
+													reservation.created_at ||
+													new Date().toISOString()}
+												onExpire={() => {
+													reservation.status = 'expired';
+												}}
+											/>
+											<p class="mt-2 text-xs text-orange-300/70">
+												Please complete payment before the timer expires to avoid automatic
+												cancellation.
+											</p>
+										</div>
 									{/if}
 								</div>
+							</div>
+
+							<div class="mt-4 flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+								{#if reservation.status === 'waiting'}
+									<Button
+										variant="outline"
+										class="border-destructive/30 text-destructive transition-all duration-300 hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+										onclick={() => handleCancelReservation(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-16 bg-white/10" />
+										{:else}
+											<X class="mr-2 size-4" />
+											Cancel
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										onclick={() => openChatModal(reservation)}
+									>
+										<MessageCircle class="mr-2 size-4" />
+										Chat
+									</Button>
+								{:else if reservation.status === 'onGoing'}
+									<Button
+										variant="outline"
+										class="border-quaternary/30 text-quaternary transition-all duration-300 hover:border-quaternary hover:bg-quaternary/10 hover:text-quaternary"
+										onclick={() => handleRescheduleReservation(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-20 bg-white/10" />
+										{:else}
+											<RotateCcw class="mr-2 size-4" />
+											Reschedule
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-destructive/30 text-destructive transition-all duration-300 hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+										onclick={() => handleCancelReservation(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-16 bg-white/10" />
+										{:else}
+											<X class="mr-2 size-4" />
+											Cancel
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										onclick={() => openChatModal(reservation)}
+									>
+										<MessageCircle class="mr-2 size-4" />
+										Chat
+									</Button>
+								{:else if reservation.status === 'requestToReschedule'}
+									<Button
+										variant="outline"
+										class="border-destructive/30 text-destructive transition-all duration-300 hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+										onclick={() => handleCancelReservation(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-16 bg-white/10" />
+										{:else}
+											<X class="mr-2 size-4" />
+											Cancel
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										onclick={() => openChatModal(reservation)}
+									>
+										<MessageCircle class="mr-2 size-4" />
+										Chat
+									</Button>
+								{:else if reservation.status === 'waitingForPayment'}
+									<Button
+										class="bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all duration-300 hover:bg-senary/90 hover:shadow-[0_0_25px_rgba(212,175,55,0.5)]"
+										onclick={() => handlePayNow(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-20 bg-white/20" />
+										{:else}
+											<CreditCard class="mr-2 size-4" />
+											Pay Now
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-destructive/30 text-destructive transition-all duration-300 hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+										onclick={() => handleCancelReservation(reservation)}
+										disabled={processingReservationId === reservation.reservationID}
+									>
+										{#if processingReservationId === reservation.reservationID}
+											<Skeleton class="h-4 w-16 bg-white/10" />
+										{:else}
+											<X class="mr-2 size-4" />
+											Cancel
+										{/if}
+									</Button>
+									<Button
+										variant="outline"
+										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										onclick={() => openChatModal(reservation)}
+									>
+										<MessageCircle class="mr-2 size-4" />
+										Chat
+									</Button>
+								{/if}
+								<Button
+									variant="outline"
+									class="border-senary/20 text-secondary/70 transition-all duration-300 hover:border-senary/50 hover:bg-senary/5 hover:text-senary"
+									onclick={() => goto(`/profile/reservation/${reservation.reservationID}`)}
+								>
+									<Eye class="mr-2 size-4" />
+									Details
+								</Button>
 							</div>
 						</div>
 					{/each}
@@ -487,13 +602,24 @@
 				</div>
 			{:else}
 				<div class="space-y-4">
-					{#each historyReservations as reservation (reservation.reservationID)}
+					{#each paginatedHistoryReservations as reservation (reservation.reservationID)}
 						<div
 							class="group rounded-2xl border border-white/5 bg-white/5 p-6 transition-all hover:border-white/10 hover:bg-white/10"
 						>
 							<div class="flex flex-wrap items-center justify-between gap-4">
 								<div class="space-y-4">
 									<div>
+										<p class="text-sm font-medium text-secondary/70">
+											Pesanan Dibuat pada: {new Date(reservation.created_at)
+												.toLocaleString('id-ID', {
+													year: 'numeric',
+													month: 'numeric',
+													day: 'numeric',
+													hour: '2-digit',
+													minute: '2-digit'
+												})
+												.replace(/\//g, '-')}
+										</p>
 										<h3 class="flex items-center gap-2 font-semibold text-secondary/80">
 											<Scissors class="size-4 text-senary/50" />
 											#{reservation.invoice || reservation.reservationID}
@@ -541,6 +667,40 @@
 						</div>
 					{/each}
 				</div>
+
+				{#if historyReservations.length > historyItemsPerPage}
+					<div class="mt-8">
+						<Pagination.Root
+							count={historyReservations.length}
+							perPage={historyItemsPerPage}
+							bind:page={historyPage}
+						>
+							{#snippet children({ pages, currentPage })}
+								<Pagination.Content>
+									<Pagination.Item>
+										<Pagination.PrevButton />
+									</Pagination.Item>
+									{#each pages as page (page.key)}
+										{#if page.type === 'ellipsis'}
+											<Pagination.Item>
+												<Pagination.Ellipsis />
+											</Pagination.Item>
+										{:else}
+											<Pagination.Item>
+												<Pagination.Link {page} isActive={currentPage === page.value}>
+													{page.value}
+												</Pagination.Link>
+											</Pagination.Item>
+										{/if}
+									{/each}
+									<Pagination.Item>
+										<Pagination.NextButton />
+									</Pagination.Item>
+								</Pagination.Content>
+							{/snippet}
+						</Pagination.Root>
+					</div>
+				{/if}
 			{/if}
 		</section>
 	</div>
@@ -554,7 +714,7 @@
 
 <!-- Cancel Reservation Dialog -->
 <AlertDialog open={showCancelDialog}>
-	<AlertDialogContent class="border border-white/10 bg-[#05120e] text-secondary">
+	<AlertDialogContent class="border border-white/10 bg-primary text-secondary">
 		<AlertDialogHeader>
 			<AlertDialogTitle class="text-white">Cancel Reservation?</AlertDialogTitle>
 			<AlertDialogDescription class="text-secondary/70">

@@ -23,12 +23,17 @@ export type ReservationResponse = {
 	invoice: string | null;
 	service: ReservationService;
 	dateTime: DateTime;
+	newDateTime?: DateTime;
 	serviceID: string;
 	dateTimeID: string;
 	reservationID: string;
 	created_at?: string;
 	updated_at?: string;
 	voucherId?: string | null;
+	voucherValue?: number;
+	downPayment?: number;
+	totalPayment?: number;
+	fulfillmentStatus?: string;
 };
 
 export type CreateReservationPayload = {
@@ -37,6 +42,7 @@ export type CreateReservationPayload = {
 	dateTimeId: string;
 	notes?: string;
 	voucherId?: string;
+	redeemCode?: string;
 };
 
 export type CreateReservationResponse = {

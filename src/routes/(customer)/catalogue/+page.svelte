@@ -4,8 +4,7 @@
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { getCatalogue } from '$lib/api/shared/catalogue';
-	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
+	import { getCatalogue, type Catalogue } from '$lib/api/shared/api';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import {
@@ -19,9 +18,19 @@
 	import CatalogueCard from '$lib/components/ui/CatalogueCard.svelte';
 	import ServiceDetailModal from '$lib/components/ui/ServiceDetailModal.svelte';
 	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
+	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
+	import { onMount } from 'svelte';
 
-	let response = getCatalogue();
-	let catalogues = response.catalogues;
+	let catalogues = $state<Catalogue[]>([]);
+	let showReservationSheet = $state(false);
+	let selectedCatalogueNote = $state('');
+
+	onMount(async () => {
+		const response = await getCatalogue(fetch);
+		if (response.success && response.data) {
+			catalogues = response.data;
+		}
+	});
 
 	let tablePagination = $state({ pageIndex: 0, pageSize: 8 });
 	let tableColumnFilters = $state<ColumnFiltersState>([]);
@@ -89,7 +98,12 @@
 	// State using Svelte 5 runes
 	let selectedFilter = $state('All');
 	// Fixed: Proper type for selectedService
-	let selectedService = $state<(typeof catalogues)[0] | null>(null);
+	let selectedService = $state<Catalogue | null>(null);
+
+	function handleBook(catalogue: Catalogue) {
+		selectedCatalogueNote = catalogue.name;
+		showReservationSheet = true;
+	}
 </script>
 
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
@@ -208,7 +222,7 @@
 						{catalogue}
 						index={i}
 						onSelect={(c) => (selectedService = c)}
-						onBook={(c) => console.log('Book', c)}
+						onBook={(c) => handleBook(c)}
 					/>
 				{/each}
 			</div>
@@ -276,4 +290,14 @@
 </div>
 
 <!-- Detail Modal -->
-<ServiceDetailModal bind:selectedService onClose={() => (selectedService = null)} />
+<ServiceDetailModal
+	bind:selectedService
+	onClose={() => (selectedService = null)}
+	onBook={(c) => handleBook(c)}
+/>
+
+<ReservationSheet
+	bind:open={showReservationSheet}
+	initialNote={selectedCatalogueNote}
+	triggerClass="hidden"
+/>
