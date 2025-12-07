@@ -1181,6 +1181,26 @@
 						</Accordion.Root>
 					</div>
 
+					<!-- Terms and Conditions Accordion -->
+					<Accordion.Root type="single" collapsible class="w-full">
+						<Accordion.Item value="tnc" class="border-white/10">
+							<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+								Syarat & Ketentuan
+							</Accordion.Trigger>
+							<Accordion.Content class="text-sm text-secondary/70">
+								<ul class="list-disc space-y-1 pl-4">
+									<li>
+										Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
+										maksimal 1 kali.
+									</li>
+									<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
+									<li>Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.</li>
+									<li>Biaya admin tidak dapat dikembalikan.</li>
+								</ul>
+							</Accordion.Content>
+						</Accordion.Item>
+					</Accordion.Root>
+
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<Button
 							variant="outline"

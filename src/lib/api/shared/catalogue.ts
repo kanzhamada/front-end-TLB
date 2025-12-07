@@ -7,6 +7,9 @@ export type Catalogue = {
 	description: string;
 	image: string; // Fallback or first image
 	catalogueImages: { imageID?: string; imageUrl: string }[];
+	hairTypes?: string;
+	faceShapes?: string;
+	skinTones?: string;
 };
 
 export const getCatalogues = async (
@@ -35,7 +38,10 @@ export const getCatalogues = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
-		catalogueImages: item.catalogueImages || []
+		catalogueImages: item.catalogueImages || [],
+		hairTypes: item.hairTypes,
+		faceShapes: item.faceShapes,
+		skinTones: item.skinTones
 	}));
 
 	return {
@@ -66,7 +72,10 @@ export const getCatalogueById = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
-		catalogueImages: item.catalogueImages || []
+		catalogueImages: item.catalogueImages || [],
+		hairTypes: item.hairTypes,
+		faceShapes: item.faceShapes,
+		skinTones: item.skinTones
 	};
 
 	return {

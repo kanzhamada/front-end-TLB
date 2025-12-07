@@ -52,7 +52,10 @@ export const createCatalogue = async (
 				type: json.data.type,
 				description: json.data.description,
 				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
-				catalogueImages: json.data.catalogueImages || []
+				catalogueImages: json.data.catalogueImages || [],
+				hairTypes: json.data.hairTypes,
+				faceShapes: json.data.faceShapes,
+				skinTones: json.data.skinTones
 			}
 		};
 	} catch (error) {
@@ -97,7 +100,10 @@ export const editCatalogue = async (
 				type: json.data.type,
 				description: json.data.description,
 				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
-				catalogueImages: json.data.catalogueImages || []
+				catalogueImages: json.data.catalogueImages || [],
+				hairTypes: json.data.hairTypes,
+				faceShapes: json.data.faceShapes,
+				skinTones: json.data.skinTones
 			}
 		};
 	} catch (error) {

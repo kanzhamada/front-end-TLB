@@ -284,6 +284,7 @@
 			onClose();
 		}
 	}
+<<<<<<< HEAD
 
 	function isSameDay(date1: string, date2: string) {
 		const d1 = new Date(date1);
@@ -313,6 +314,8 @@
 			});
 		}
 	}
+=======
+>>>>>>> ef57d19 (fix admin catalogue and reservation page)
 </script>
 
 <Sheet {open} onOpenChange={handleOpenChange}>
@@ -377,6 +380,7 @@
 					{:else}
 						<div bind:this={messagesContainer} class="h-full overflow-y-auto pr-2">
 							<div class="space-y-6 pb-4">
+<<<<<<< HEAD
 								{#each messages as message, i (message.created_at + message.sender)}
 									{#if i === 0 || !isSameDay(message.created_at, messages[i - 1].created_at)}
 										<div class="my-4 flex justify-center">
@@ -385,6 +389,9 @@
 											</span>
 										</div>
 									{/if}
+=======
+								{#each messages as message (message.created_at + message.sender)}
+>>>>>>> ef57d19 (fix admin catalogue and reservation page)
 									<div
 										class="flex {isCurrentUserMessage(message.sender)
 											? 'justify-end'

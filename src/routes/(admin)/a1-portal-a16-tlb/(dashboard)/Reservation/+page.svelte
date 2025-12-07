@@ -24,7 +24,7 @@
 	let { data } = $props();
 	let reservations = $state<Reservation[]>([]);
 	let searchQuery = $state('');
-	let selectedStatus = $state<string>('All');
+	let selectedStatuses = $state<string[]>([]);
 	let selectedSort = $state<string>('newest');
 	let selectedReservationId = $state<string | null>(null);
 
@@ -61,8 +61,11 @@
 		reservations
 			.filter((r) => {
 				const customerName = r.customer?.name || 'Unknown';
-				const matchesSearch = customerName.toLowerCase().includes(searchQuery.toLowerCase());
-				const matchesStatus = selectedStatus === 'All' || r.status === selectedStatus;
+				const invoice = r.invoice || '';
+				const matchesSearch = 
+					customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					invoice.toLowerCase().includes(searchQuery.toLowerCase());
+				const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(r.status);
 				return matchesSearch && matchesStatus;
 			})
 			.sort((a, b) => {
@@ -134,7 +137,6 @@
 	};
 
 	const statusOptions = [
-		{ value: 'All', label: 'All Status' },
 		{ value: 'waiting', label: 'Waiting Approve' },
 		{ value: 'onGoing', label: 'On Going' },
 		{ value: 'completed', label: 'Completed' },
@@ -239,7 +241,7 @@
 							class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 transform text-secondary/50"
 						/>
 						<Input
-							placeholder="Search customer..."
+							placeholder="Search customer or invoice..."
 							bind:value={searchQuery}
 							class="w-full rounded-xl border-white/10 bg-white/5 py-6 pl-11 text-secondary placeholder:text-secondary/50 focus:border-senary/50 focus:ring-senary/20"
 						/>
@@ -281,18 +283,34 @@
 									class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-senary"
 								>
 									<Filter class="mr-2 h-4 w-4" />
-									{selectedStatus === 'All' ? 'All Status' : selectedStatus}
+									{selectedStatuses.length === 0 ? 'All Status' : `${selectedStatuses.length} Selected`}
 								</Button>
 							{/snippet}
 						</DropdownMenu.Trigger>
-						<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary">
+						<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary w-56">
+							<DropdownMenu.CheckboxItem
+								checked={selectedStatuses.length === 0}
+								onclick={() => selectedStatuses = []}
+								class="focus:bg-white/10 focus:text-senary flex items-center [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5 [&>span]:size-4 [&>span]:rounded-sm"
+							>
+								All Status
+							</DropdownMenu.CheckboxItem>
+							<DropdownMenu.Separator class="bg-white/20 my-2" />
 							{#each statusOptions as option}
-								<DropdownMenu.Item
-									onclick={() => (selectedStatus = option.value)}
-									class="focus:bg-white/10 focus:text-senary"
+								<DropdownMenu.CheckboxItem
+									checked={selectedStatuses.includes(option.value)}
+									onclick={(e) => {
+										e.preventDefault();
+										if (selectedStatuses.includes(option.value)) {
+											selectedStatuses = selectedStatuses.filter(s => s !== option.value);
+										} else {
+											selectedStatuses = [...selectedStatuses, option.value];
+										}
+									}}
+									class="focus:bg-white/10 focus:text-senary flex items-center [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5 [&>span]:size-4 [&>span]:rounded-sm"
 								>
 									{option.label}
-								</DropdownMenu.Item>
+								</DropdownMenu.CheckboxItem>
 							{/each}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -317,7 +335,7 @@
 									class="transition-colors hover:bg-white/5 cursor-pointer"
 									onclick={() => selectedReservationId = reservation.id}
 								>
-									<td class="p-6 font-medium text-senary">{(reservation.id || '').slice(0, 8)}</td>
+									<td class="p-6 font-medium text-senary">{reservation.invoice }</td>
 									<td class="p-6 font-medium text-secondary">{reservation.customer?.name || 'Unknown'}</td>
 									<td class="p-6 text-secondary/70">{reservation.dateTime?.date || 'N/A'} <span class="text-senary ml-1">{reservation.dateTime?.hour || ''}</span></td>
 									<td class="p-6 text-secondary">{formatCurrency(reservation.service?.price || 0)}</td>
