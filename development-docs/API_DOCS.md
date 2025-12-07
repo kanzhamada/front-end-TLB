@@ -852,6 +852,9 @@ All API responses follow this structure:
 - `name`: String
 - `type`: String ("short" | "long" | "medium")
 - `description`: String
+- `hairTypes`: String
+- `faceShapes`: String
+- `skinTones`: String
 
 **Response Body Success (200)**:
 ```json
@@ -863,6 +866,9 @@ All API responses follow this structure:
     "name": "Catalogue Name",
     "type": "short",
     "description": "Description",
+    "hairTypes": "Lurus",
+    "faceShapes": "Oval",
+    "skinTones": "Sawo Matang",
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -882,6 +888,9 @@ All API responses follow this structure:
 - `name`: String
 - `type`: String ("short" | "long" | "medium")
 - `description`: String
+- `hairTypes`: String
+- `faceShapes`: String
+- `skinTones`: String
 
 **Response Body Success (200)**:
 ```json
@@ -893,6 +902,9 @@ All API responses follow this structure:
     "name": "Updated Name",
     "type": "long",
     "description": "Updated Description",
+    "hairTypes": "Keriting",
+    "faceShapes": "Bulat",
+    "skinTones": "Putih",
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -1239,6 +1251,9 @@ All API responses follow this structure:
       "name": "Catalogue Name",
       "type": "short",
       "description": "Description",
+      "hairTypes": "Lurus",
+      "faceShapes": "Oval",
+      "skinTones": "Sawo Matang",
       "imageUrl": "https://..."
     }
   ],
@@ -1262,6 +1277,9 @@ All API responses follow this structure:
     "name": "Catalogue Name",
     "type": "short",
     "description": "Description",
+    "hairTypes": "Lurus",
+    "faceShapes": "Oval",
+    "skinTones": "Sawo Matang",
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",

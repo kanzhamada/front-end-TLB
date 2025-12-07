@@ -16,7 +16,6 @@
 		CardDescription,
 		CardContent
 	} from '$lib/components/ui/card';
-	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
 	import { fade, fly } from 'svelte/transition';
 
 	// --- Our NEW Local Components ---
@@ -25,37 +24,61 @@
 	import ServiceItem from '$lib/components/User/Home/ServiceItem.svelte';
 
 	// --- Page Data ---
-	// Moved from the markup to keep the HTML clean
-	const scheduleData = [
-		{ day: 'Senin', time: 'Off' },
-		{ day: 'Selasa', time: '17:00 - 21:00' },
-		{ day: 'Rabu', time: '17:00 - 21:00' },
-		{ day: 'Kamis', time: '17:00 - 21:00' },
-		{ day: "Jum'at", time: '17:00 - 21:00' },
-		{ day: 'Sabtu', time: '17:00 - 21:00' },
-		{ day: 'Minggu', time: '17:00 - 21:00' }
-	];
+	export let data;
 
-	const serviceData = [
-		{
-			id: '1',
-			title: 'Premium Haircut',
-			price: 'Rp 45.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		},
-		{
-			id: '2',
-			title: 'Classic Haircut',
-			price: 'Rp 40.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		},
-		{
-			id: '3',
-			title: 'Shave Beard',
-			price: 'Rp 15.000',
-			description: 'Haircut premium dengan pilihan warna dan keramik yang terbaik'
-		}
-	];
+	// Helper function to format schedule data
+	function formatSchedule(schedule) {
+		if (!schedule || schedule.length === 0) return [];
+
+		// Order of days for sorting
+		const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+		const dayMap = {
+			monday: 'Senin',
+			tuesday: 'Selasa',
+			wednesday: 'Rabu',
+			thursday: 'Kamis',
+			friday: "Jum'at",
+			saturday: 'Sabtu',
+			sunday: 'Minggu'
+		};
+
+		return schedule
+			.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day))
+			.map((item) => {
+				let time = 'Off';
+				if (item.hours && item.hours.length > 0) {
+					const start = item.hours[0].slice(0, 5);
+					const end = item.hours[item.hours.length - 1].slice(0, 5);
+					// Assuming hours are sorted. If not, we might need to sort them first.
+					// But typically they come sorted from backend or we can just take min/max if needed.
+					// For now, taking first and last seems reasonable based on the example response.
+					// Wait, the example response has hours like ["14:00:00", "15:00:00", ...].
+					// So start is 14:00, end is 22:00.
+					// But we should probably check if they are continuous.
+					// For simplicity and based on the design "17:00 - 21:00", let's just take start and end.
+					time = `${start} - ${end}`;
+				}
+				return {
+					day: dayMap[item.day] || item.day,
+					time
+				};
+			});
+	}
+
+	$: scheduleData = formatSchedule(data.schedule);
+
+	$: serviceData = (data.services || []).map((service) => ({
+		id: service.id,
+		title: service.name,
+		price: `Rp ${service.price.toLocaleString('id-ID')}`,
+		description: service.description
+	}));
+
+	$: activeDays = scheduleData.filter((d) => d.time !== 'Off');
+	$: operationalSummary =
+		activeDays.length > 0
+			? `${activeDays[0].day} - ${activeDays[activeDays.length - 1].day}, ${activeDays[0].time}`
+			: 'Tutup Sementara';
 
 	// Note: I've removed the commented-out Google Maps code for clarity.
 </script>
@@ -102,48 +125,62 @@
 				in:fly={{ y: 40, duration: 800, delay: 600 }}
 			>
 				<div class="grid gap-8 md:grid-cols-3">
-					<div class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5">
+					<a href="https://wa.me/6287855014355">
 						<div
-							class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5"
 						>
-							<Phone class="h-6 w-6" />
+							<div
+								class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							>
+								<Phone class="h-6 w-6" />
+							</div>
+							<div>
+								<h3 class="text-lg font-bold text-secondary">Kontak Kami</h3>
+								<p class="font-light text-secondary/70">+62 878-5501-4355</p>
+							</div>
 						</div>
-						<div>
-							<h3 class="text-lg font-bold text-secondary">Concierge</h3>
-							<p class="font-light text-secondary/70">+62 812-3456-7890</p>
-						</div>
-					</div>
+					</a>
 
-					<div class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5">
+					<a href="#location">
 						<div
-							class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5"
 						>
-							<MapPin class="h-6 w-6" />
+							<div
+								class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							>
+								<MapPin class="h-6 w-6" />
+							</div>
+							<div>
+								<h3 class="text-lg font-bold text-secondary">Lokasi</h3>
+								<p class="font-light text-secondary/70">
+									Jl. Terusan Sudimoro, Gembrung, Mojolangu
+								</p>
+							</div>
 						</div>
-						<div>
-							<h3 class="text-lg font-bold text-secondary">Atelier</h3>
-							<p class="font-light text-secondary/70">Jl. Terusan Sudimoro</p>
-						</div>
-					</div>
+					</a>
 
-					<div class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5">
+					<a href="#schedule-and-service">
 						<div
-							class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5"
 						>
-							<Clock class="h-6 w-6" />
+							<div
+								class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary"
+							>
+								<Clock class="h-6 w-6" />
+							</div>
+							<div>
+								<h3 class="text-lg font-bold text-secondary">Operasional</h3>
+								<p class="font-light text-secondary/70">{operationalSummary}</p>
+							</div>
 						</div>
-						<div>
-							<h3 class="text-lg font-bold text-secondary">Availability</h3>
-							<p class="font-light text-secondary/70">Tue - Sun, 13:00 - 22:00</p>
-						</div>
-					</div>
+					</a>
 				</div>
 			</div>
-		</div>
 
-		<!-- Scroll Indicator -->
-		<div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-senary/50">
-			<ChevronsDown class="h-8 w-8" />
+			<!-- Scroll Indicator -->
+			<div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-senary/50">
+				<ChevronsDown class="h-8 w-8" />
+			</div>
 		</div>
 	</section>
 
@@ -158,7 +195,7 @@
 		}
 	</style>
 
-	<section class="relative z-10 py-32">
+	<section class="relative z-10 py-32" id="about">
 		<div class="container mx-auto px-4">
 			<div class="mb-16 flex flex-col items-center text-center">
 				<Sparkles class="mb-4 h-8 w-8 text-senary" />
@@ -200,7 +237,7 @@
 
 			<div class="mt-32 grid grid-cols-1 gap-12 md:grid-cols-1">
 				<Card
-					class=" group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-12 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10"
+					class="group relative self-center overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-12 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10"
 				>
 					<div
 						class="absolute top-0 right-0 p-12 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12"
@@ -210,24 +247,20 @@
 							stroke-width="1"
 						/>
 					</div>
-
-					<CardHeader
-						class="relative z-10 col-span-1 grid grid-cols-1 items-center gap-12 md:grid-cols-4"
-					>
+					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
 						<h3
-							class="col-span-1 bg-gradient-to-r from-secondary to-senary bg-clip-text text-5xl font-bold text-transparent"
+							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-5xl font-bold whitespace-nowrap text-transparent"
 						>
-							Vision
+							Visi
 						</h3>
-						<p
-							class="col-span-3 border-l border-senary/20 pl-8 text-left text-xl leading-relaxed font-light text-secondary/80"
-						>
-							“Menjadi barbershop yang memberikan pelayanan rapi, nyaman, dan tepat bagi setiap
-							pelanggan dengan memberikan hasil potongan yang sesuai kebutuhan.”
-						</p>
+						<div class="flex-1 border-l border-senary/20 pl-8">
+							<p class="text-left text-xl leading-relaxed font-light text-secondary/80">
+								“Menjadi barbershop yang memberikan pelayanan rapi, nyaman, dan tepat bagi setiap
+								pelanggan dengan memberikan hasil potongan yang sesuai kebutuhan.”
+							</p>
+						</div>
 					</CardHeader>
 				</Card>
-
 				<Card
 					class="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-12 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10"
 				>
@@ -239,22 +272,20 @@
 							stroke-width="1"
 						/>
 					</div>
-					<CardHeader
-						class=" relative z-10 col-span-1 grid grid-cols-1 items-center gap-12 md:grid-cols-4"
-					>
-						<p
-							class="order-2 col-span-3 border-r border-senary/20 pr-8 text-left text-xl leading-relaxed font-light text-secondary/80 md:order-1"
-						>
-							1. Memberikan layanan potong rambut yang rapi dan sesuai karakter wajah pelanggan.
-							<br />2. Meningkatkan kualitas pelayanan melalui rekomendasi model rambut yang lebih
-							personal.
-							<br />3. Menjaga kenyamanan dan kepuasan pelanggan melalui pelayanan yang ramah dan
-							profesional.
-						</p>
+					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
+						<div class="flex-1 border-r border-senary/20 pr-8">
+							<p class="text-left text-xl leading-relaxed font-light text-secondary/80">
+								1. Memberikan layanan potong rambut yang rapi dan sesuai karakter wajah pelanggan.<br
+								/>
+								2. Meningkatkan kualitas pelayanan melalui rekomendasi model rambut yang lebih personal.<br
+								/>
+								3. Menjaga kenyamanan dan kepuasan pelanggan melalui pelayanan yang ramah dan profesional.
+							</p>
+						</div>
 						<h3
-							class="order-1 col-span-1 bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-5xl font-bold text-transparent md:order-2"
+							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-5xl font-bold whitespace-nowrap text-transparent"
 						>
-							Mission
+							Misi
 						</h3>
 					</CardHeader>
 				</Card>
@@ -262,11 +293,11 @@
 		</div>
 	</section>
 
-	<section class="relative z-10 bg-black/20 py-32 backdrop-blur-sm">
+	<section class="relative z-10 bg-black/20 py-32 backdrop-blur-sm" id="location">
 		<div class="container mx-auto px-4">
 			<div class="mb-16 flex flex-col items-center text-center">
 				<MapPin class="mb-4 h-8 w-8 text-senary" />
-				<h2 class="mb-4 text-5xl font-bold text-secondary">The Location</h2>
+				<h2 class="mb-4 text-5xl font-bold text-secondary">Lokasi</h2>
 				<p class="max-w-2xl text-xl font-light text-secondary/70">
 					Jl. Terusan Sudimoro, Gembrung, Mojolangu, Kec. Lowokwaru, Kota Malang, Jawa Timur 65142
 				</p>
@@ -303,13 +334,13 @@
 		</div>
 	</section>
 
-	<section class="relative z-10 py-32">
+	<section class="relative z-10 py-32" id="schedule-and-service">
 		<div class="container mx-auto px-4">
 			<div class="grid grid-cols-1 gap-24 md:grid-cols-2">
 				<div>
 					<div class="mb-8 flex items-center gap-4">
 						<Clock class="h-8 w-8 text-senary" />
-						<h2 class="text-4xl font-bold text-secondary">Opening Hours</h2>
+						<h2 class="text-4xl font-bold text-secondary">Jadwal Operasional</h2>
 					</div>
 
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
@@ -322,7 +353,7 @@
 				<div>
 					<div class="mb-8 flex items-center gap-4">
 						<Star class="h-8 w-8 text-senary" />
-						<h2 class="text-4xl font-bold text-secondary">Premium Services</h2>
+						<h2 class="text-4xl font-bold text-secondary">Layanan</h2>
 					</div>
 
 					<Accordion.Root type="multiple" class="w-full space-y-4">

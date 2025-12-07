@@ -81,10 +81,21 @@
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
 	import { fade, fly } from 'svelte/transition';
-	import { Sparkles } from 'lucide-svelte';
+	import { Sparkles, Eye, EyeOff } from 'lucide-svelte';
+	import {
+		Card,
+		CardContent,
+		CardDescription,
+		CardFooter,
+		CardHeader,
+		CardTitle
+	} from '$lib/components/ui/card';
+	import LoginForm from '$lib/components/auth/LoginForm.svelte';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	let email = $state('');
 	let password = $state('');
+	let showPassword = $state(false);
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
 
@@ -102,6 +113,52 @@
 
 		try {
 			console.log('Attempting login with:', { email, password });
+
+			const response = await login({ email, password });
+			console.log('Login response:', response);
+
+			const success = response.success ?? response.sucess ?? false;
+
+			if (!success || !response.data?.session) {
+				const errorMessage = response.message ?? 'Gagal masuk. Coba lagi.';
+				handleError(errorMessage);
+				console.log('Login failed:', response);
+				return;
+			}
+
+			authStore.setSession(response.data.session);
+			toast.success('Berhasil masuk!');
+			await goto('/');
+		} catch (error) {
+			console.error('Login error:', error);
+
+			if (browser) {
+				const customError = error as { response?: { message?: string } };
+				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
+				handleError(message);
+			} else {
+				handleError('Tidak dapat masuk. Coba lagi.');
+			}
+		} finally {
+			submitting = false;
+		}
+	}
+	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
+		cancel(); // Prevent default form submission
+		const email = formData.get('email') as string;
+		const password = formData.get('password') as string;
+
+		performLogin(email, password);
+	};
+
+	async function performLogin(email: string, password: string) {
+		if (submitting) return;
+
+		formError = null;
+		submitting = true;
+
+		try {
+			console.log('Attempting login with:', { email });
 
 			const response = await login({ email, password });
 			console.log('Login response:', response);
@@ -196,38 +253,34 @@
 					/>
 				</div>
 
-				<CardContent class="space-y-6 px-0 py-6">
-					<LoginForm
-						actionUrl="?/login"
-						showRegister={false}
-						bind:submitting
-						bind:formError
-						enhanceHandler={handleLogin}
-					/>
-				</CardContent>
-
-				<CardFooter class="flex flex-col items-start gap-2 px-0 py-0">
-					<p class="text-sm text-[#032B24]/70">
-						Belum punya akun?
-						<a class="text-[#fcb13f] hover:underline" href="/auth/register">Daftar sekarang</a>
-					</p>
-				</CardFooter>
-
 				<div class="space-y-2">
 					<div class="flex items-center justify-between">
 						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
 						<!-- Optional: Add Forgot Password link here later -->
 					</div>
-					<Input
-						id="password"
-						type="password"
-						placeholder="Enter your password"
-						bind:value={password}
-						required
-						autocomplete="current-password"
-						disabled={submitting}
-						class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
-					/>
+					<div class="relative">
+						<Input
+							id="password"
+							type={showPassword ? 'text' : 'password'}
+							placeholder="Enter your password"
+							bind:value={password}
+							required
+							autocomplete="current-password"
+							disabled={submitting}
+							class="border-white/10 bg-black/20 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
+						/>
+						<button
+							type="button"
+							class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+							onclick={() => (showPassword = !showPassword)}
+						>
+							{#if showPassword}
+								<EyeOff class="size-4" />
+							{:else}
+								<Eye class="size-4" />
+							{/if}
+						</button>
+					</div>
 				</div>
 
 				{#if formError}
@@ -255,7 +308,6 @@
 						Register here
 					</a>
 				</p>
-				>>>>>>> 48b37be (redesign):src/routes/auth/login/+page.svelte
 			</div>
 		</div>
 	</div>

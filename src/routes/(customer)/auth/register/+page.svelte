@@ -78,13 +78,15 @@
 	import { Label } from '$lib/components/ui/label';
 	import { toast } from 'svelte-sonner';
 	import { fade, fly } from 'svelte/transition';
-	import { Sparkles } from 'lucide-svelte';
+	import { Sparkles, Eye, EyeOff } from 'lucide-svelte';
 
 	let displayName = $state('');
 	let email = $state('');
 	let phone = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let showPassword = $state(false);
+	let showConfirmPassword = $state(false);
 
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
@@ -219,34 +221,60 @@
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div class="space-y-2">
 						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
-						<Input
-							id="password"
-							type="password"
-							placeholder="Min 8 chars"
-							bind:value={password}
-							required
-							autocomplete="new-password"
-							minlength={8}
-							disabled={submitting}
-							class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
-						/>
+						<div class="relative">
+							<Input
+								id="password"
+								type={showPassword ? 'text' : 'password'}
+								placeholder="Min 8 chars"
+								bind:value={password}
+								required
+								autocomplete="new-password"
+								minlength={8}
+								disabled={submitting}
+								class="border-white/10 bg-black/20 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
+							/>
+							<button
+								type="button"
+								class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+								onclick={() => (showPassword = !showPassword)}
+							>
+								{#if showPassword}
+									<EyeOff class="size-4" />
+								{:else}
+									<Eye class="size-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 
 					<div class="space-y-2">
 						<Label for="confirmPassword" class="text-sm font-medium text-senary"
 							>Confirm Password</Label
 						>
-						<Input
-							id="confirmPassword"
-							type="password"
-							placeholder="Repeat password"
-							bind:value={confirmPassword}
-							required
-							minlength={8}
-							autocomplete="new-password"
-							disabled={submitting}
-							class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
-						/>
+						<div class="relative">
+							<Input
+								id="confirmPassword"
+								type={showConfirmPassword ? 'text' : 'password'}
+								placeholder="Repeat password"
+								bind:value={confirmPassword}
+								required
+								minlength={8}
+								autocomplete="new-password"
+								disabled={submitting}
+								class="border-white/10 bg-black/20 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
+							/>
+							<button
+								type="button"
+								class="absolute top-1/2 right-3 -translate-y-1/2 text-secondary/50 hover:text-senary"
+								onclick={() => (showConfirmPassword = !showConfirmPassword)}
+							>
+								{#if showConfirmPassword}
+									<EyeOff class="size-4" />
+								{:else}
+									<Eye class="size-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 				</div>
 

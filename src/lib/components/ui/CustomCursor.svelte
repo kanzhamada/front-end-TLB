@@ -42,7 +42,7 @@
 			target.classList.contains('cursor-pointer')
 		) {
 			isHovering = true;
-			size.set(60);
+			size.set(10);
 		} else {
 			isHovering = false;
 			size.set(20);
@@ -67,7 +67,7 @@
 </script>
 
 <div
-	class="pointer-events-none fixed z-[9999] hidden mix-blend-difference lg:block"
+	class="pointer-events-none fixed z-[9999] mix-blend-difference"
 	style="
         left: {$coords.x}px;
         top: {$coords.y}px;

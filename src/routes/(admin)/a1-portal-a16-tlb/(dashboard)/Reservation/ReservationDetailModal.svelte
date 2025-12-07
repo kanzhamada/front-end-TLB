@@ -151,7 +151,7 @@
 						<div class="md:col-span-2 space-y-8">
 							<div class="flex items-start justify-between">
 								<div>
-									<h3 class="text-3xl font-light text-secondary">#{(reservation.id || '').slice(0, 8)}</h3>
+									<h3 class="text-3xl font-light text-secondary">#{reservation.invoice || reservation.id}</h3>
 									<p class="text-xs font-bold tracking-widest text-secondary/40 uppercase mt-1">Invoice ID</p>
 								</div>
 								<span class={`rounded-full border px-4 py-1.5 text-xs font-bold tracking-wider uppercase ${getStatusColor(reservation.status)}`}>

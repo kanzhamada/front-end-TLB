@@ -23,7 +23,11 @@
 	let loading = $state(false);
 	let name = $state(catalogue?.name || '');
 	let type = $state(catalogue?.type || 'medium');
+
 	let description = $state(catalogue?.description || '');
+	let hairTypes = $state(catalogue?.hairTypes || '');
+	let faceShapes = $state(catalogue?.faceShapes || '');
+	let skinTones = $state(catalogue?.skinTones || '');
 	
 	// Image State
 	type ImageItem = {
@@ -44,7 +48,11 @@
 		if (catalogue) {
 			name = catalogue.name;
 			type = catalogue.type.toLowerCase(); // Ensure lowercase match
+
 			description = catalogue.description;
+			hairTypes = catalogue.hairTypes || '';
+			faceShapes = catalogue.faceShapes || '';
+			skinTones = catalogue.skinTones || '';
 			
 			// Load existing images
 			if (catalogue.catalogueImages && catalogue.catalogueImages.length > 0) {
@@ -65,7 +73,11 @@
 		} else {
 			name = '';
 			type = 'medium';
+
 			description = '';
+			hairTypes = '';
+			faceShapes = '';
+			skinTones = '';
 			images = [];
 		}
 	});
@@ -119,8 +131,12 @@
 
 		const formData = new FormData();
 		formData.append('name', name);
+
 		formData.append('type', type);
 		formData.append('description', description);
+		formData.append('hairTypes', hairTypes);
+		formData.append('faceShapes', faceShapes);
+		formData.append('skinTones', skinTones);
 		
 		// Append new files
 		images.forEach(img => {
@@ -156,6 +172,24 @@
 		{ value: 'long', label: 'Long' },
 		{ value: 'medium', label: 'Medium' },
 		{ value: 'short', label: 'Short' }
+	];
+
+	const hairTypeOptions = [
+		{ value: 'Lurus', label: 'Lurus' },
+		{ value: 'Bergelombang', label: 'Bergelombang' },
+		{ value: 'Keriting', label: 'Keriting' }
+	];
+
+	const faceShapeOptions = [
+		{ value: 'Oval', label: 'Oval' },
+		{ value: 'Bulat', label: 'Bulat' },
+		{ value: 'Kotak', label: 'Kotak' }
+	];
+
+	const skinToneOptions = [
+		{ value: 'Sawo Matang', label: 'Sawo Matang' },
+		{ value: 'Coklat Tua', label: 'Coklat Tua' },
+		{ value: 'Putih', label: 'Putih' }
 	];
 </script>
 
@@ -255,6 +289,20 @@
 							<p class="text-xl font-medium text-senary capitalize">{catalogue.type}</p>
 						</div>
 					</div>
+					<div class="grid gap-6 sm:grid-cols-3">
+						<div class="rounded-2xl border border-white/5 bg-white/5 p-5">
+							<Label class="text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2 block">Hair Types</Label>
+							<p class="text-base font-medium text-secondary">{catalogue.hairTypes || '-'}</p>
+						</div>
+						<div class="rounded-2xl border border-white/5 bg-white/5 p-5">
+							<Label class="text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2 block">Face Shapes</Label>
+							<p class="text-base font-medium text-secondary">{catalogue.faceShapes || '-'}</p>
+						</div>
+						<div class="rounded-2xl border border-white/5 bg-white/5 p-5">
+							<Label class="text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2 block">Skin Tones</Label>
+							<p class="text-base font-medium text-secondary">{catalogue.skinTones || '-'}</p>
+						</div>
+					</div>
 					<div class="rounded-2xl border border-white/5 bg-white/5 p-6">
 						<Label class="text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2 block">Description</Label>
 						<p class="text-secondary leading-relaxed">{catalogue.description}</p>
@@ -303,6 +351,66 @@
 							class="min-h-[120px] rounded-xl border-white/10 bg-white/5 p-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20" 
 							required 
 						/>
+					</div>
+
+					<div class="grid gap-6 sm:grid-cols-3">
+						<div class="space-y-2">
+							<Label for="hairTypes" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Hair Types</Label>
+							<Select.Root type="single" bind:value={hairTypes}>
+								<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20">
+									{hairTypes || 'Select Hair Type'}
+								</Select.Trigger>
+								<Select.Content class="border-white/10 bg-slate-900 text-secondary">
+									{#each hairTypeOptions as option}
+										<Select.Item 
+											value={option.value} 
+											label={option.label}
+											class="focus:bg-white/10 focus:text-senary cursor-pointer"
+										>
+											{option.label}
+										</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="space-y-2">
+							<Label for="faceShapes" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Face Shapes</Label>
+							<Select.Root type="single" bind:value={faceShapes}>
+								<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20">
+									{faceShapes || 'Select Face Shape'}
+								</Select.Trigger>
+								<Select.Content class="border-white/10 bg-slate-900 text-secondary">
+									{#each faceShapeOptions as option}
+										<Select.Item 
+											value={option.value} 
+											label={option.label}
+											class="focus:bg-white/10 focus:text-senary cursor-pointer"
+										>
+											{option.label}
+										</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="space-y-2">
+							<Label for="skinTones" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Skin Tones</Label>
+							<Select.Root type="single" bind:value={skinTones}>
+								<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20">
+									{skinTones || 'Select Skin Tone'}
+								</Select.Trigger>
+								<Select.Content class="border-white/10 bg-slate-900 text-secondary">
+									{#each skinToneOptions as option}
+										<Select.Item 
+											value={option.value} 
+											label={option.label}
+											class="focus:bg-white/10 focus:text-senary cursor-pointer"
+										>
+											{option.label}
+										</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
+						</div>
 					</div>
 
 					<div class="space-y-3">

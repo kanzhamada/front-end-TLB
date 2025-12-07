@@ -2,6 +2,7 @@ import { getFromApi, putToApi, type ApiResponse } from '$lib/api/shared/api';
 
 export type Reservation = {
 	id: string;
+	invoice: string;
 	customer_id: string;
 	barber_id: string;
 	service_id: string;
@@ -40,6 +41,7 @@ export const getReservations = async (
 
 	const reservations: Reservation[] = result.data.map((item) => ({
 		id: item.reservationID,
+		invoice: item.invoice,
 		customer_id: item.user?.id || '', // Not present in log, but maybe not needed for list
 		barber_id: item.barber?.id || '',
 		service_id: item.service?.id || '',
@@ -99,6 +101,7 @@ export const getReservationById = async (
 
 	const reservation: Reservation = {
 		id: dataToMap.reservationID || dataToMap.id, // Try both
+		invoice: dataToMap.invoice,
 		customer_id: dataToMap.user?.id || dataToMap.customer_id || '',
 		barber_id: dataToMap.barber?.id || dataToMap.barber_id || '',
 		service_id: dataToMap.service?.id || dataToMap.service_id || '',

@@ -5,15 +5,23 @@
 	import { getReservationDetails, type ReservationResponse } from '$lib/api/customer/reservation';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
 	import { Separator } from '$lib/components/ui/separator';
 	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Badge } from '$lib/components/ui/badge';
+	import {
+		Calendar,
+		Clock,
+		Scissors,
+		User,
+		FileText,
+		CreditCard,
+		Phone,
+		MapPin,
+		ChevronLeft,
+		Receipt
+	} from 'lucide-svelte';
+	import { fade, fly } from 'svelte/transition';
+	import Countdown from '$lib/components/User/Reservation/Countdown.svelte';
 
 	let { params } = $props();
 	let reservation: ReservationResponse | null = $state(null);
@@ -23,6 +31,10 @@
 	onMount(async () => {
 		await loadReservation();
 	});
+
+	async function reloadReservation() {
+		await goto(`/profile/reservation`);
+	}
 
 	async function loadReservation() {
 		loading = true;
@@ -40,7 +52,6 @@
 			}
 
 			if (response.data && response.data.length > 0) {
-				// The API returns an array, so we take the first item
 				reservation = response.data[0];
 			} else {
 				throw new Error('Reservation not found');
@@ -57,23 +68,23 @@
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Menunggu';
+				return 'Waiting';
 			case 'onGoing':
-				return 'Sedang Berlangsung';
+				return 'On Going';
 			case 'waitingForPayment':
-				return 'Menunggu Pembayaran';
+				return 'Waiting Payment';
 			case 'completed':
-				return 'Selesai';
+				return 'Completed';
 			case 'canceledByUser':
-				return 'Dibatalkan oleh Pengguna';
+				return 'Canceled by User';
 			case 'canceledByAdmin':
-				return 'Dibatalkan oleh Admin';
+				return 'Canceled by Admin';
 			case 'declined':
-				return 'Ditolak';
+				return 'Declined';
 			case 'expired':
-				return 'Kedaluwarsa';
+				return 'Expired';
 			case 'requestToReschedule':
-				return 'Permintaan Reschedule';
+				return 'Reschedule Request';
 			default:
 				return status;
 		}
@@ -82,26 +93,42 @@
 	function getStatusColor(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'bg-blue-100 text-blue-800';
+				return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
 			case 'onGoing':
-				return 'bg-yellow-100 text-yellow-800';
+				return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
 			case 'waitingForPayment':
-				return 'bg-orange-100 text-orange-800';
+				return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
 			case 'completed':
-				return 'bg-green-100 text-green-800';
+				return 'bg-green-500/20 text-green-300 border-green-500/30';
 			case 'canceledByUser':
 			case 'canceledByAdmin':
 			case 'declined':
 			case 'expired':
-				return 'bg-red-100 text-red-800';
+				return 'bg-red-500/20 text-red-300 border-red-500/30';
 			case 'requestToReschedule':
-				return 'bg-purple-100 text-purple-800';
+				return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
 			default:
-				return 'bg-gray-100 text-gray-800';
+				return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
 		}
 	}
 
-	// Format currency in Indonesian Rupiah
+	function getFulfillmentStatusText(status: string): string {
+		switch (status) {
+			case 'pendingDownPayment':
+				return 'Pending Down Payment';
+			case 'downPaymentPaid':
+				return 'Down Payment Paid';
+			case 'fullyPaid':
+				return 'Fully Paid';
+			case 'refunded':
+				return 'Refunded';
+			case 'failed':
+				return 'Failed';
+			default:
+				return status;
+		}
+	}
+
 	const currencyFormatter = new Intl.NumberFormat('id-ID', {
 		style: 'currency',
 		currency: 'IDR',
@@ -109,157 +136,242 @@
 	});
 </script>
 
-<div class="space-y-6">
-	<!-- Mini Navigation for Profile Sections - Now handled in layout -->
-
-	<div class="mx-auto max-w-2xl">
-		<Card>
-			<CardHeader class="flex flex-row items-center justify-between">
-				<div>
-					<CardTitle>Detail Reservasi</CardTitle>
-					<CardDescription>Informasi lengkap tentang reservasi Anda</CardDescription>
-				</div>
-				<Button
-					variant="outline"
-					class="border-[#2e6057] text-[#2e6057] hover:bg-[#2e6057]/10"
-					onclick={() => goto('/profile/reservation')}
-				>
-					Kembali
-				</Button>
-			</CardHeader>
-			<CardContent>
-				{#if loading}
-					<div class="space-y-4">
-						<Skeleton class="h-4 w-full" />
-						<Skeleton class="h-4 w-3/4" />
-						<Skeleton class="h-8 w-1/2" />
-						<Skeleton class="h-4 w-full" />
-						<Skeleton class="h-4 w-1/3" />
-					</div>
-				{:else if error}
-					<div class="rounded-lg bg-red-50 p-4 text-red-700">
-						{error}
-					</div>
-				{:else if reservation}
-					<!-- Reservation Summary Section -->
-					<div
-						class="mb-6 rounded-2xl bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-500 p-5 text-white"
-					>
-						<div class="space-y-2">
-							<div class="flex justify-between">
-								<span>ID Invoice:</span>
-								<span class="font-medium">#{reservation.invoice || reservation.reservationID}</span>
-							</div>
-							<div class="flex justify-between">
-								<span>Tanggal:</span>
-								<span class="font-medium">{reservation.dateTime.date}</span>
-							</div>
-							<div class="flex justify-between">
-								<span>Waktu:</span>
-								<span class="font-medium">{reservation.dateTime.hour}</span>
-							</div>
-							<div class="flex justify-between">
-								<span>Barber:</span>
-								<span class="font-medium">{reservation.barber.name}</span>
-							</div>
-							<div class="flex justify-between">
-								<span>Layanan:</span>
-								<span class="font-medium">{reservation.service.name}</span>
-							</div>
-							<div class="flex justify-between">
-								<span>Status:</span>
-								<span
-									class="rounded-full px-3 py-1 text-xs font-medium {getStatusColor(
-										reservation.status
-									)} text-black"
-								>
-									{getStatusText(reservation.status)}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<!-- Service Details -->
-					<div class="mb-6">
-						<h3 class="mb-3 text-lg font-semibold text-gray-800">Detail Layanan</h3>
-						<div class="space-y-2">
-							<div class="flex justify-between">
-								<span class="text-gray-600">Layanan:</span>
-								<span class="font-medium text-gray-900">{reservation.service.name}</span>
-							</div>
-							<div class="flex justify-between">
-								<span class="text-gray-600">Harga:</span>
-								<span class="font-medium text-gray-900">
-									{reservation.service.price
-										? currencyFormatter.format(reservation.service.price)
-										: 'TBD'}
-								</span>
-							</div>
-							{#if reservation.notes}
-								<div class="mt-3">
-									<div class="text-gray-600">Catatan:</div>
-									<p class="text-gray-900">{reservation.notes}</p>
-								</div>
-							{/if}
-						</div>
-					</div>
-
-					<Separator class="my-6" />
-
-					<!-- Pricing Breakdown -->
-					<div class="mb-6">
-						<h3 class="mb-3 text-lg font-bold text-gray-900">Rincian Pembayaran</h3>
-						<div class="space-y-3">
-							<div class="flex justify-between">
-								<span>{reservation.service.name}</span>
-								<span
-									>{reservation.service.price
-										? currencyFormatter.format(reservation.service.price)
-										: 'TBD'}</span
-								>
-							</div>
-							{#if reservation.voucherId}
-								<div class="flex justify-between text-[#2E6057]">
-									<span>Diskon Voucher</span>
-									<span>-{currencyFormatter.format(10000)}</span>
-									<!-- Placeholder discount -->
-								</div>
-							{/if}
-							<div class="flex justify-between text-rose-500">
-								<span>Biaya Admin</span>
-								<span>+{currencyFormatter.format(5000)}</span>
-							</div>
-							<Separator class="my-3" />
-							<div class="flex justify-between font-bold">
-								<span>Total Pembayaran</span>
-								<span>
-									{reservation.service.price
-										? currencyFormatter.format(
-												Math.max(
-													reservation.service.price - (reservation.voucherId ? 10000 : 0) + 5000,
-													0
-												)
-											)
-										: currencyFormatter.format(5000)}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<Separator class="my-6" />
-
-					<!-- Contact Information -->
-					{#if reservation.barber.phoneNumber}
-						<div>
-							<h3 class="mb-3 text-lg font-semibold text-gray-800">Kontak Barber</h3>
-							<div class="flex justify-between">
-								<span class="text-gray-600">Nomor Telepon:</span>
-								<span class="font-medium text-gray-900">{reservation.barber.phoneNumber}</span>
-							</div>
-						</div>
-					{/if}
-				{/if}
-			</CardContent>
-		</Card>
+<div class="space-y-10" in:fade>
+	<!-- Header -->
+	<div class="mb-6 flex items-center gap-3">
+		<Button
+			variant="ghost"
+			size="icon"
+			class="rounded-lg bg-senary/10 p-2 text-secondary hover:bg-white/10 hover:text-senary"
+			onclick={() => goto('/profile/reservation')}
+		>
+			<ChevronLeft class="size-6" />
+		</Button>
+		<div>
+			<h3 class="text-xl font-bold text-secondary">Reservation Details</h3>
+			<p class="text-secondary/60">View complete information about your appointment</p>
+		</div>
 	</div>
+
+	{#if loading}
+		<div class="glass-panel space-y-8 rounded-2xl p-8">
+			<div class="flex items-center justify-between">
+				<Skeleton class="h-8 w-48 bg-white/10" />
+				<Skeleton class="h-8 w-32 rounded-full bg-white/10" />
+			</div>
+			<div class="grid gap-8 md:grid-cols-2">
+				<div class="space-y-4">
+					<Skeleton class="h-6 w-32 bg-white/10" />
+					<Skeleton class="h-4 w-full bg-white/10" />
+					<Skeleton class="h-4 w-full bg-white/10" />
+				</div>
+				<div class="space-y-4">
+					<Skeleton class="h-6 w-32 bg-white/10" />
+					<Skeleton class="h-4 w-full bg-white/10" />
+					<Skeleton class="h-4 w-full bg-white/10" />
+				</div>
+			</div>
+		</div>
+	{:else if error}
+		<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center text-red-400">
+			<p>{error}</p>
+			<Button
+				variant="outline"
+				class="mt-4 border-red-500/30 text-red-400 hover:bg-red-500/10"
+				onclick={reloadReservation}
+			>
+				Try Again
+			</Button>
+		</div>
+	{:else if reservation}
+		<div class=" overflow-hidden rounded-2xl" in:fly={{ y: 20, duration: 500, delay: 100 }}>
+			<!-- Status Banner -->
+			<div class="px-8 py-6">
+				<div class="flex flex-wrap items-center justify-between gap-4">
+					<div class="flex items-center gap-3">
+						<div class="rounded-full bg-senary/10 p-2">
+							<Receipt class="size-5 text-senary" />
+						</div>
+						<div>
+							<p class="text-sm text-secondary/60">Invoice ID</p>
+							<p class="font-mono text-lg font-bold text-secondary">
+								#{reservation.invoice || reservation.reservationID}
+							</p>
+						</div>
+					</div>
+					<Badge
+						variant="outline"
+						class="{getStatusColor(reservation.status)} px-4 py-1.5 text-sm backdrop-blur-md"
+					>
+						{getStatusText(reservation.status)}
+					</Badge>
+				</div>
+			</div>
+			{#if reservation.status === 'waitingForPayment'}
+				<div class="px-8 pb-6">
+					<Countdown
+						date={reservation.updated_at}
+						onExpire={() => {
+							if (reservation) reservation.status = 'expired';
+						}}
+					/>
+				</div>
+			{/if}
+
+			<div class="p-8">
+				<div class="grid gap-12 md:grid-cols-1">
+					<!-- Left Column: Service Info -->
+					<div class="space-y-8">
+						<div>
+							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
+								<Scissors class="size-5" />
+								Service Information
+							</h3>
+							<div class="space-y-4 rounded-xl border border-white/5 bg-white/5 p-5">
+								<div class="flex items-start justify-between gap-4">
+									<div>
+										<p class="font-medium text-secondary">{reservation.service.name}</p>
+										<p class="text-sm text-secondary/60">Professional Hair Service</p>
+									</div>
+									<p class="font-bold text-senary">
+										{reservation.service.price
+											? currencyFormatter.format(reservation.service.price)
+											: 'TBD'}
+									</p>
+								</div>
+								{#if reservation.notes}
+									<Separator class="bg-white/10" />
+									<div>
+										<p class="mb-1 text-xs font-medium tracking-wider text-secondary/40 uppercase">
+											Notes
+										</p>
+										<p class="text-sm text-secondary/80">{reservation.notes}</p>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<div>
+							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
+								<User class="size-5" />
+								Barber Details
+							</h3>
+							<div class="rounded-xl border border-white/5 bg-white/5 p-5">
+								<div class="flex items-center gap-4">
+									<div
+										class="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-senary/20 to-primary/20 text-senary"
+									>
+										<User class="size-6" />
+									</div>
+									<div>
+										<p class="font-bold text-secondary">{reservation.barber.name}</p>
+										<p class="text-sm text-secondary/60">Professional Barber</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Right Column: Schedule & Payment -->
+					<div class="space-y-8">
+						<div>
+							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
+								<Calendar class="size-5" />
+								Schedule
+							</h3>
+							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
+								<div class="flex items-center gap-3">
+									<Calendar class="size-5 text-secondary/60" />
+									<div>
+										<p class="text-xs text-secondary/40">Date</p>
+										<p class="font-medium text-secondary">{reservation.dateTime.date}</p>
+										{#if reservation.newDateTime?.date}
+											<p class="text-xs text-secondary/40">New Date (Reschedule)</p>
+											<p class="font-medium text-secondary">{reservation.newDateTime?.date}</p>
+										{/if}
+									</div>
+								</div>
+								<Separator class="bg-white/10" />
+								<div class="flex items-center gap-3">
+									<Clock class="size-5 text-secondary/60" />
+									<div>
+										<p class="text-xs text-secondary/40">Time</p>
+										<p class="font-medium text-secondary">{reservation.dateTime.hour}</p>
+										{#if reservation.newDateTime?.hour}
+											<p class="text-xs text-secondary/40">New Time (Reschedule)</p>
+											<p class="font-medium text-secondary">{reservation.newDateTime?.hour}</p>
+										{/if}
+									</div>
+								</div>
+								<Separator class="bg-white/10" />
+								<div class="flex items-center gap-3">
+									<MapPin class="size-5 text-secondary/60" />
+									<div>
+										<p class="text-xs text-secondary/40">Location</p>
+										<p class="font-medium text-secondary">Three Lights Barbershop</p>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div>
+							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
+								<CreditCard class="size-5" />
+								Payment Summary
+							</h3>
+							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
+								<div class="flex justify-between text-sm">
+									<span class="text-secondary/70">Harga Service</span>
+									<span class="text-secondary">
+										{reservation.service.price
+											? currencyFormatter.format(reservation.service.price)
+											: 'TBD'}
+									</span>
+								</div>
+								{#if reservation.voucherValue}
+									<div class="flex justify-between text-sm text-green-400">
+										<span>Voucher Discount</span>
+										<span
+											>- {reservation.voucherValue
+												? currencyFormatter.format(reservation.voucherValue)
+												: 'TBD'}</span
+										>
+									</div>
+								{/if}
+								<div class="flex justify-between text-sm text-secondary/70">
+									<span>Admin Fee</span>
+									<span>+ {currencyFormatter.format(5000)}</span>
+								</div>
+								<Separator class="bg-white/10" />
+								<div class="flex justify-between text-lg font-bold">
+									<span class="text-senary">Total</span>
+									<span class="text-secondary"
+										>{reservation.totalPayment
+											? currencyFormatter.format(reservation.totalPayment)
+											: 'TBD'}</span
+									>
+								</div>
+								<div class="flex justify-between text-lg font-bold">
+									<span class="text-senary">Biaya DP</span>
+									<span class="text-secondary"
+										>{reservation.downPayment
+											? currencyFormatter.format(reservation.downPayment)
+											: 'TBD'}</span
+									>
+								</div>
+								{#if reservation.fulfillmentStatus}
+									<div class="flex justify-between text-sm text-secondary/70">
+										<span>Status</span>
+										<span class="font-medium text-secondary"
+											>{getFulfillmentStatusText(reservation.fulfillmentStatus)}</span
+										>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>

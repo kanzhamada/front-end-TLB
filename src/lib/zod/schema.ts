@@ -102,8 +102,33 @@ export const operationalTimeSchema = z.object({
 	hour: z.array(z.string()).refine((v) => v.length > 0, { message: 'At least one hour is required.' })
 });
 
+export const profileSchema = z.object({
+	displayName: z
+		.string()
+		.trim()
+		.min(1, 'Full name is required')
+		.max(30, 'Full name must be at most 30 characters'),
+
+	phone: z
+		.string()
+		.trim()
+		.refine((val) => /^\d+$/.test(val), {
+			message: 'Phone number must be numeric only'
+		})
+		.refine((val) => val.length >= 10, {
+			message: 'Phone number must be at least 10 digits'
+		})
+		.refine((val) => val.length <= 14, {
+			message: 'Phone number must be at most 14 digits'
+		})
+		.refine((val) => val.startsWith('08'), {
+			message: "Phone number must start with '08'"
+		})
+});
+
 export type BarberSchema = typeof barberSchema;
 export type ServiceSchema = typeof serviceSchema;
 export type VoucherSchema = typeof voucherSchema;
 export type CatalogueSchema = typeof catalogueSchema;
 export type OperationalTimeSchema = typeof operationalTimeSchema;
+export type ProfileSchema = typeof profileSchema;

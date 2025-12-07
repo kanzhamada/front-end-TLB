@@ -269,3 +269,52 @@ export const getCoinHistory = async (
 		};
 	}
 };
+
+// API function to buy a voucher
+export const buyVoucher = async (
+	voucherID: string,
+	accessToken: string
+): Promise<ApiResponse<null>> => {
+	const API_URL = import.meta.env.PUBLIC_API_URL;
+	if (!API_URL) {
+		return {
+			success: false,
+			message: 'PUBLIC_API_URL is not configured'
+		};
+	}
+
+	try {
+		console.log(JSON.stringify({ voucherID }))
+		const response = await fetch(`${API_URL}/customer/buy-voucher`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${accessToken}`
+			},
+			body: JSON.stringify({ voucherID })
+		});
+
+		const json = await response.json();
+		const successFlag = Boolean(json.success ?? json.sucess);
+
+		if (!response.ok || !successFlag) {
+			return {
+				success: false,
+				message: json.message ?? 'Failed to buy voucher',
+				error: json.error ?? json
+			};
+		}
+
+		return {
+			success: true,
+			message: json.message,
+			data: null
+		};
+	} catch (error) {
+		return {
+			success: false,
+			message: 'Failed to buy voucher',
+			error
+		};
+	}
+};
