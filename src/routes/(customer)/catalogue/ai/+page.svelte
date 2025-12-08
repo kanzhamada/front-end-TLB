@@ -8,8 +8,15 @@
 		Sparkles,
 		Gem,
 		Camera,
-		Aperture
+		Aperture,
+		User,
+		Palette,
+		Fingerprint,
+		ScanFace,
+		Scissors,
+		Sun
 	} from 'lucide-svelte';
+
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -38,7 +45,23 @@
 	let fileInput;
 	let accordionValue = $state(['contoh-foto']); // Auto open on load
 	let scanning = $state(false);
-	let result = $state<string | null>(null);
+	let result = $state<any>(null);
+	let showResults = $state(false);
+
+	const ANALYSIS_OPTIONS = {
+		faceShape: ['Oval', 'Bulat', 'Kotak'],
+		hairType: ['Lurus', 'Bergelombang', 'Keriting'],
+		skinTone: ['Putih', 'Sawo Matang', 'Coklat Tua']
+	};
+
+	let analysisData = $state({
+		faceShape: '-',
+		hairType: '-',
+		skinTone: '-',
+		faceAccuracy: '-',
+		hairAccuracy: '-',
+		skinAccuracy: '-'
+	});
 
 	// Camera State
 	let showCamera = $state(false);
@@ -61,6 +84,8 @@
 			avatar = event.target?.result;
 			// Close accordion when photo is uploaded
 			accordionValue = [];
+			showResults = false;
+			result = null;
 		};
 		reader.readAsDataURL(file);
 	};
@@ -129,6 +154,8 @@
 
 		stopCamera();
 		accordionValue = []; // Close accordion
+		showResults = false;
+		result = null;
 	}
 
 	onDestroy(() => {
@@ -136,6 +163,7 @@
 	});
 
 	// Get catalogue data
+	let allCatalogues = $state<Catalogue[]>([]);
 	let catalogues = $state<Catalogue[]>([]);
 	let showReservationSheet = $state(false);
 	let selectedCatalogueNote = $state('');
@@ -143,6 +171,7 @@
 	onMount(async () => {
 		const response = await getCatalogue(fetch);
 		if (response.success && response.data) {
+			allCatalogues = response.data;
 			catalogues = response.data;
 		}
 	});
@@ -205,13 +234,65 @@
 		});
 	}
 
-	function handleScan() {
+	async function handleScan() {
+		if (!avatar) return;
 		scanning = true;
+		showResults = false;
 		result = null;
-		setTimeout(() => {
+
+		try {
+			// Convert base64/data URL to Blob
+			const res = await fetch(avatar);
+			const blob = await res.blob();
+
+			const formData = new FormData();
+			formData.append('image', blob);
+
+			const response = await fetch('/api/ai/analyze', {
+				method: 'POST',
+				body: formData
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				result = data.data; // Array of { label: string, score: number }
+				showResults = true;
+
+				// Use the specific Result from the AI Model (Custom JSON)
+				if (result) {
+					analysisData = {
+						faceShape: result.wajah || 'Unknown',
+						hairType: result.rambut || 'Unknown',
+						skinTone: result.skin || 'Unknown',
+						faceAccuracy: result.c_wajah || '-',
+						hairAccuracy: result.c_rambut || '-',
+						skinAccuracy: result.c_skin || '-'
+					};
+
+					// Map specific 'katalog' recommendations if present
+					if (result.katalog && Array.isArray(result.katalog)) {
+						catalogues = result.katalog.map((item: any, index: number) => ({
+							catalogueID: `ai-rec-${index}`,
+							name: item.nama_gaya,
+							type: item.tipe,
+							description: item.deskripsi,
+							catalogueImages: [{ imageUrl: item.gambar_url }]
+						}));
+					} else {
+						// Fallback if no catalogue in response
+						catalogues = allCatalogues.slice(0, 3);
+					}
+				}
+			} else {
+				alert('Failed to analyze image: ' + (data.error || 'Unknown error'));
+			}
+		} catch (e) {
+			console.error(e);
+			alert('An error occurred during analysis.');
+		} finally {
 			scanning = false;
-			result = "The 'Modern Pompadour' with a high fade.";
-		}, 3000);
+		}
 	}
 
 	const itemsPerPage = $derived(8);
@@ -531,7 +612,70 @@
 							<h4 class="mb-2 font-serif text-2xl text-secondary">Analyzing Features</h4>
 							<p class="text-sm text-secondary/60">Identifying face shape and hair texture...</p>
 						</div>
-					{:else}
+					{:else if showResults}
+						<!-- Analysis Results -->
+						<div class="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+							<!-- Face Shape -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<ScanFace class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Face Shape
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.faceShape}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Accuracy: {analysisData.faceAccuracy}
+								</p>
+							</div>
+
+							<!-- Hair Type -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<Scissors class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Hair Type
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.hairType}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Accuracy: {analysisData.hairAccuracy}
+								</p>
+							</div>
+
+							<!-- Skin Tone -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<Sun class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Skin Tone
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.skinTone}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Accuracy: {analysisData.skinAccuracy}
+								</p>
+							</div>
+						</div>
+
 						<!-- Filter Section -->
 						<div class="mb-10">
 							<FilterGroup
@@ -620,6 +764,24 @@
 								</Pagination.Content>
 							{/snippet}
 						</Pagination.Root>
+					{:else}
+						<!-- Photo Ready State (Uploaded but not analyzed) -->
+						<div class="flex flex-col items-center justify-center py-24 text-center">
+							<div class="relative mb-8">
+								<div class="absolute inset-0 animate-pulse rounded-full bg-senary/10 blur-xl"></div>
+								<div
+									class="relative rounded-full border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+								>
+									<Camera class="h-10 w-10 text-senary/80" />
+								</div>
+							</div>
+							<h4 class="mb-3 font-serif text-2xl text-secondary">Photo Ready</h4>
+							<p class="max-w-xs text-sm leading-relaxed text-secondary/70">
+								Your photo is selected. Click <span class="font-bold text-senary"
+									>ANALYZE STYLE</span
+								> to begin the transformation.
+							</p>
+						</div>
 					{/if}
 				</div>
 			</div>
