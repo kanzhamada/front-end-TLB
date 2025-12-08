@@ -6,7 +6,8 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	// Note: hooks.server.ts already handles 404s for unauthorized access,
 	// but this ensures a friendly redirect for users who might have lost their session
 	// while navigating.
-	if (!locals.session && url.pathname !== '/a1-portal-a16-tlb/login') {
+	const allowedUnauthenticatedPaths = ['/a1-portal-a16-tlb/login', '/a1-portal-a16-tlb/login/forget-password', '/a1-portal-a16-tlb/login/update-password'];
+	if (!locals.session && !allowedUnauthenticatedPaths.includes(url.pathname)) {
 		throw redirect(303, '/a1-portal-a16-tlb/login');
 	}
 

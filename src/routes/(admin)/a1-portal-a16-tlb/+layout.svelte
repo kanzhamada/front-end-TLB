@@ -26,6 +26,6 @@
 		}
 	});
 </script>
+
 <CustomCursor />
 {@render children?.()}
-

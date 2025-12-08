@@ -7,8 +7,14 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<title>Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="min-h-screen bg-slate-950">
-	<CustomerNavbar />
+	<div class="mx-auto max-w-6xl">
+		<CustomerNavbar />
+	</div>
 	<main class="">
 		<CustomCursor />
 		<Toaster position="bottom-left" richColors />

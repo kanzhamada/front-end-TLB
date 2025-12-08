@@ -59,9 +59,24 @@ async function request<T>(path: string, payload: unknown): Promise<T> {
 	}
 }
 
+
+
 export const login = (payload: LoginPayload) => request<AuthResponse>('/auth/login', payload);
 
 export const register = (payload: RegisterPayload) =>
 	request<AuthResponse>('/auth/register', payload);
+
+export const forgotPassword = (payload: { email: string, isAdmin?: boolean }) =>
+	request<AuthResponse>('/auth/forgot-password', payload);
+
+export const updatePassword = (payload: {
+	access_token: string;
+	refresh_token: string;
+	expires_in: string;
+	expires_at: string;
+	token_type: string;
+	type: string;
+	newPassword: string;
+}) => request<AuthResponse>('/auth/update-password', payload);
 
 export type { LoginPayload, RegisterPayload, AuthResponse };

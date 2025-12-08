@@ -29,7 +29,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			access_token: accessToken,
 			refresh_token: refreshToken || ''
 		});
-		
+
 		// Only call getSession if we have a token to validate
 		const { data } = await supabase.auth.getSession();
 		session = data.session;
@@ -39,10 +39,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Admin Route Protection
 	if (event.url.pathname.startsWith('/a1-portal-a16-tlb')) {
-		const isLoginPage = event.url.pathname === '/a1-portal-a16-tlb/login';
+		const allowedUnauthenticatedPaths = [
+			'/a1-portal-a16-tlb/login',
+			'/a1-portal-a16-tlb/login/forget-password',
+			'/a1-portal-a16-tlb/login/update-password'
+		];
+		const isAllowedPath = allowedUnauthenticatedPaths.includes(event.url.pathname);
 
 		if (!session) {
-			if (!isLoginPage) {
+			if (!isAllowedPath) {
 				// Unauthorized access to admin portal -> 404 to hide it
 				// This effectively hides the admin routes from public view
 				error(404, 'Not Found');
@@ -56,7 +61,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				// User is logged in but NOT an admin
 				// If they try to access any admin page (except login), return 404
 				// This ensures that even logged-in customers cannot see admin routes
-				if (!isLoginPage) {
+				if (!isAllowedPath) {
 					error(404, 'Not Found');
 				}
 				// If they are on login page, we allow it (publicly accessible)
@@ -64,7 +69,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			} else {
 				// User IS an admin
 				// If they are on the login page, redirect them to the dashboard
-				if (isLoginPage) {
+				if (isAllowedPath) {
 					redirect(303, '/a1-portal-a16-tlb');
 				}
 				// Otherwise allow access to admin pages

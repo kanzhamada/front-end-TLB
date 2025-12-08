@@ -227,9 +227,13 @@
 					<div class="flex flex-col items-center text-center">
 						<div class="relative">
 							<Avatar class="size-24 border-2 border-senary shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-								<AvatarFallback class="bg-primary text-2xl text-senary">
-									{profileData?.displayName.charAt(0) ?? 'U'}
-								</AvatarFallback>
+								{#if profileData?.photoProfile}
+									<img src={profileData.photoProfile} alt={profileData?.displayName ?? 'User'} />
+								{:else}
+									<AvatarFallback class="bg-primary text-2xl text-senary">
+										{profileData?.displayName?.charAt(0)?.toUpperCase() ?? 'U'}
+									</AvatarFallback>
+								{/if}
 							</Avatar>
 						</div>
 

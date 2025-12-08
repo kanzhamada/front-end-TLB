@@ -29,7 +29,7 @@
 <nav
 	class="fixed top-0 right-0 left-0 z-50 border-b border-white/5 bg-black/40 shadow-lg backdrop-blur-md transition-all duration-300"
 >
-	<div class="container mx-auto px-4">
+	<div class="mx-auto max-w-6xl px-4">
 		<div class="flex h-20 items-center justify-between">
 			<!-- Logo -->
 			<div class="flex items-center gap-2">
@@ -49,17 +49,19 @@
 					href="/catalogue"
 					class="text-sm font-medium text-secondary transition-colors hover:text-senary">Katalog</a
 				>
-				<a
-					href="/profile"
-					class="text-sm font-medium text-secondary transition-colors hover:text-senary">Profil</a
-				>
+				{#if $authStore.session}
+					<a
+						href="/profile"
+						class="text-sm font-medium text-secondary transition-colors hover:text-senary">Profil</a
+					>
+				{/if}
+				<ReservationSheet
+					triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium"
+					triggerText="Reservasi"
+				/>
 			</div>
 
 			<div class="hidden items-center gap-4 md:flex">
-				<ReservationSheet
-					triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium mr-4"
-					triggerText="Reservasi"
-				/>
 				<!-- Reservation Button & Auth -->
 				{#if $authStore.session}
 					<Button
@@ -121,14 +123,16 @@
 										<BookOpen class="size-5" />
 										<span class="font-medium">Katalog</span>
 									</a>
-									<a
-										href="/profile"
-										class="flex items-center gap-3 rounded-lg px-4 py-3 text-secondary transition-all hover:bg-white/5 hover:text-senary"
-										onclick={() => (isMobileMenuOpen = false)}
-									>
-										<User class="size-5" />
-										<span class="font-medium">Profil</span>
-									</a>
+									{#if $authStore.session}
+										<a
+											href="/profile"
+											class="flex items-center gap-3 rounded-lg px-4 py-3 text-secondary transition-all hover:bg-white/5 hover:text-senary"
+											onclick={() => (isMobileMenuOpen = false)}
+										>
+											<User class="size-5" />
+											<span class="font-medium">Profil</span>
+										</a>
+									{/if}
 								</div>
 
 								<div class="my-6 h-px w-full bg-white/10"></div>

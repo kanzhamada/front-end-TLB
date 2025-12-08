@@ -5,7 +5,7 @@
 </script>
 
 <footer class="border-t border-white/10 bg-primary/40 py-16 text-secondary/80 backdrop-blur-md">
-	<div class="container mx-auto px-4">
+	<div class="mx-auto max-w-6xl">
 		<div class="mb-12 grid grid-cols-1 gap-12 md:grid-cols-3">
 			<div>
 				<img src="/three_lights_barbershop_logo.svg" alt="" />
