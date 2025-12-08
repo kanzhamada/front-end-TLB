@@ -93,6 +93,9 @@
 						</h3>
 						<span class="text-[10px] text-secondary/50 font-medium">{formatTime(session.lastMessageTime)}</span>
 					</div>
+					{#if session.customerPhone}
+						<p class="text-[10px] font-medium text-senary/70 mb-0.5">{session.customerPhone}</p>
+					{/if}
 					<p class={cn(
 						"truncate text-xs",
 						session.unreadCount > 0 ? "text-secondary font-medium" : "text-secondary/60"

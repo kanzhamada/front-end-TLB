@@ -14,6 +14,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { income = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		income?: OfflineIncome | null;
@@ -106,11 +107,18 @@
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!income) return;
-		if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!income) return;
+		
+		deleteLoading = true;
 		const res = await deleteOfflineIncome(fetch, income.id, token);
 		
 		if (res.success) {
@@ -120,7 +128,8 @@
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 </script>
 
@@ -249,7 +258,7 @@
 							<Button 
 								type="button"
 								variant="destructive" 
-								onclick={handleDelete}
+								onclick={initiateDelete}
 								disabled={loading}
 								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
 							>
@@ -285,5 +294,24 @@
 				</form>
 			</div>
 		</div>
-	</div>
+
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Delete Income Record"
+		description="Are you sure you want to delete this income record? This action cannot be undone."
+		variant="destructive"
+		confirmText="Delete"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
+</div>
 {/if}
+
+<style>
+	:global(.bg-black\/80) {
+		background-color: rgba(9, 9, 11, 0.8);
+	}
+	:global(.backdrop-blur-md) {
+		backdrop-filter: blur(12px);
+	}
+</style>

@@ -138,18 +138,43 @@
 		formData.append('faceShapes', faceShapes);
 		formData.append('skinTones', skinTones);
 		
-		// Append new files
-		images.forEach(img => {
-			if (!img.isExisting && img.file) {
-				formData.append('file', img.file);
+		// Append all files (new and existing)
+		// We need to re-upload existing files because the backend replaces the entire set
+		try {
+			for (const img of images) {
+				if (!img.isExisting && img.file) {
+					// New image, already has file object
+					formData.append('file', img.file);
+				} else if (img.isExisting && img.preview) {
+					// Existing image, fetch blob and convert to file
+					try {
+						const response = await fetch(img.preview);
+						const blob = await response.blob();
+						// Try to get a meaningful name, otherwise generate one
+						const filename = img.preview.split('/').pop()?.split('?')[0] || `existing-${img.id}.jpg`;
+						const file = new File([blob], filename, { type: blob.type });
+						formData.append('file', file);
+					} catch (err) {
+						console.error('Failed to fetch existing image:', img.preview, err);
+						toast.error('Failed to process one of the existing images. Please check your connection.');
+						loading = false;
+						return;
+					}
+				}
 			}
-		});
+		} catch (err) {
+			console.error('Error processing images:', err);
+			toast.error('An error occurred while preparing images.');
+			loading = false;
+			return;
+		}
 
 		// Debug: Log FormData entries
 		console.log('Submitting FormData:');
-		for (const pair of formData.entries()) {
-			console.log(pair[0], pair[1]);
-		}
+		// Note: We can't easily log file contents, but we can verify keys exist
+		// for (const pair of formData.entries()) {
+		// 	console.log(pair[0], pair[1]);
+		// }
 
 		let res;
 		if (mode === 'add') {

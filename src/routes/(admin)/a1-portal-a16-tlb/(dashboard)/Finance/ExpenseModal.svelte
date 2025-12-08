@@ -13,6 +13,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { expense = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		expense?: Expense | null;
@@ -100,11 +101,18 @@
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!expense) return;
-		if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!expense) return;
+		
+		deleteLoading = true;
 		const res = await deleteExpense(fetch, expense.id, token);
 		
 		if (res.success) {
@@ -114,7 +122,8 @@
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 </script>
 
@@ -210,16 +219,31 @@
 
 					<div class="flex justify-between items-center pt-6 border-t border-white/10">
 						{#if expense}
-							<Button 
-								type="button"
-								variant="destructive" 
-								onclick={handleDelete}
-								disabled={loading}
-								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
-							>
-								<Trash2 class="mr-2 h-4 w-4" />
-								Delete
-							</Button>
+							<div class="flex gap-3">
+								<Button 
+									type="button"
+									variant="outline" 
+									onclick={onClose} 
+									disabled={loading}
+									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								>
+									Cancel
+								</Button>
+								<Button 
+									type="button" 
+									variant="destructive" 
+									class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+									onclick={initiateDelete}
+									disabled={loading}
+								>
+									{#if loading}
+										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+									{:else}
+										<Trash2 class="mr-2 h-4 w-4" />
+									{/if}
+									Delete Record
+								</Button>
+							</div>
 						{:else}
 							<div></div>
 						{/if}
@@ -249,5 +273,14 @@
 				</form>
 			</div>
 		</div>
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Delete Expense Record"
+		description="Are you sure you want to delete this expense record? This action cannot be undone."
+		variant="destructive"
+		confirmText="Delete"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
 	</div>
 {/if}

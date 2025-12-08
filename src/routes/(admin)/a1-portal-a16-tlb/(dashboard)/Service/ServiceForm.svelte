@@ -8,6 +8,7 @@
 	import { X, Loader2, Scissors, Pencil, Trash2, Coins } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { mode = $bindable(), service, token, onClose, onUpdate } = $props<{
 		mode: 'add' | 'edit' | 'view';
@@ -65,11 +66,18 @@
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!service) return;
-		if (!confirm('Are you sure you want to delete this service?')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!service) return;
+		
+		deleteLoading = true;
 		const res = await deleteService(fetch, service.id, token);
 		
 		if (res.success) {
@@ -79,7 +87,8 @@
 		} else {
 			toast.error(res.message || 'Failed to delete service');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 
 	const formatCurrency = (amount: number) => {
@@ -179,7 +188,7 @@
 						<Button 
 							variant="destructive" 
 							class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
-							onclick={handleDelete}
+							onclick={initiateDelete}
 							disabled={loading}
 						>
 							{#if loading}
@@ -264,4 +273,14 @@
 			{/if}
 		</div>
 	</div>
+
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Delete Service"
+		description="Are you sure you want to delete this service? This action cannot be undone."
+		variant="destructive"
+		confirmText="Delete"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
 </div>

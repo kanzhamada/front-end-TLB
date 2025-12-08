@@ -4,20 +4,22 @@
 		acceptReservation, 
 		declineReservation, 
 		cancelReservation, 
-		acceptReschedule, 
+		acceptReschedule,
 		declineReschedule,
-		type Reservation 
+		completeReservation
 	} from '$lib/api/admin/reservation';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
+	import type { Reservation } from '$lib/api/admin/reservation';
 	import { toast } from 'svelte-sonner';
-	import { X, Calendar, Clock, User, Scissors, Phone, CreditCard, MapPin } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { X, Calendar, Clock, Scissors, CreditCard, User, Phone, Loader2 } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
-	let { reservationId, token, onClose, onUpdate } = $props<{
-		reservationId: string | null;
+	let { reservationId = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
+		reservationId?: string | null;
 		token: string;
+		open: boolean;
 		onClose: () => void;
 		onUpdate: () => void;
 	}>();
@@ -46,35 +48,91 @@
 		}
 		loading = false;
 	}
+	// Confirmation Dialog State
+	let confirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmDescription = $state('');
+	let confirmVariant = $state<'default' | 'destructive' | 'success'>('default');
+	let pendingAction = $state<string | null>(null);
+	let actionLoading = $state(false);
 
-	async function handleAction(action: string) {
-		if (!reservationId || !confirm(`Are you sure you want to ${action.replace('-', ' ')}?`)) return;
-
-		let res;
+	function initiateAction(action: string) {
+		pendingAction = action;
+		const actionName = action.replace('-', ' ');
+		
 		switch (action) {
 			case 'accept':
-				res = await acceptReservation(fetch, reservationId, token);
+			case 'accept-reschedule':
+				confirmTitle = 'Accept Reservation';
+				confirmDescription = 'Are you sure you want to accept this reservation? This will update the status and notify the customer.';
+				confirmVariant = 'success';
 				break;
 			case 'decline':
-				res = await declineReservation(fetch, reservationId, token);
+			case 'decline-reschedule':
+				confirmTitle = 'Decline Request';
+				confirmDescription = 'Are you sure you want to decline this request? This action cannot be undone.';
+				confirmVariant = 'destructive';
 				break;
 			case 'cancel':
-				res = await cancelReservation(fetch, reservationId, token);
+				confirmTitle = 'Cancel Reservation';
+				confirmDescription = 'Are you sure you want to cancel this reservation? The customer will be notified.';
+				confirmVariant = 'destructive';
 				break;
-			case 'accept-reschedule':
-				res = await acceptReschedule(fetch, reservationId, token);
+			case 'complete':
+				confirmTitle = 'Complete Reservation';
+				confirmDescription = 'Are you sure you want to mark this reservation as completed? This implies the service has been delivered.';
+				confirmVariant = 'success';
 				break;
-			case 'decline-reschedule':
-				res = await declineReschedule(fetch, reservationId, token);
-				break;
+			default:
+				confirmTitle = 'Confirm Action';
+				confirmDescription = `Are you sure you want to ${actionName}?`;
+				confirmVariant = 'default';
 		}
+		confirmOpen = true;
+	}
 
-		if (res?.success) {
-			toast.success(`Reservation ${action.replace('-', ' ')}ed successfully`);
-			onUpdate();
-			onClose();
-		} else {
-			toast.error(res?.message || `Failed to ${action} reservation`);
+	async function handleConfirmAction() {
+		if (!reservationId || !pendingAction) return;
+		
+		actionLoading = true;
+		let res;
+		
+		try {
+			switch (pendingAction) {
+				case 'accept':
+					res = await acceptReservation(fetch, reservationId, token);
+					break;
+				case 'decline':
+					res = await declineReservation(fetch, reservationId, token);
+					break;
+				case 'cancel':
+					res = await cancelReservation(fetch, reservationId, token);
+					break;
+				case 'complete':
+					res = await completeReservation(fetch, reservationId, token);
+					break;
+				case 'accept-reschedule':
+					res = await acceptReschedule(fetch, reservationId, token);
+					break;
+				case 'decline-reschedule':
+					res = await declineReschedule(fetch, reservationId, token);
+					break;
+			}
+
+			if (res?.success) {
+				toast.success(`Reservation ${pendingAction.replace('-', ' ')}ed successfully`);
+				onUpdate();
+				onClose();
+			} else {
+				toast.error(res?.message || `Failed to ${pendingAction} reservation`);
+			}
+		} catch (error) {
+			toast.error('An error occurred during the action');
+			console.error(error);
+		} finally {
+			actionLoading = false;
+			confirmOpen = false;
+			pendingAction = null;
 		}
 	}
 
@@ -257,31 +315,66 @@
 
 			{#if reservation && !loading}
 				<div class="border-t border-white/10 bg-white/5 px-8 py-6">
-					<div class="flex flex-wrap justify-end gap-3">
-						{#if reservation.status === 'waiting'}
-							<Button variant="outline" class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300" onclick={() => handleAction('decline')}>
-								Decline Request
-							</Button>
-							<Button class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide" onclick={() => handleAction('accept')}>
-								Accept Reservation
-							</Button>
-						{:else if reservation.status === 'onGoing'}
-							<Button variant="destructive" onclick={() => handleAction('cancel')}>
-								Cancel Reservation
-							</Button>
-						{:else if reservation.status === 'requestToReschedule'}
-							<Button variant="outline" class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300" onclick={() => handleAction('decline-reschedule')}>
-								Decline Reschedule
-							</Button>
-							<Button class="bg-purple-500 hover:bg-purple-600 text-white font-bold tracking-wide" onclick={() => handleAction('accept-reschedule')}>
-								Accept Reschedule
-							</Button>
-						{:else}
-							<Button variant="outline" class="border-white/10 hover:bg-white/10 text-secondary" onclick={onClose}>Close Details</Button>
-						{/if}
-					</div>
+			{#if reservation.status === 'waiting'}
+				<div class="flex justify-end gap-3">
+					<Button 
+						variant="outline" 
+						class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
+						onclick={() => initiateAction('decline')}
+					>
+						Decline Request
+					</Button>
+					<Button 
+						class="bg-senary text-primary hover:bg-senary/90 font-bold"
+						onclick={() => initiateAction('accept')}
+					>
+						Accept Reservation
+					</Button>
 				</div>
+			{:else if reservation.status === 'requestToReschedule'}
+				<div class="flex justify-end gap-3">
+					<Button 
+						variant="outline" 
+						class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
+						onclick={() => initiateAction('decline-reschedule')}
+					>
+						Decline Reschedule
+					</Button>
+					<Button 
+						class="bg-senary text-primary hover:bg-senary/90 font-bold"
+						onclick={() => initiateAction('accept-reschedule')}
+					>
+						Accept Reschedule
+					</Button>
+				</div>
+			{:else if reservation.status === 'onGoing'}
+				<div class="flex justify-end gap-3">
+					<Button 
+						variant="destructive" 
+						class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
+						onclick={() => initiateAction('cancel')}
+					>
+						Cancel Reservation
+					</Button>
+					<Button 
+						class="bg-senary text-primary hover:bg-senary/90 font-bold"
+						onclick={() => initiateAction('complete')}
+					>
+						Complete Reservation
+					</Button>
+				</div>
+			{/if}
+		</div>
 			{/if}
 		</div>
 	</div>
 {/if}
+
+<AdminConfirmDialog 
+	bind:open={confirmOpen}
+	title={confirmTitle}
+	description={confirmDescription}
+	variant={confirmVariant}
+	loading={actionLoading}
+	onConfirm={handleConfirmAction}
+/>

@@ -20,6 +20,8 @@
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
 	import { unreadChatCount } from '$lib/stores/chat';
+	import { logout } from '$lib/api/auth';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		ref = $bindable(null),
@@ -28,6 +30,23 @@
 	}: ComponentProps<typeof Sidebar.Root> = $props();
 
 	const sidebar = useSidebar();
+
+	// Function to handle logout
+	async function handleLogout() {
+		try {
+			const token = $page.data.session?.access_token;
+			if (token) {
+				await logout(token);
+			}
+			toast.success('Logged out successfully');
+			// Force hard redirect to login to clear any state
+			window.location.href = '/login';
+		} catch (error) {
+			console.error('Logout failed:', error);
+			// Even if API fails, we should probably redirect user out
+			window.location.href = '/login'; 
+		}
+	}
 
 	// Fungsi untuk menangani klik menu pada mobile
 	function handleMenuClick() {
@@ -91,6 +110,12 @@
 			url: '/a1-portal-a16-tlb/Voucher',
 			icon: TicketsIcon,
 			tooltip: 'Manage Vouchers'
+		},
+		{
+			title: 'Settings',
+			url: '/a1-portal-a16-tlb/Settings',
+			icon: MenuIcon,
+			tooltip: 'Website Settings'
 		}
 	];
 
@@ -156,16 +181,17 @@
 		<Sidebar.Footer class="border-t border-white/10 bg-transparent">
 			<Sidebar.Menu class="px-2 pb-4">
 				<Sidebar.MenuItem>
-					<form action="?/logout" method="POST" class="w-full">
+					<!-- Replaced form with client-side handler -->
+					<div class="w-full">
 						<Sidebar.MenuButton
-							type="submit"
+							onclick={handleLogout}
 							tooltipContent="Sign out of your account"
 							class="w-full justify-start rounded-xl px-4 py-3 text-red-400/80 transition-all duration-300 hover:bg-red-500/10 hover:pl-6 hover:text-red-400"
 						>
 							<LogoutIcon class="h-5 w-5" />
 							<span class="ml-3 text-base font-light">Logout</span>
 						</Sidebar.MenuButton>
-					</form>
+					</div>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
 			<div class="items-left flex justify-center space-x-2 p-4 text-xs text-secondary/50">

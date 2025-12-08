@@ -29,7 +29,6 @@
 	import OperationalModal from './OperationalModal.svelte';
 	import { cn } from "$lib/utils";
 	import { fade, slide } from 'svelte/transition';
-	import AdminHeader from '$lib/components/Admin/AdminHeader/AdminHeader.svelte';
 
 	let { data } = $props();
 	let token = $derived(data.session?.access_token || '');
@@ -75,7 +74,7 @@
 		const res = await getSchedule(fetch, token);
 		if (res.success && res.data) {
 			// Normalize data: map array response to object structure
-			const rawData = res.data as any[];
+			const rawData = res.data as unknown as any[];
 			const normalized: any = {};
 			
 			// Initialize with empty arrays
@@ -116,8 +115,11 @@
 		})
 	);
 
-	const isScheduled = (date: CalendarDate) => {
-		return scheduledDates.some((d) => d.compare(date) === 0);
+	// Simplified isScheduled check
+	const isScheduled = (date: any) => {
+		if (!date) return false;
+		const dateStr = date.toString(); // CalendarDate.toString() gives YYYY-MM-DD
+		return operationalTimes.some((ot) => ot.date === dateStr);
 	};
 
 	function handleDateSelect(date: DateValue | undefined) {
@@ -173,12 +175,12 @@
 	}
 </script>
 
-<div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30">
+<div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30 pb-20">
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
 		
-		<div class="relative z-10 mx-auto max-w-7xl">
+		<div class="relative z-10 mx-auto max-w-[1600px]">
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>
@@ -203,8 +205,8 @@
 		</div>
 	</div>
 
-	<div class="px-6 pb-20 lg:px-8">
-		<div class="mx-auto max-w-7xl space-y-6">
+	<div class="px-8">
+		<div class="mx-auto max-w-[1600px] space-y-6">
 			
 			<Tabs.Root value="daily" class="w-full" onValueChange={(v) => activeTab = v}>
 				<div class="flex items-center justify-between mb-6">
@@ -228,7 +230,7 @@
 
 				<!-- Daily Tab -->
 				<Tabs.Content value="daily" class="mt-0 focus-visible:outline-none focus-visible:ring-0">
-					<div class="bg-white/5 rounded-3xl border border-white/10 p-6 backdrop-blur-sm flex flex-col items-center">
+					<div class="rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md flex flex-col items-center">
 						<div class="w-full max-w-5xl grid md:grid-cols-[1fr_300px] gap-8 items-start">
 							<!-- Calendar Section -->
 							<div class="flex flex-col gap-4 w-full">
@@ -262,7 +264,7 @@
 										{#snippet day({ day, outsideMonth })}
 											<div class="relative w-full h-12 flex items-center justify-center">
 												<span class="text-sm font-medium">{day.day}</span>
-												{#if !outsideMonth && isScheduled(day)}
+												{#if !outsideMonth && isScheduled(day.date)}
 													<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-senary shadow-[0_0_6px_rgba(255,215,0,0.6)]"></div>
 												{/if}
 											</div>

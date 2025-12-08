@@ -45,7 +45,15 @@
 			messages = res.data.messagesDetail;
 			// Mark as read locally (API should handle backend)
 			const s = sessions.find(s => s.chatID === session.chatID);
-			if (s) s.unreadCount = 0;
+			if (s) {
+				s.unreadCount = 0;
+				if (res.data.customerPhone) {
+					s.customerPhone = res.data.customerPhone;
+					// Force update reactivity if needed, usually direct mutation on $state proxy works, 
+					// but let's trigger it by reassignment if not showing up
+					selectedSession = { ...s }; 
+				}
+			}
 		} else {
 			toast.error(res.message || 'Failed to load messages');
 		}

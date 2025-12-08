@@ -549,6 +549,27 @@ All API responses follow this structure:
 *Note: `reschedule` field will be `null` if there is no active reschedule request.*
 
 
+### Complete Reservation
+**Endpoint**: `PUT /admin/complete-reservation/:id`
+
+**Headers**:
+- `Authorization`: `Bearer <admin_token>`
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Reservation completed successfully",
+  "data": {
+     "reservationID": "uuid",
+     "status": "completed",
+     "updated_at": "..."
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
+}
+```
+
 ### Create Barber
 **Endpoint**: `POST /admin/create-barber`
 
@@ -816,29 +837,8 @@ All API responses follow this structure:
   "success": true,
   "message": "Operational update successfully.",
   "data": { ... },
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "status": 200
 }
 ```
-
-### Delete Operational
-**Endpoint**: `DELETE /admin/delete-operational/:id`
-
-**Headers**:
-- `Authorization`: `Bearer <admin_token>`
-
-**Response Body Success (200)**:
-```json
-{
-  "success": true,
-  "message": "Operational delete successfully.",
-  "data": { ... },
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "status": 200
-}
-```
-
----
 
 ### Create Catalogue
 **Endpoint**: `POST /admin/create-catalogue`
@@ -1408,6 +1408,7 @@ All API responses follow this structure:
   "data": {
     "chatID": "chat-uuid",
     "reservationID": "reservation-uuid",
+    "customerPhone": "081234567890",
     "messagesDetail": [
       {
         "sender": "user-uuid",
@@ -1484,3 +1485,73 @@ All API responses follow this structure:
 }
 ```
 *Note: Webhook response format differs slightly as it is a system-to-system callback.*
+
+---
+
+## Website Settings
+
+### Website Settings: Get Settings (Public)
+**Endpoint**: `GET /shared/settings`
+
+**Headers**: None
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Website settings retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "admin_fee": 1000,
+    "vision": "Our Vision",
+    "mission": "Our Mission",
+    "location": "Central Park",
+    "maps_link": "https://maps.google.com/...",
+    "phone": "08123456789",
+    "instagram": "@barbershop"
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
+}
+```
+
+### Website Settings: Update Settings (Admin)
+**Endpoint**: `PUT /admin/settings`
+
+**Headers**:
+- `Authorization`: `Bearer <admin_token>`
+- `Content-Type`: `application/json`
+
+**Request Body**:
+```json
+{
+  "admin_fee": 2000,
+  "vision": "New Vision",
+  "mission": "New Mission",
+  "location": "New Location",
+  "maps_link": "https://newmaps...",
+  "phone": "08987654321",
+  "instagram": "@newbarber"
+}
+```
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Website settings updated successfully",
+  "data": {
+    "id": "uuid",
+    "admin_fee": 2000,
+    "vision": "New Vision",
+    "mission": "New Mission",
+    "location": "New Location",
+    "maps_link": "https://newmaps...",
+    "phone": "08987654321",
+    "instagram": "@newbarber",
+    "updated_at": "..."
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
+}
+```

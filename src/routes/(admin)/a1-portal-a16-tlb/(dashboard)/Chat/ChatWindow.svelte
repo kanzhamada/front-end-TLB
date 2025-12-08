@@ -137,6 +137,9 @@
 		
 		<div>
 			<h2 class="text-lg font-bold text-secondary">{session.customerName || 'Unknown Customer'}</h2>
+			{#if session.customerPhone}
+				<p class="text-xs text-senary/70 font-medium">{session.customerPhone}</p>
+			{/if}
 		</div>
 	</div>
 

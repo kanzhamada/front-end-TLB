@@ -22,6 +22,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import ReservationDetailModal from "./Reservation/ReservationDetailModal.svelte";
 
 	let { data } = $props();
 	let token = $derived(data.session?.access_token || '');
@@ -29,6 +30,20 @@
 	let dashboardData = $state<DashboardData | null>(null);
 	let isLoading = $state(true);
 	let activeChartTab = $state('weekly');
+
+	// Modal State
+	let selectedReservationId = $state<string | null>(null);
+	let isDetailModalOpen = $state(false);
+
+	function openDetailModal(id: string) {
+		selectedReservationId = id;
+		isDetailModalOpen = true;
+	}
+
+	function closeDetailModal() {
+		isDetailModalOpen = false;
+		selectedReservationId = null;
+	}
 
 	async function loadDashboardData() {
 		if (!token) return;
@@ -200,9 +215,19 @@
 												<p class="font-medium text-secondary text-sm">{item.customerName}</p>
 												<p class="text-xs text-secondary/50 capitalize">{item.status.replace(/([A-Z])/g, ' $1').trim()}</p>
 											</div>
-											<div class="text-right">
-												<p class="text-xs font-medium text-senary">{item.time}</p>
-												<p class="text-[10px] text-secondary/40">{format(new Date(item.date), 'dd MMM')}</p>
+											<div class="flex items-center gap-3">
+												<div class="text-right">
+													<p class="text-xs font-medium text-senary">{item.time}</p>
+													<p class="text-[10px] text-secondary/40">{format(new Date(item.date), 'dd MMM')}</p>
+												</div>
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-8 w-8 text-secondary/60 hover:text-senary"
+													onclick={() => openDetailModal(item.reservationID)}
+												>
+													<ArrowUpRight class="h-4 w-4" />
+												</Button>
 											</div>
 										</div>
 									{/each}
@@ -309,3 +334,11 @@
 		</div>
 	</div>
 </div>
+
+<ReservationDetailModal
+	bind:open={isDetailModalOpen}
+	reservationId={selectedReservationId}
+	{token}
+	onClose={closeDetailModal}
+	onUpdate={loadDashboardData}
+/>

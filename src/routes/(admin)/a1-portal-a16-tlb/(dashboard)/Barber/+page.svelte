@@ -91,7 +91,7 @@
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
-		<div class="relative z-10 mx-auto max-w-7xl">
+		<div class="relative z-10 mx-auto max-w-[1600px]">
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>

@@ -9,6 +9,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import * as Select from '$lib/components/ui/select';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { mode = $bindable(), barber, token, onClose, onUpdate } = $props<{
 		mode: 'add' | 'edit' | 'view';
@@ -74,11 +75,18 @@
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!barber) return;
-		if (!confirm('Are you sure you want to delete this barber?')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!barber) return;
+		
+		deleteLoading = true;
 		const res = await deleteBarber(fetch, barber.id, token);
 		
 		if (res.success) {
@@ -88,7 +96,8 @@
 		} else {
 			toast.error(res.message || 'Failed to delete barber');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 
 	const statusOptions = [
@@ -127,11 +136,11 @@
 				</h2>
 				<p class="text-xs font-light text-secondary/60 uppercase tracking-widest mt-1">
 					{#if mode === 'add'}
-						Onboard a new team member
+						Register a new professional
 					{:else if mode === 'edit'}
-						Update barber details
+						Update barber information
 					{:else}
-						View barber information
+						View detailed profile
 					{/if}
 				</p>
 			</div>
@@ -190,7 +199,7 @@
 						<Button 
 							variant="destructive" 
 							class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
-							onclick={handleDelete}
+							onclick={initiateDelete}
 							disabled={loading}
 						>
 							{#if loading}
@@ -303,4 +312,14 @@
 			{/if}
 		</div>
 	</div>
+
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Delete Barber"
+		description="Are you sure you want to delete this barber? This action cannot be undone."
+		variant="destructive"
+		confirmText="Delete"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
 </div>
