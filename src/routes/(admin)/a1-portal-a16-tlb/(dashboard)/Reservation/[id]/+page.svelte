@@ -126,7 +126,11 @@
 						<div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
 							<div class="mb-6 flex items-start justify-between">
 								<div>
+<<<<<<< HEAD
 									<h2 class="text-xl font-light text-secondary">Reservation #{reservation.invoice}</h2>
+=======
+									<h2 class="text-xl font-light text-secondary">Reservation #{reservation.id.slice(0, 8)}</h2>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 									<p class="text-sm text-secondary/60">Created on {new Date(reservation.created_at).toLocaleDateString()}</p>
 								</div>
 								<span class={`rounded-full border px-3 py-1 text-sm font-medium ${getStatusColor(reservation.status)}`}>

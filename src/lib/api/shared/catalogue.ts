@@ -7,9 +7,12 @@ export type Catalogue = {
 	description: string;
 	image: string; // Fallback or first image
 	catalogueImages: { imageID?: string; imageUrl: string }[];
+<<<<<<< HEAD
 	hairTypes?: string;
 	faceShapes?: string;
 	skinTones?: string;
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 };
 
 export const getCatalogues = async (
@@ -38,10 +41,14 @@ export const getCatalogues = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+<<<<<<< HEAD
 		catalogueImages: item.catalogueImages || [],
 		hairTypes: item.hairTypes,
 		faceShapes: item.faceShapes,
 		skinTones: item.skinTones
+=======
+		catalogueImages: item.catalogueImages || []
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 	}));
 
 	return {
@@ -72,10 +79,14 @@ export const getCatalogueById = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+<<<<<<< HEAD
 		catalogueImages: item.catalogueImages || [],
 		hairTypes: item.hairTypes,
 		faceShapes: item.faceShapes,
 		skinTones: item.skinTones
+=======
+		catalogueImages: item.catalogueImages || []
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 	};
 
 	return {

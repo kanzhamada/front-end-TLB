@@ -837,12 +837,12 @@ All API responses follow this structure:
   "success": true,
   "message": "Operational update successfully.",
   "data": { ... },
+<<<<<<< HEAD
 }
 ```
-
-### Create Catalogue
-**Endpoint**: `POST /admin/create-catalogue`
-
+=======
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
 **Headers**:
 - `Authorization`: `Bearer <admin_token>`
 - `Content-Type`: `multipart/form-data`
@@ -852,9 +852,12 @@ All API responses follow this structure:
 - `name`: String
 - `type`: String ("short" | "long" | "medium")
 - `description`: String
+<<<<<<< HEAD
 - `hairTypes`: String
 - `faceShapes`: String
 - `skinTones`: String
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 
 **Response Body Success (200)**:
 ```json
@@ -866,9 +869,12 @@ All API responses follow this structure:
     "name": "Catalogue Name",
     "type": "short",
     "description": "Description",
+<<<<<<< HEAD
     "hairTypes": "Lurus",
     "faceShapes": "Oval",
     "skinTones": "Sawo Matang",
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -888,9 +894,12 @@ All API responses follow this structure:
 - `name`: String
 - `type`: String ("short" | "long" | "medium")
 - `description`: String
+<<<<<<< HEAD
 - `hairTypes`: String
 - `faceShapes`: String
 - `skinTones`: String
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 
 **Response Body Success (200)**:
 ```json
@@ -902,9 +911,12 @@ All API responses follow this structure:
     "name": "Updated Name",
     "type": "long",
     "description": "Updated Description",
+<<<<<<< HEAD
     "hairTypes": "Keriting",
     "faceShapes": "Bulat",
     "skinTones": "Putih",
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -1251,9 +1263,12 @@ All API responses follow this structure:
       "name": "Catalogue Name",
       "type": "short",
       "description": "Description",
+<<<<<<< HEAD
       "hairTypes": "Lurus",
       "faceShapes": "Oval",
       "skinTones": "Sawo Matang",
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
       "imageUrl": "https://..."
     }
   ],
@@ -1277,9 +1292,12 @@ All API responses follow this structure:
     "name": "Catalogue Name",
     "type": "short",
     "description": "Description",
+<<<<<<< HEAD
     "hairTypes": "Lurus",
     "faceShapes": "Oval",
     "skinTones": "Sawo Matang",
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
     "imageUrl": "https://..."
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -1408,7 +1426,10 @@ All API responses follow this structure:
   "data": {
     "chatID": "chat-uuid",
     "reservationID": "reservation-uuid",
+<<<<<<< HEAD
     "customerPhone": "081234567890",
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
     "messagesDetail": [
       {
         "sender": "user-uuid",
@@ -1485,6 +1506,7 @@ All API responses follow this structure:
 }
 ```
 *Note: Webhook response format differs slightly as it is a system-to-system callback.*
+<<<<<<< HEAD
 
 ---
 
@@ -1555,3 +1577,5 @@ All API responses follow this structure:
   "status": 200
 }
 ```
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1

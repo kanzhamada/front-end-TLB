@@ -41,6 +41,11 @@
 		onRedeemApply: (code: string, discount: number) => void;
 	}>();
 
+<<<<<<< HEAD
+=======
+	console.log(availableVouchers);
+
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 	let redeemCodeInput = $state('');
 	let redeemLoading = $state(false);
 
@@ -49,7 +54,11 @@
 
 		const token = get(authStore).session?.access_token;
 		if (!token) {
+<<<<<<< HEAD
 			toast.error('Please login to redeem code');
+=======
+			toast.error('Silakan login untuk menukarkan kode');
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			return;
 		}
 
@@ -78,11 +87,19 @@
 				redeemCodeInput = '';
 			} else {
 				console.log(data);
+<<<<<<< HEAD
 				toast.warning(data.error || data.message || 'Invalid redeem code');
 			}
 		} catch (error) {
 			console.error('Error redeeming code:', error);
 			toast.error('Failed to validate redeem code');
+=======
+				toast.warning(data.error || data.message || 'Kode penukaran tidak valid');
+			}
+		} catch (error) {
+			console.error('Error redeeming code:', error);
+			toast.error('Gagal memvalidasi kode penukaran');
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 		} finally {
 			redeemLoading = false;
 		}
@@ -92,7 +109,11 @@
 
 	function formatDate(dateString: string | undefined) {
 		if (!dateString) return '-';
+<<<<<<< HEAD
 		return new Date(dateString).toLocaleDateString('en-US', {
+=======
+		return new Date(dateString).toLocaleDateString('id-ID', {
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric'
@@ -107,9 +128,15 @@
 	>
 		<div class="mb-6 flex items-center justify-between border-b border-white/5 p-6">
 			<div>
+<<<<<<< HEAD
 				<SheetTitle class="mb-6 text-2xl font-bold text-secondary">Select Voucher</SheetTitle>
 				<SheetDescription class="text-sm text-secondary/60">
 					Choose a voucher or buy a new one
+=======
+				<SheetTitle class="mb-6 text-2xl font-bold text-secondary">Pilih Voucher</SheetTitle>
+				<SheetDescription class="text-sm text-secondary/60">
+					Pilih voucher atau beli yang baru
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 				</SheetDescription>
 			</div>
 			<div class="flex items-center gap-4">
@@ -117,7 +144,11 @@
 					class="flex items-center gap-2 rounded-full border border-senary/20 bg-senary/10 px-4 py-2"
 				>
 					<Coins class="h-4 w-4 text-senary" />
+<<<<<<< HEAD
 					<span class="font-bold text-senary">{userCoins} Coins</span>
+=======
+					<span class="font-bold text-senary">{userCoins} Koin</span>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 				</div>
 			</div>
 		</div>
@@ -126,7 +157,11 @@
 		<div class="px-6 pb-4">
 			<div class="flex gap-2">
 				<Input
+<<<<<<< HEAD
 					placeholder="Enter redeem code"
+=======
+					placeholder="Masukkan kode penukaran"
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 					bind:value={redeemCodeInput}
 					class="border-white/10 bg-white/5 text-secondary placeholder:text-secondary/40 focus-visible:ring-senary"
 				/>
@@ -138,7 +173,11 @@
 					{#if redeemLoading}
 						<Loader2 class="h-4 w-4 animate-spin" />
 					{:else}
+<<<<<<< HEAD
 						Apply
+=======
+						Gunakan
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 					{/if}
 				</Button>
 			</div>
@@ -165,7 +204,11 @@
 				)}
 				onclick={() => (activeTab = 'available')}
 			>
+<<<<<<< HEAD
 				Available to Buy
+=======
+				Tersedia untuk Dibeli
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 				{#if activeTab === 'available'}
 					<div class="absolute bottom-0 left-0 h-0.5 w-full bg-senary"></div>
 				{/if}
@@ -190,8 +233,13 @@
 							<X class="h-6 w-6 text-secondary" />
 						</div>
 						<div>
+<<<<<<< HEAD
 							<h3 class="font-bold text-secondary">Don't use voucher</h3>
 							<p class="text-sm text-secondary/60">Proceed without discount</p>
+=======
+							<h3 class="font-bold text-secondary">Jangan gunakan voucher</h3>
+							<p class="text-sm text-secondary/60">Lanjutkan tanpa diskon</p>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						</div>
 					</button>
 
@@ -228,7 +276,11 @@
 										</span>
 									{:else if voucher.discountPercentage}
 										<span class="rounded-full bg-senary/20 px-2 py-1 text-xs font-bold text-senary">
+<<<<<<< HEAD
 											{voucher.discountPercentage}% OFF
+=======
+											Diskon {voucher.discountPercentage}%
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 										</span>
 									{/if}
 									{#if voucher.count > 1}
@@ -247,11 +299,19 @@
 									{voucher.title ?? voucher.name}
 								</h3>
 								<p class="text-xs font-medium text-senary/80">
+<<<<<<< HEAD
 									{voucher.serviceName ?? 'All Services'}
 								</p>
 								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
 								<p class="pt-2 text-xs text-secondary/40">
 									Expires: {formatDate(
+=======
+									{voucher.serviceName ?? 'Semua Layanan'}
+								</p>
+								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
+								<p class="pt-2 text-xs text-secondary/40">
+									Berlaku sampai: {formatDate(
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 										voucher.expireDate ?? voucher.expiredAt ?? voucher.expiredDate
 									)}
 								</p>
@@ -262,12 +322,20 @@
 
 				{#if ownedVouchers.length === 0}
 					<div class="mt-8 text-center">
+<<<<<<< HEAD
 						<p class="text-secondary/50">You don't have any vouchers yet.</p>
+=======
+						<p class="text-secondary/50">Anda belum memiliki voucher.</p>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						<button
 							class="mt-2 text-senary hover:underline"
 							onclick={() => (activeTab = 'available')}
 						>
+<<<<<<< HEAD
 							Browse available vouchers
+=======
+							Lihat voucher yang tersedia
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						</button>
 					</div>
 				{/if}
@@ -295,11 +363,19 @@
 							<div class="mb-4 space-y-1">
 								<h3 class="line-clamp-1 font-bold text-secondary">{voucher.title}</h3>
 								<p class="text-xs font-medium text-senary/80">
+<<<<<<< HEAD
 									{voucher.serviceName ?? 'All Services'}
 								</p>
 								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
 								<p class="pt-2 text-xs text-secondary/40">
 									Valid until: {formatDate(voucher.expireDate)}
+=======
+									{voucher.serviceName ?? 'Semua Layanan'}
+								</p>
+								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
+								<p class="pt-2 text-xs text-secondary/40">
+									Berlaku sampai: {formatDate(voucher.expireDate)}
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 								</p>
 							</div>
 
@@ -309,7 +385,11 @@
 								disabled={userCoins < voucher.price}
 							>
 								{#if userCoins < voucher.price}
+<<<<<<< HEAD
 									Coin tidak cukup
+=======
+									Koin tidak cukup
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 								{:else}
 									Beli <Coins class="h-3 w-3" /> {voucher.price}
 								{/if}
@@ -320,7 +400,11 @@
 
 				{#if availableVouchers.length === 0}
 					<div class="mt-8 text-center text-secondary/50">
+<<<<<<< HEAD
 						No vouchers available for purchase at the moment.
+=======
+						Tidak ada voucher yang tersedia untuk dibeli saat ini.
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 					</div>
 				{/if}
 			{/if}

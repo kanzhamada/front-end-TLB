@@ -12,7 +12,10 @@
 	import { cn } from '$lib/utils';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+<<<<<<< HEAD
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 
 	let { voucherId = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		voucherId?: string | null;
@@ -139,6 +142,7 @@
 		loading = false;
 	}
 
+<<<<<<< HEAD
 	// Delete Confirmation State
 	let confirmOpen = $state(false);
 	let deleteLoading = $state(false);
@@ -151,6 +155,13 @@
 		if (!voucherId) return;
 		
 		deleteLoading = true;
+=======
+	async function handleDelete() {
+		if (!voucherId) return;
+		if (!confirm('Are you sure you want to delete this voucher? This action cannot be undone.')) return;
+
+		loading = true;
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 		const res = await deleteVoucher(fetch, voucherId, token);
 		
 		if (res.success) {
@@ -160,8 +171,12 @@
 		} else {
 			toast.error(res.message || 'Failed to delete voucher');
 		}
+<<<<<<< HEAD
 		deleteLoading = false;
 		confirmOpen = false;
+=======
+		loading = false;
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 	}
 </script>
 
@@ -359,7 +374,11 @@
 								<Button 
 									type="button"
 									variant="destructive" 
+<<<<<<< HEAD
 									onclick={initiateDelete}
+=======
+									onclick={handleDelete}
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 									disabled={loading}
 									class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
 								>
@@ -370,6 +389,7 @@
 								<div></div>
 							{/if}
 
+<<<<<<< HEAD
 							<Button 
 								type="button"
 								variant="outline" 
@@ -378,10 +398,34 @@
 							>
 								Cancel
 							</Button>
+=======
+							<div class="flex gap-3">
+								<Button 
+									type="button"
+									variant="outline" 
+									onclick={onClose} 
+									disabled={loading}
+									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								>
+									Cancel
+								</Button>
+								<Button 
+									type="submit" 
+									class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
+									disabled={loading}
+								>
+									{#if loading}
+										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+									{/if}
+									{voucherId ? 'Save Changes' : 'Create'}
+								</Button>
+							</div>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						</div>
 					</form>
 				{/if}
 			</div>
+<<<<<<< HEAD
 
 			<AdminConfirmDialog 
 				bind:open={confirmOpen}
@@ -392,6 +436,8 @@
 				loading={deleteLoading}
 				onConfirm={confirmDelete}
 			/>
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 		</div>
 	</div>
 {/if}

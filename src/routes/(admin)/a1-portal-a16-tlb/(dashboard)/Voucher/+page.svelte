@@ -85,12 +85,20 @@
 	];
 </script>
 
+<<<<<<< HEAD
 <div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30 pb-20">
+=======
+<div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30">
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
 		
+<<<<<<< HEAD
 		<div class="relative z-10 mx-auto max-w-[1600px]">
+=======
+		<div class="relative z-10 mx-auto max-w-7xl">
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>
@@ -111,11 +119,25 @@
 						Create and manage vouchers and redeem codes to boost customer engagement.
 					</p>
 				</div>
+<<<<<<< HEAD
+=======
+				<Button 
+					onclick={openCreateModal}
+					class="bg-senary text-primary hover:bg-senary/90 shadow-[0_0_15px_-3px_rgba(212,175,55,0.3)] transition-all hover:scale-105 active:scale-95 h-12 px-8 rounded-xl font-bold"
+				>
+					<Plus class="mr-2 h-5 w-5" />
+					Create New
+				</Button>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			</div>
 		</div>
 	</div>
 
+<<<<<<< HEAD
 	<div class="px-8">
+=======
+	<div class="px-8 pb-20">
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 		<div class="mx-auto max-w-7xl">
 			<!-- Stats Cards -->
 			<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -172,26 +194,52 @@
 				<div class="flex flex-1 gap-4">
 					<div class="relative max-w-md flex-1">
 						<Search
+<<<<<<< HEAD
 							class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-secondary/50"
+=======
+							class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 transform text-secondary/50"
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						/>
 						<Input
 							placeholder="Search vouchers..."
 							bind:value={searchQuery}
+<<<<<<< HEAD
 							class="h-10 rounded-xl border-white/10 bg-white/5 pl-10 text-secondary placeholder:text-secondary/50 focus:border-senary focus:ring-senary"
+=======
+							class="w-full rounded-xl border-white/10 bg-white/5 py-6 pl-11 text-secondary placeholder:text-secondary/50 focus:border-senary/50 focus:ring-senary/20"
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						/>
 					</div>
 
 					<!-- Filter Dropdown -->
 					<DropdownMenu.Root>
+<<<<<<< HEAD
 						<DropdownMenu.Trigger class="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-xl border border-white/10 bg-white/5 px-6 text-sm font-medium text-secondary hover:bg-white/10 hover:text-senary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-senary disabled:pointer-events-none disabled:opacity-50">
 							<Filter class="mr-2 h-4 w-4" />
 							{selectedType === 'All' ? 'All Types' : (selectedType === 'voucher' ? 'Voucher' : 'Redeem Code')}
+=======
+						<DropdownMenu.Trigger asChild>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="outline"
+									class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-senary h-12 px-6"
+								>
+									<Filter class="mr-2 h-4 w-4" />
+									{selectedType === 'All' ? 'All Types' : (selectedType === 'voucher' ? 'Voucher' : 'Redeem Code')}
+								</Button>
+							{/snippet}
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary">
 							{#each typeOptions as option}
 								<DropdownMenu.Item
 									onclick={() => (selectedType = option.value)}
+<<<<<<< HEAD
 									class="focus:bg-white/10 focus:text-senary cursor-pointer"
+=======
+									class="focus:bg-white/10 focus:text-senary"
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 								>
 									{option.label}
 								</DropdownMenu.Item>
@@ -199,6 +247,7 @@
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				</div>
+<<<<<<< HEAD
 
 				<Button 
 					onclick={openCreateModal}
@@ -207,6 +256,8 @@
 					<Plus class="mr-2 h-4 w-4" />
 					Create New
 				</Button>
+=======
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			</div>
 
 			<div class="rounded-3xl border border-white/5 bg-black/40 backdrop-blur-md overflow-hidden">

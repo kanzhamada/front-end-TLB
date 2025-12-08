@@ -82,7 +82,11 @@
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
+<<<<<<< HEAD
 		<div class="relative z-10 mx-auto max-w-[1600px]">
+=======
+		<div class="relative z-10 mx-auto max-w-7xl">
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>
@@ -107,7 +111,11 @@
 	</div>
 
 	<div class="px-8">
+<<<<<<< HEAD
 		<div class="mx-auto max-w-[1600px] space-y-6">
+=======
+		<div class="mx-auto max-w-7xl space-y-6">
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			<!-- Controls -->
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div class="flex flex-1 gap-4">

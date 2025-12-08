@@ -25,6 +25,7 @@ export type Voucher = {
 	title: string;
 	value: number;
 	serviceID: string;
+	serviceName?: string;
 	startDate: string;
 	voucherID: string;
 	created_at?: string;

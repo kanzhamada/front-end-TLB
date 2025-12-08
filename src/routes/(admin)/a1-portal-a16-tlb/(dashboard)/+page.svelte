@@ -33,7 +33,6 @@
 
 	// Modal State
 	let selectedReservationId = $state<string | null>(null);
-	let isDetailModalOpen = $state(false);
 
 	function openDetailModal(id: string) {
 		selectedReservationId = id;
@@ -46,8 +45,6 @@
 	}
 
 	async function loadDashboardData() {
-		if (!token) return;
-		isLoading = true;
 		const res = await getDashboardInfo(fetch, token);
 		if (res.success && res.data) {
 			dashboardData = res.data;

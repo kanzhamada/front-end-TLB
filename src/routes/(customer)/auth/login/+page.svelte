@@ -1,7 +1,14 @@
-<!-- <script lang="ts">
+<script lang="ts">
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/api/auth';
 	import { authStore } from '$lib/stores/auth';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { toast } from 'svelte-sonner';
+	import { browser } from '$app/environment';
+	import { fade, fly } from 'svelte/transition';
+	import { Sparkles, Eye, EyeOff } from 'lucide-svelte';
 	import {
 		Card,
 		CardContent,
@@ -11,10 +18,11 @@
 		CardTitle
 	} from '$lib/components/ui/card';
 	import LoginForm from '$lib/components/auth/LoginForm.svelte';
-	import { toast } from 'svelte-sonner';
-	import { browser } from '$app/environment';
 	import type { SubmitFunction } from '@sveltejs/kit';
 
+	let email = $state('');
+	let password = $state('');
+	let showPassword = $state(false);
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
 
@@ -23,22 +31,24 @@
 		toast.error(message);
 	}
 
-	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
-		cancel(); // Prevent default form submission
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
+	async function loginWithGoogle() {
+		const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/google`);
+		const json = await res.json();
 
-		performLogin(email, password);
-	};
+		if (json?.data?.url) {
+			window.location.href = json.data.url;
+		}
+	}
 
-	async function performLogin(email: string, password: string) {
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
 		if (submitting) return;
 
 		formError = null;
 		submitting = true;
 
 		try {
-			console.log('Attempting login with:', { email });
+			console.log('Attempting login with:', { email, password });
 
 			const response = await login({ email, password });
 			console.log('Login response:', response);
@@ -69,8 +79,12 @@
 			submitting = false;
 		}
 	}
-</script> -->
+	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
+		cancel(); // Prevent default form submission
+		const email = formData.get('email') as string;
+		const password = formData.get('password') as string;
 
+<<<<<<< HEAD
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/api/auth';
@@ -106,13 +120,19 @@
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
+=======
+		performLogin(email, password);
+	};
+
+	async function performLogin(email: string, password: string) {
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 		if (submitting) return;
 
 		formError = null;
 		submitting = true;
 
 		try {
-			console.log('Attempting login with:', { email, password });
+			console.log('Attempting login with:', { email });
 
 			const response = await login({ email, password });
 			console.log('Login response:', response);
@@ -256,7 +276,6 @@
 				<div class="space-y-2">
 					<div class="flex items-center justify-between">
 						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
-						<!-- Optional: Add Forgot Password link here later -->
 					</div>
 					<div class="relative">
 						<Input
@@ -281,6 +300,12 @@
 							{/if}
 						</button>
 					</div>
+<<<<<<< HEAD
+=======
+					<div class="flex items-center justify-end">
+						<a href="/auth/forget-password" class="text-senary hover:underline"> Lupa Password? </a>
+					</div>
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 				</div>
 
 				{#if formError}
@@ -291,10 +316,39 @@
 
 				<Button
 					type="submit"
-					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
+					class="w-full bg-senary font-medium tracking-wide text-primary transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
 					{submitting ? 'Signing In...' : 'Sign In'}
+				</Button>
+
+				<Button
+					type="button"
+					class=" w-full bg-white text-black hover:bg-gray-200"
+					onclick={loginWithGoogle}
+				>
+					Sign in with Google <svg
+						xmlns="http://www.w3.org/2000/svg"
+						x="0px"
+						y="0px"
+						width="100"
+						height="100"
+						viewBox="0 0 48 48"
+					>
+						<path
+							fill="#FFC107"
+							d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+						></path><path
+							fill="#FF3D00"
+							d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+						></path><path
+							fill="#4CAF50"
+							d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+						></path><path
+							fill="#1976D2"
+							d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+						></path>
+					</svg>
 				</Button>
 			</form>
 

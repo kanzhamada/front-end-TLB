@@ -286,11 +286,7 @@
 									</div>
 									<div class="pt-4 border-t border-white/5">
 										<div class="flex items-center text-sm text-secondary">
-											<Phone class="mr-2 h-3 w-3 text-senary" />
 											{reservation.customer?.phoneNumber || 'N/A'}
-										</div>
-									</div>
-								</div>
 							</div>
 
 							<div class="rounded-2xl border border-white/10 bg-white/5 p-6">

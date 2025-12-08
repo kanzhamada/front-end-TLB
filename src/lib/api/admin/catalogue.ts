@@ -52,10 +52,14 @@ export const createCatalogue = async (
 				type: json.data.type,
 				description: json.data.description,
 				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
+<<<<<<< HEAD
 				catalogueImages: json.data.catalogueImages || [],
 				hairTypes: json.data.hairTypes,
 				faceShapes: json.data.faceShapes,
 				skinTones: json.data.skinTones
+=======
+				catalogueImages: json.data.catalogueImages || []
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			}
 		};
 	} catch (error) {
@@ -100,10 +104,14 @@ export const editCatalogue = async (
 				type: json.data.type,
 				description: json.data.description,
 				image: json.data.catalogueImages?.[0]?.imageUrl || json.data.imageUrl || '',
+<<<<<<< HEAD
 				catalogueImages: json.data.catalogueImages || [],
 				hairTypes: json.data.hairTypes,
 				faceShapes: json.data.faceShapes,
 				skinTones: json.data.skinTones
+=======
+				catalogueImages: json.data.catalogueImages || []
+>>>>>>> 7a8c9d606cf53b216e906b65c7b068e54ef13ee1
 			}
 		};
 	} catch (error) {
