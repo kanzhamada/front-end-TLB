@@ -42,6 +42,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Authenticating | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="flex min-h-screen items-center justify-center bg-primary text-secondary">
 	<div class="text-center">
 		<h1 class="text-2xl font-bold">Authenticating...</h1>

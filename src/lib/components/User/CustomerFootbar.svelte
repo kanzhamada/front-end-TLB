@@ -4,9 +4,11 @@
 	import Phone from '@lucide/svelte/icons/phone';
 </script>
 
-<footer class="border-t border-white/10 bg-primary/40 py-16 text-secondary/80 backdrop-blur-md">
-	<div class="mx-auto max-w-6xl">
-		<div class="mb-12 grid grid-cols-1 gap-12 md:grid-cols-3">
+<footer
+	class="border-t border-white/10 bg-primary/40 py-12 text-secondary/80 backdrop-blur-md md:py-16"
+>
+	<div class="mx-auto max-w-6xl px-6 md:px-4">
+		<div class="mb-12 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
 			<div>
 				<img src="/three_lights_barbershop_logo.svg" alt="" />
 			</div>

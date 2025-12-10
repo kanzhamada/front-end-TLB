@@ -17,8 +17,16 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
-	import LoginForm from '$lib/components/auth/LoginForm.svelte';
-	import type { SubmitFunction } from '@sveltejs/kit';
+
+	import { onMount } from 'svelte';
+
+	const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
+	declare global {
+		interface Window {
+			grecaptcha: any;
+		}
+	}
 
 	let email = $state('');
 	let password = $state('');
@@ -50,53 +58,16 @@
 		try {
 			console.log('Attempting login with:', { email, password });
 
-			const response = await login({ email, password });
-			console.log('Login response:', response);
-
-			const success = response.success ?? response.sucess ?? false;
-
-			if (!success || !response.data?.session) {
-				const errorMessage = response.message ?? 'Gagal masuk. Coba lagi.';
-				handleError(errorMessage);
-				console.log('Login failed:', response);
-				return;
+			let recaptchaToken = '';
+			try {
+				if (window.grecaptcha) {
+					recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, { action: 'login' });
+				}
+			} catch (e) {
+				console.error('Recaptcha execution failed:', e);
 			}
 
-			authStore.setSession(response.data.session);
-			toast.success('Berhasil masuk!');
-			await goto('/');
-		} catch (error) {
-			console.error('Login error:', error);
-
-			if (browser) {
-				const customError = error as { response?: { message?: string } };
-				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
-				handleError(message);
-			} else {
-				handleError('Tidak dapat masuk. Coba lagi.');
-			}
-		} finally {
-			submitting = false;
-		}
-	}
-	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
-		cancel(); // Prevent default form submission
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-
-		performLogin(email, password);
-	};
-
-	async function performLogin(email: string, password: string) {
-		if (submitting) return;
-
-		formError = null;
-		submitting = true;
-
-		try {
-			console.log('Attempting login with:', { email });
-
-			const response = await login({ email, password });
+			const response = await login({ email, password, recaptchaToken });
 			console.log('Login response:', response);
 
 			const success = response.success ?? response.sucess ?? false;
@@ -127,6 +98,15 @@
 	}
 </script>
 
+<svelte:head>
+	<script
+		src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"
+		async
+		defer
+	></script>
+	<title>Login | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -156,7 +136,7 @@
 				<div class="h-[1px] w-12 bg-senary"></div>
 			</div>
 			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Welcome <span class="text-gradient-gold">Back</span>
+				Selamat Datang <span class="text-gradient-gold">Kembali</span>
 			</h1>
 		</div>
 
@@ -171,7 +151,7 @@
 					alt="three lights barbershop logo"
 					class="mx-auto mb-4"
 				/>
-				<p class="text-lg font-light text-secondary/80">Sign in to manage your reservations</p>
+				<p class="text-lg font-light text-secondary/80">Masuk untuk mengelola reservasi Anda</p>
 			</div>
 
 			<form class="space-y-6" onsubmit={handleSubmit}>
@@ -191,13 +171,13 @@
 
 				<div class="space-y-2">
 					<div class="flex items-center justify-between">
-						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
+						<Label for="password" class="text-sm font-medium text-senary">Kata Sandi</Label>
 					</div>
 					<div class="relative">
 						<Input
 							id="password"
 							type={showPassword ? 'text' : 'password'}
-							placeholder="Enter your password"
+							placeholder="Masukkan kata sandi Anda"
 							bind:value={password}
 							required
 							autocomplete="current-password"
@@ -217,7 +197,9 @@
 						</button>
 					</div>
 					<div class="flex items-center justify-end">
-						<a href="/auth/forget-password" class="text-senary hover:underline"> Lupa Password? </a>
+						<a href="/auth/forget-password" class="text-senary hover:underline">
+							Lupa Kata Sandi?
+						</a>
 					</div>
 				</div>
 
@@ -232,7 +214,7 @@
 					class="w-full bg-senary font-medium tracking-wide text-primary transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Signing In...' : 'Sign In'}
+					{submitting ? 'Sedang Masuk...' : 'Masuk'}
 				</Button>
 
 				<Button
@@ -240,7 +222,7 @@
 					class=" w-full bg-white text-black hover:bg-gray-200"
 					onclick={loginWithGoogle}
 				>
-					Sign in with Google <svg
+					Masuk dengan Google <svg
 						xmlns="http://www.w3.org/2000/svg"
 						x="0px"
 						y="0px"
@@ -267,15 +249,22 @@
 
 			<div class="mt-8 text-center">
 				<p class="text-sm text-secondary/60">
-					Don't have an account?
+					Belum punya akun?
 					<a
 						href="/auth/register"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Register here
+						Daftar di sini
 					</a>
 				</p>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Gunakan !important untuk memastikan aturan ini menang */
+	:global(.grecaptcha-badge) {
+		visibility: hidden;
+	}
+</style>

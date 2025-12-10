@@ -35,7 +35,8 @@ const createAuthStore = () => {
 	function persist(session: Session | null) {
 		if (!browser) return;
 		if (session) {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+			const { user, ...sessionWithoutUser } = session;
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionWithoutUser));
 		} else {
 			localStorage.removeItem(STORAGE_KEY);
 		}

@@ -68,23 +68,23 @@
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Waiting';
+				return 'Menunggu';
 			case 'onGoing':
-				return 'On Going';
+				return 'Sedang Berjalan';
 			case 'waitingForPayment':
-				return 'Waiting Payment';
+				return 'Menunggu Pembayaran';
 			case 'completed':
-				return 'Completed';
+				return 'Selesai';
 			case 'canceledByUser':
-				return 'Canceled by User';
+				return 'Dibatalkan Pengguna';
 			case 'canceledByAdmin':
-				return 'Canceled by Admin';
+				return 'Dibatalkan Admin';
 			case 'declined':
-				return 'Declined';
+				return 'Ditolak';
 			case 'expired':
-				return 'Expired';
+				return 'Kedaluwarsa';
 			case 'requestToReschedule':
-				return 'Reschedule Request';
+				return 'Permintaan Jadwal Ulang';
 			default:
 				return status;
 		}
@@ -115,15 +115,15 @@
 	function getFulfillmentStatusText(status: string): string {
 		switch (status) {
 			case 'pendingDownPayment':
-				return 'Pending Down Payment';
+				return 'Menunggu Uang Muka';
 			case 'downPaymentPaid':
-				return 'Down Payment Paid';
+				return 'Uang Muka Dibayar';
 			case 'fullyPaid':
-				return 'Fully Paid';
+				return 'Lunas';
 			case 'refunded':
-				return 'Refunded';
+				return 'Dikembalikan';
 			case 'failed':
-				return 'Failed';
+				return 'Gagal';
 			default:
 				return status;
 		}
@@ -135,6 +135,10 @@
 		maximumFractionDigits: 0
 	});
 </script>
+
+<svelte:head>
+	<title>Profile - Reservation Details | Three Lights Barbershop</title>
+</svelte:head>
 
 <div class="space-y-10" in:fade>
 	<!-- Header -->
@@ -148,8 +152,8 @@
 			<ChevronLeft class="size-6" />
 		</Button>
 		<div>
-			<h3 class="text-xl font-bold text-secondary">Reservation Details</h3>
-			<p class="text-secondary/60">View complete information about your appointment</p>
+			<h3 class="text-xl font-bold text-secondary">Detail Reservasi</h3>
+			<p class="text-secondary/60">Lihat informasi lengkap tentang janji temu Anda</p>
 		</div>
 	</div>
 
@@ -180,7 +184,7 @@
 				class="mt-4 border-red-500/30 text-red-400 hover:bg-red-500/10"
 				onclick={reloadReservation}
 			>
-				Try Again
+				Coba Lagi
 			</Button>
 		</div>
 	{:else if reservation}
@@ -193,7 +197,7 @@
 							<Receipt class="size-5 text-senary" />
 						</div>
 						<div>
-							<p class="text-sm text-secondary/60">Invoice ID</p>
+							<p class="text-sm text-secondary/60">ID Tagihan</p>
 							<p class="font-mono text-lg font-bold text-secondary">
 								#{reservation.invoice || reservation.reservationID}
 							</p>
@@ -225,13 +229,13 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<Scissors class="size-5" />
-								Service Information
+								Informasi Layanan
 							</h3>
 							<div class="space-y-4 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-start justify-between gap-4">
 									<div>
 										<p class="font-medium text-secondary">{reservation.service.name}</p>
-										<p class="text-sm text-secondary/60">Professional Hair Service</p>
+										<p class="text-sm text-secondary/60">Layanan Rambut Profesional</p>
 									</div>
 									<p class="font-bold text-senary">
 										{reservation.service.price
@@ -243,7 +247,7 @@
 									<Separator class="bg-white/10" />
 									<div>
 										<p class="mb-1 text-xs font-medium tracking-wider text-secondary/40 uppercase">
-											Notes
+											Catatan
 										</p>
 										<p class="text-sm text-secondary/80">{reservation.notes}</p>
 									</div>
@@ -254,7 +258,7 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<User class="size-5" />
-								Barber Details
+								Detail Barber
 							</h3>
 							<div class="rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-center gap-4">
@@ -265,7 +269,7 @@
 									</div>
 									<div>
 										<p class="font-bold text-secondary">{reservation.barber.name}</p>
-										<p class="text-sm text-secondary/60">Professional Barber</p>
+										<p class="text-sm text-secondary/60">Barber Profesional</p>
 									</div>
 								</div>
 							</div>
@@ -277,16 +281,16 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<Calendar class="size-5" />
-								Schedule
+								Jadwal
 							</h3>
 							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-center gap-3">
 									<Calendar class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Date</p>
+										<p class="text-xs text-secondary/40">Tanggal</p>
 										<p class="font-medium text-secondary">{reservation.dateTime.date}</p>
 										{#if reservation.newDateTime?.date}
-											<p class="text-xs text-secondary/40">New Date (Reschedule)</p>
+											<p class="text-xs text-secondary/40">Tanggal Baru (Jadwal Ulang)</p>
 											<p class="font-medium text-secondary">{reservation.newDateTime?.date}</p>
 										{/if}
 									</div>
@@ -295,10 +299,10 @@
 								<div class="flex items-center gap-3">
 									<Clock class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Time</p>
+										<p class="text-xs text-secondary/40">Waktu</p>
 										<p class="font-medium text-secondary">{reservation.dateTime.hour}</p>
 										{#if reservation.newDateTime?.hour}
-											<p class="text-xs text-secondary/40">New Time (Reschedule)</p>
+											<p class="text-xs text-secondary/40">Waktu Baru (Jadwal Ulang)</p>
 											<p class="font-medium text-secondary">{reservation.newDateTime?.hour}</p>
 										{/if}
 									</div>
@@ -307,7 +311,7 @@
 								<div class="flex items-center gap-3">
 									<MapPin class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Location</p>
+										<p class="text-xs text-secondary/40">Lokasi</p>
 										<p class="font-medium text-secondary">Three Lights Barbershop</p>
 									</div>
 								</div>
@@ -317,7 +321,7 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<CreditCard class="size-5" />
-								Payment Summary
+								Ringkasan Pembayaran
 							</h3>
 							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex justify-between text-sm">
@@ -330,7 +334,7 @@
 								</div>
 								{#if reservation.voucherValue}
 									<div class="flex justify-between text-sm text-green-400">
-										<span>Voucher Discount</span>
+										<span>Diskon Voucher</span>
 										<span
 											>- {reservation.voucherValue
 												? currencyFormatter.format(reservation.voucherValue)
@@ -339,8 +343,18 @@
 									</div>
 								{/if}
 								<div class="flex justify-between text-sm text-secondary/70">
-									<span>Admin Fee</span>
-									<span>+ {currencyFormatter.format(5000)}</span>
+									<span>Biaya Admin</span>
+									<span
+										>+ {reservation.voucherValue
+											? currencyFormatter.format(
+													reservation.totalPayment +
+														reservation.voucherValue -
+														reservation.service.price
+												)
+											: currencyFormatter.format(
+													reservation.totalPayment - reservation.service.price
+												)}</span
+									>
 								</div>
 								<Separator class="bg-white/10" />
 								<div class="flex justify-between text-lg font-bold">

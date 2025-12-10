@@ -53,7 +53,7 @@
 					<X class="h-6 w-6" />
 				</button>
 			</div>
-			<div class="p-8">
+			<div class="flex-1 overflow-y-auto p-8">
 				<div class="mb-2 flex items-center gap-3">
 					<span
 						class="rounded-full border border-senary/30 bg-senary/10 px-3 py-1 text-[10px] font-bold tracking-widest text-senary uppercase"

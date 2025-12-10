@@ -106,17 +106,17 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Catalogue | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Hero Section -->
-	<section class="relative h-[60vh] w-full overflow-hidden">
+	<section class="relative h-[50vh] w-full overflow-hidden md:h-[60vh]">
 		<div
 			class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/30 via-transparent to-primary/90"
 		>
-			<img
-				src="https://images.unsplash.com/photo-1608869776252-33ff061fabf2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-				alt=""
-				class="h-full w-full object-cover opacity-25"
-			/>
+			<img src="/Catalogue_Banner.webp" alt="" class="h-full w-full object-cover opacity-25" />
 		</div>
 
 		<div
@@ -129,7 +129,7 @@
 			</div>
 
 			<h1
-				class="max-w-4xl text-left text-6xl leading-[0.9] font-bold tracking-tighter text-secondary drop-shadow-2xl md:text-8xl lg:text-[100px]"
+				class="max-w-4xl text-left text-5xl leading-[0.9] font-bold tracking-tighter text-secondary drop-shadow-2xl md:text-6xl md:text-8xl lg:text-[100px]"
 				in:fly={{ y: 30, duration: 800, delay: 400 }}
 			>
 				Curated <br />
@@ -176,7 +176,7 @@
 	</section>
 
 	<!-- Services Catalog -->
-	<section class="relative z-10 container mx-auto px-4 py-20" id="services">
+	<section class="relative z-10 container mx-auto px-4 py-10 md:py-20" id="services">
 		<div class="mb-12">
 			<div class="mb-4 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
 				<div>

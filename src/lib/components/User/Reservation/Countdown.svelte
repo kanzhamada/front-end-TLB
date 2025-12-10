@@ -5,7 +5,7 @@
 
 	let {
 		date,
-		durationHours = 12,
+		durationHours = 12 + 7,
 		onExpire
 	} = $props<{
 		date: string;

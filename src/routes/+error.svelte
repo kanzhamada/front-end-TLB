@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
 </script>
 
-<CustomCursor />
+<svelte:head>
+	<title>Three Lights Barbershop - Error</title>
+</svelte:head>
 
 <div
 	class="flex h-screen w-full flex-col items-center justify-center bg-background p-4 text-center"
@@ -24,8 +25,14 @@
 		</h2>
 
 		<p class="mb-8 text-muted-foreground">
-			The page you are looking for might have been removed, had its name changed, or is temporarily
-			unavailable.
+			{#if $page.status === 404}
+				The page you are looking for might have been removed, had its name changed, or is
+				temporarily unavailable.
+			{:else if $page.status === 500}
+				{$page.error?.message}
+			{:else}
+				{$page.error?.message}
+			{/if}
 		</p>
 
 		<a

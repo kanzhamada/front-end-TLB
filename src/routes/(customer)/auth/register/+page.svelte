@@ -112,7 +112,7 @@
 
 		if (password !== confirmPassword) {
 			console.log('Passwords do not match.');
-			handleError('Passwords do not match.');
+			handleError('Kata sandi tidak cocok.');
 			return;
 		}
 
@@ -139,16 +139,16 @@
 
 			if (!success) {
 				console.log('Registration failed 1:', response);
-				handleError(response.message ?? 'Registration failed. Please try again.');
+				handleError(response.message ?? 'Pendaftaran gagal. Silakan coba lagi.');
 				return;
 			}
 
-			toast.success('Registration successful! Check your email for confirmation.');
+			toast.success('Pendaftaran berhasil! Periksa email Anda untuk konfirmasi.');
 			await goto('/auth/login');
 		} catch (error: unknown) {
 			console.log('Registration failed:', error);
 			const customError = error as { response?: { message?: string } };
-			const message = customError?.response?.message ?? 'Unable to register. Please try again.';
+			const message = customError?.response?.message ?? 'Tidak dapat mendaftar. Silakan coba lagi.';
 			handleError(message);
 		} finally {
 			submitting = false;
@@ -156,6 +156,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Register | Three Lights Barbershop</title>
+</svelte:head>
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -179,7 +182,7 @@
 				<div class="h-[1px] w-12 bg-senary"></div>
 			</div>
 			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Join the <span class="text-gradient-gold">Elite</span>
+				Bergabunglah <span class="text-gradient-gold">Bersama Kami</span>
 			</h1>
 		</div>
 
@@ -194,15 +197,15 @@
 					alt="three lights barbershop logo"
 					class="mx-auto mb-4"
 				/>
-				<p class="text-lg font-light text-secondary/80">Create your account to book appointments</p>
+				<p class="text-lg font-light text-secondary/80">Buat akun untuk memesan janji temu</p>
 			</div>
 
 			<form class="space-y-6" onsubmit={handleSubmit}>
 				<div class="space-y-2">
-					<Label for="displayName" class="text-sm font-medium text-senary">Full Name</Label>
+					<Label for="displayName" class="text-sm font-medium text-senary">Nama Lengkap</Label>
 					<Input
 						id="displayName"
-						placeholder="Your Name"
+						placeholder="Nama Anda"
 						bind:value={displayName}
 						required
 						autocomplete="name"
@@ -226,12 +229,13 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for="phone" class="text-sm font-medium text-senary">Phone Number (Optional)</Label>
+					<Label for="phone" class="text-sm font-medium text-senary">Nomor Telepon</Label>
 					<Input
 						id="phone"
 						type="tel"
 						placeholder="08xxxxxxxxxx"
 						bind:value={phone}
+						required
 						autocomplete="tel"
 						disabled={submitting}
 						class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
@@ -240,12 +244,12 @@
 
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div class="space-y-2">
-						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
+						<Label for="password" class="text-sm font-medium text-senary">Kata Sandi</Label>
 						<div class="relative">
 							<Input
 								id="password"
 								type={showPassword ? 'text' : 'password'}
-								placeholder="Min 8 chars"
+								placeholder="Min 8 karakter"
 								bind:value={password}
 								required
 								autocomplete="new-password"
@@ -269,13 +273,13 @@
 
 					<div class="space-y-2">
 						<Label for="confirmPassword" class="text-sm font-medium text-senary"
-							>Confirm Password</Label
+							>Konfirmasi Kata Sandi</Label
 						>
 						<div class="relative">
 							<Input
 								id="confirmPassword"
 								type={showConfirmPassword ? 'text' : 'password'}
-								placeholder="Repeat password"
+								placeholder="Ulangi kata sandi"
 								bind:value={confirmPassword}
 								required
 								minlength={8}
@@ -309,14 +313,14 @@
 					class="w-full bg-senary font-medium tracking-wide text-primary transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Creating Account...' : 'Create Account'}
+					{submitting ? 'Sedang Membuat Akun...' : 'Buat Akun'}
 				</Button>
 				<Button
 					type="button"
 					class=" w-full bg-white text-black hover:bg-gray-200"
 					onclick={loginWithGoogle}
 				>
-					Register with Google <svg
+					Daftar dengan Google <svg
 						xmlns="http://www.w3.org/2000/svg"
 						x="0px"
 						y="0px"
@@ -343,12 +347,12 @@
 
 			<div class="mt-8 text-center">
 				<p class="text-sm text-secondary/60">
-					Already have an account?
+					Sudah punya akun?
 					<a
 						href="/auth/login"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Sign in here
+						Masuk di sini
 					</a>
 				</p>
 			</div>

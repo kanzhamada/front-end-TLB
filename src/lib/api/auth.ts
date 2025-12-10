@@ -15,6 +15,7 @@ type AuthResponse = {
 type LoginPayload = {
 	email: string;
 	password: string;
+	recaptchaToken?: string;
 };
 
 type RegisterPayload = {

@@ -70,6 +70,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Forget Password | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -99,7 +103,7 @@
 				<div class="h-[1px] w-12 bg-senary"></div>
 			</div>
 			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Lupa <span class="text-gradient-gold">Password?</span>
+				Lupa <span class="text-gradient-gold">Kata Sandi?</span>
 			</h1>
 		</div>
 
@@ -115,7 +119,7 @@
 					class="mx-auto mb-4"
 				/>
 				<p class="text-lg font-light text-secondary/80">
-					Masukan Email Anda untuk mengatur ulang password
+					Masukkan Email Anda untuk mengatur ulang kata sandi
 				</p>
 			</div>
 
@@ -145,25 +149,25 @@
 					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Mengirimkan...' : 'Kirim'}
+					{submitting ? 'Sedang Mengirim...' : 'Kirim'}
 				</Button>
 			</form>
 
 			<div class="mt-8 text-center">
 				<p class="text-sm text-secondary/60">
-					Don't have an account?
+					Belum punya akun?
 					<a
 						href="/auth/register"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Register here
+						Daftar di sini
 					</a>
-					or
+					atau
 					<a
 						href="/auth/login"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Login here
+						Masuk di sini
 					</a>
 				</p>
 			</div>

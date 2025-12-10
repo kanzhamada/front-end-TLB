@@ -284,6 +284,35 @@
 			onClose();
 		}
 	}
+
+	function isSameDay(date1: string, date2: string) {
+		const d1 = new Date(date1);
+		const d2 = new Date(date2);
+		return (
+			d1.getFullYear() === d2.getFullYear() &&
+			d1.getMonth() === d2.getMonth() &&
+			d1.getDate() === d2.getDate()
+		);
+	}
+
+	function formatDateSeparator(dateString: string) {
+		const date = new Date(dateString);
+		const today = new Date();
+		const yesterday = new Date(today);
+		yesterday.setDate(yesterday.getDate() - 1);
+
+		if (isSameDay(dateString, today.toISOString())) {
+			return 'Hari Ini';
+		} else if (isSameDay(dateString, yesterday.toISOString())) {
+			return 'Kemarin';
+		} else {
+			return date.toLocaleDateString('id-ID', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			});
+		}
+	}
 </script>
 
 <Sheet {open} onOpenChange={handleOpenChange}>
@@ -348,7 +377,14 @@
 					{:else}
 						<div bind:this={messagesContainer} class="h-full overflow-y-auto pr-2">
 							<div class="space-y-6 pb-4">
-								{#each messages as message (message.created_at + message.sender)}
+								{#each messages as message, i (message.created_at + message.sender)}
+									{#if i === 0 || !isSameDay(message.created_at, messages[i - 1].created_at)}
+										<div class="my-4 flex justify-center">
+											<span class="rounded-full bg-white/5 px-3 py-1 text-[10px] text-secondary/50">
+												{formatDateSeparator(message.created_at)}
+											</span>
+										</div>
+									{/if}
 									<div
 										class="flex {isCurrentUserMessage(message.sender)
 											? 'justify-end'

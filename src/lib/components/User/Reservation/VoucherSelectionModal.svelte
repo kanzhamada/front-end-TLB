@@ -41,7 +41,9 @@
 		onRedeemApply: (code: string, discount: number) => void;
 	}>();
 
-	console.log(availableVouchers);
+	$effect(() => {
+		console.log('availableVouchers', availableVouchers);
+	});
 
 	let redeemCodeInput = $state('');
 	let redeemLoading = $state(false);

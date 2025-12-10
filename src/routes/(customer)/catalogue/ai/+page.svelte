@@ -229,6 +229,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Catalogue - AI | Three Lights Barbershop</title>
+</svelte:head>
+
 <!-- Luxury Theme Wrapper -->
 <div class="min-h-screen w-full text-secondary selection:bg-senary/30">
 	<!-- Gradient Overlay for readability -->

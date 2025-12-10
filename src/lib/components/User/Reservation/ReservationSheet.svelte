@@ -100,10 +100,13 @@
 	let selectedBarberId = $state<string | null>(null);
 	let selectedServiceId = $state<string | null>(null);
 	let specialRequest = $state('');
+	let typingRequest = $state('');
+
 	$effect(() => {
 		specialRequest = initialNote;
-		console.log(specialRequest);
+		console.log('specialRequest', specialRequest);
 	});
+
 	let voucherSelection = $state('none');
 	let redeemCode = $state<string | null>(null);
 	let redeemCodeDiscount = $state(0);
@@ -698,9 +701,9 @@
 			<SheetDescription class="sr-only">Create a new reservation</SheetDescription>
 		</SheetHeader>
 
-		<div class="mb-6 flex items-center justify-between gap-3">
+		<div class="mb-6 flex items-center justify-around gap-1 sm:justify-between sm:gap-3">
 			{#each steps as { key, label }, index (key)}
-				<div class="flex flex-1 items-center">
+				<div class="flex flex-1 items-center justify-center sm:justify-start">
 					<div
 						class={cn(
 							'flex size-10 items-center justify-center rounded-full border-2 transition-colors',
@@ -719,7 +722,7 @@
 					</div>
 					<span
 						class={cn(
-							'ml-2 text-sm font-medium transition-colors',
+							'ml-2 hidden text-sm font-medium transition-colors sm:block',
 							step === key || isPastStep(key) ? 'text-senary' : 'text-muted-foreground'
 						)}>{label}</span
 					>
@@ -746,404 +749,437 @@
 					>
 				</div>
 			{:else if step === 'date'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Pilih Tanggal Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							Pilih tahun, bulan, dan tanggal yang tersedia untuk melanjutkan.
-						</p>
-					</div>
-
-					<div class="space-y-4">
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
 						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tahun</Label>
-							<div class="flex flex-wrap gap-2">
-								{#each availableYears as year (year)}
-									<button
-										type="button"
-										class={cn(
-											'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-											selectedYear === year
-												? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-												: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-										)}
-										onclick={() => selectYear(year)}
-									>
-										{year}
-									</button>
-								{/each}
-							</div>
+							<h3 class="text-lg font-semibold text-secondary">Pilih Tanggal Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								Pilih tahun, bulan, dan tanggal yang tersedia untuk melanjutkan.
+							</p>
 						</div>
 
-						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Bulan</Label>
-							{#if availableMonths.length === 0}
-								<p class="text-sm text-muted-foreground">Silakan pilih tahun terlebih dahulu.</p>
-							{:else}
+						<div class="space-y-4">
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tahun</Label>
 								<div class="flex flex-wrap gap-2">
-									{#each availableMonths as month (month)}
+									{#each availableYears as year (year)}
 										<button
 											type="button"
 											class={cn(
 												'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-												selectedMonth === month
+												selectedYear === year
 													? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
 													: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 											)}
-											onclick={() => selectMonth(month)}
+											onclick={() => selectYear(year)}
 										>
-											{monthFormatter.format(new Date(2000, month - 1, 1))}
+											{year}
 										</button>
 									{/each}
 								</div>
-							{/if}
-						</div>
+							</div>
 
-						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tanggal</Label>
-							{#if availableDays.length === 0}
-								<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
-							{:else}
-								<div
-									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[500px] overflow-y-auto pr-2"
-								>
-									<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-										{#each availableDays as day (day.id)}
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Bulan</Label>
+								{#if availableMonths.length === 0}
+									<p class="text-sm text-muted-foreground">Silakan pilih tahun terlebih dahulu.</p>
+								{:else}
+									<div class="flex flex-wrap gap-2">
+										{#each availableMonths as month (month)}
 											<button
 												type="button"
 												class={cn(
-													'rounded-xl border px-3 py-3 text-center transition-all duration-300',
-													day.available
-														? selectedDayId === day.id
-															? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-															: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-														: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+													'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
+													selectedMonth === month
+														? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+														: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 												)}
-												onclick={() => selectDay(day.id, day.available)}
-												disabled={!day.available}
+												onclick={() => selectMonth(month)}
 											>
-												<div class="text-lg font-semibold">{day.day}</div>
-												<div class="text-xs capitalize">{day.weekday}</div>
+												{monthFormatter.format(new Date(2000, month - 1, 1))}
 											</button>
 										{/each}
 									</div>
-								</div>
-							{/if}
-						</div>
-					</div>
+								{/if}
+							</div>
 
-					<div class="flex justify-end">
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedDayId}>Pilih Jam</Button
-						>
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tanggal</Label>
+								{#if availableDays.length === 0}
+									<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
+								{:else}
+									<div
+										class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[500px] overflow-y-auto pr-2"
+									>
+										<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+											{#each availableDays as day (day.id)}
+												<button
+													type="button"
+													class={cn(
+														'rounded-xl border px-3 py-3 text-center transition-all duration-300',
+														day.available
+															? selectedDayId === day.id
+																? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+																: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+															: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+													)}
+													onclick={() => selectDay(day.id, day.available)}
+													disabled={!day.available}
+												>
+													<div class="text-lg font-semibold">{day.day}</div>
+													<div class="text-xs capitalize">{day.weekday}</div>
+												</button>
+											{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex justify-end">
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedDayId}>Pilih Jam</Button
+							>
+						</div>
 					</div>
 				</div>
 			{:else if step === 'time'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Pilih Jam Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							Tanggal dipilih:
-							<span class="font-medium text-senary">
-								{selectedDateDisplay ?? '-'}
-							</span>
-						</p>
-					</div>
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
+							<h3 class="text-lg font-semibold text-secondary">Pilih Jam Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								Tanggal dipilih:
+								<span class="font-medium text-senary">
+									{selectedDateDisplay ?? '-'}
+								</span>
+							</p>
+						</div>
 
-					<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-						{#each timesForSelectedDay as hour (hour.id)}
-							<button
-								type="button"
-								class={cn(
-									'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-									hour.status === 'available'
-										? selectedTimeId === hour.id
-											? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-											: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-										: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
-								)}
-								onclick={() => selectTime(hour.id, hour.status === 'available')}
-								disabled={hour.status !== 'available'}
+						<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+							{#each timesForSelectedDay as hour (hour.id)}
+								<button
+									type="button"
+									class={cn(
+										'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
+										hour.status === 'available'
+											? selectedTimeId === hour.id
+												? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+												: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+											: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+									)}
+									onclick={() => selectTime(hour.id, hour.status === 'available')}
+									disabled={hour.status !== 'available'}
+								>
+									{hour.time}
+								</button>
+							{/each}
+						</div>
+
+						<div class="flex items-center justify-between">
+							<Button
+								variant="outline"
+								class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+								onclick={goBack}>Kembali</Button
 							>
-								{hour.time}
-							</button>
-						{/each}
-					</div>
-
-					<div class="flex items-center justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
-							onclick={goBack}>Kembali</Button
-						>
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedTimeId}>Detail Janji</Button
-						>
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedTimeId}>Detail Janji</Button
+							>
+						</div>
 					</div>
 				</div>
 			{:else if step === 'details'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Detail Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							{#if reservationToReschedule}
-								Barber dan layanan tidak dapat diubah saat reschedule.
-							{:else}
-								Pilih barber dan layanan yang Anda inginkan.
-							{/if}
-						</p>
-					</div>
-
-					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-						<!-- Left Column: Barber Selection -->
-						<div class="flex flex-col gap-2">
-							<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
-							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
-							>
-								{#if barbers.length === 0}
-									<p class="text-sm text-muted-foreground">
-										Tidak ada barber yang tersedia saat ini.
-									</p>
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
+							<h3 class="text-lg font-semibold text-secondary">Detail Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								{#if reservationToReschedule}
+									Barber dan layanan tidak dapat diubah saat reschedule.
 								{:else}
-									<div class="grid grid-cols-1 gap-3">
-										{#each barbers as barber (barber.id)}
-											<button
-												type="button"
-												class={cn(
-													'rounded-xl border p-4 text-left transition-all duration-300',
-													selectedBarberId === barber.id
-														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
-													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-												)}
-												onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
-												disabled={reservationToReschedule}
-											>
-												<div
-													class={cn(
-														'font-semibold',
-														selectedBarberId === barber.id ? 'text-senary' : 'text-secondary'
-													)}
-												>
-													{barber.name}
-												</div>
-												{#if barber.experience}
-													<p class="text-xs text-secondary/60">
-														Pengalaman: {barber.experience}
-													</p>
-												{/if}
-												{#if barber.skills}
-													<p class="text-xs text-secondary/60">Keahlian: {barber.skills}</p>
-												{/if}
-											</button>
-										{/each}
-									</div>
+									Pilih barber dan layanan yang Anda inginkan.
 								{/if}
-							</div>
+							</p>
 						</div>
 
-						<!-- Right Column: Service Selection -->
-						<div class="flex flex-col gap-2">
-							<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
-							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
-							>
-								{#if services.length === 0}
-									<p class="text-sm text-muted-foreground">
-										Tidak ada layanan yang tersedia saat ini.
-									</p>
-								{:else}
-									<div class="space-y-3">
-										{#each services as service (service.id)}
-											<button
-												type="button"
-												class={cn(
-													'flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-300',
-													selectedServiceId === service.id
-														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
-													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-												)}
-												onclick={() => !reservationToReschedule && (selectedServiceId = service.id)}
-												disabled={reservationToReschedule}
-											>
-												<div>
+						<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+							<!-- Left Column: Barber Selection -->
+							<div class="flex flex-col gap-2">
+								<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
+								<div
+									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
+								>
+									{#if barbers.length === 0}
+										<p class="text-sm text-muted-foreground">
+											Tidak ada barber yang tersedia saat ini.
+										</p>
+									{:else}
+										<div class="grid grid-cols-1 gap-3">
+											{#each barbers as barber (barber.id)}
+												<button
+													type="button"
+													class={cn(
+														'rounded-xl border p-4 text-left transition-all duration-300',
+														selectedBarberId === barber.id
+															? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+															: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+														reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+													)}
+													onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
+													disabled={reservationToReschedule}
+												>
 													<div
 														class={cn(
 															'font-semibold',
-															selectedServiceId === service.id ? 'text-senary' : 'text-secondary'
+															selectedBarberId === barber.id ? 'text-senary' : 'text-secondary'
 														)}
 													>
-														{service.name}
+														{barber.name}
 													</div>
-													<p class="text-xs text-secondary/60">{service.description}</p>
-												</div>
-												<div class="text-sm font-semibold text-senary">
-													{currencyFormatter.format(service.price)}
-												</div>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</div>
-
-						<!-- Bottom: Notes (Spanning Full Width) -->
-						<div class="col-span-1 md:col-span-2">
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">
-								Catatan (Opsional)
-							</Label>
-							<Textarea
-								rows={4}
-								placeholder="Tambahkan permintaan khusus..."
-								bind:value={specialRequest}
-								class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
-							/>
-						</div>
-					</div>
-
-					<div class="flex items-center justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
-							onclick={goBack}>Kembali</Button
-						>
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedBarberId ||
-								!selectedServiceId ||
-								(reservationToReschedule && (!selectedDayId || !selectedTimeId)) ||
-								(reservationToReschedule && loadingData)}
-						>
-							{#if reservationToReschedule}
-								Lanjut ke Konfirmasi
-							{:else}
-								Lanjut ke Pembayaran
-							{/if}
-						</Button>
-					</div>
-				</div>
-			{:else if step === 'payment'}
-				<div class="space-y-6">
-					<div>
-						{#if reservationToReschedule}
-							<h3 class="text-lg font-semibold text-secondary">Konfirmasi Reschedule</h3>
-							<p class="text-sm text-secondary/60">
-								Periksa kembali perubahan reservasi Anda sebelum dikonfirmasi.
-							</p>
-						{:else}
-							<h3 class="text-lg font-semibold text-secondary">Pembayaran</h3>
-							<p class="text-sm text-secondary/60">
-								Periksa kembali detail reservasi sebelum dikonfirmasi.
-							</p>
-						{/if}
-					</div>
-
-					<div class="grid gap-4 md:grid-cols-2">
-						<div class="rounded-lg border border-senary/20 bg-senary/10 p-4 text-secondary">
-							{#if reservationToReschedule}
-								<div class="font-semibold text-senary">Ringkasan Reschedule</div>
-							{:else}
-								<div class="font-semibold text-senary">Ringkasan Reservasi</div>
-							{/if}
-							<div class="mt-3 space-y-2 text-sm">
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Tanggal</span>
-									<span class="font-medium">{selectedDateDisplay ?? '-'}</span>
-								</div>
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Jam</span>
-									<span class="font-medium">{selectedTimeDisplay ?? '-'}</span>
-								</div>
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Barber</span>
-									<span class="font-medium">{selectedBarber?.name ?? '-'}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-secondary/70">Layanan</span>
-									<span class="font-medium">{selectedService?.name ?? '-'}</span>
+													{#if barber.experience}
+														<p class="text-xs text-secondary/60">
+															Pengalaman: {barber.experience}
+														</p>
+													{/if}
+													{#if barber.skills}
+														<p class="text-xs text-secondary/60">Keahlian: {barber.skills}</p>
+													{/if}
+												</button>
+											{/each}
+										</div>
+									{/if}
 								</div>
 							</div>
+
+							<!-- Right Column: Service Selection -->
+							<div class="flex flex-col gap-2">
+								<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
+								<div
+									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
+								>
+									{#if services.length === 0}
+										<p class="text-sm text-muted-foreground">
+											Tidak ada layanan yang tersedia saat ini.
+										</p>
+									{:else}
+										<div class="space-y-3">
+											{#each services as service (service.id)}
+												<button
+													type="button"
+													class={cn(
+														'flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-300',
+														selectedServiceId === service.id
+															? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+															: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+														reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+													)}
+													onclick={() =>
+														!reservationToReschedule && (selectedServiceId = service.id)}
+													disabled={reservationToReschedule}
+												>
+													<div>
+														<div
+															class={cn(
+																'font-semibold',
+																selectedServiceId === service.id ? 'text-senary' : 'text-secondary'
+															)}
+														>
+															{service.name}
+														</div>
+														<p class="text-xs text-secondary/60">{service.description}</p>
+													</div>
+													<div class="text-sm font-semibold text-senary">
+														{currencyFormatter.format(service.price)}
+													</div>
+												</button>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
+
+							<!-- Bottom: Notes (Spanning Full Width) -->
+							{#if specialRequest}
+								<div class="col-span-1 md:col-span-2">
+									<Label class="mb-2 block text-sm font-semibold text-secondary/80">
+										Catatan (Opsional)
+									</Label>
+									<Textarea
+										rows={4}
+										placeholder="Tambahkan permintaan khusus..."
+										bind:value={specialRequest}
+										class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
+									/>
+								</div>
+							{:else}
+								<div class="col-span-1 md:col-span-2">
+									<Label class="mb-2 block text-sm font-semibold text-secondary/80">
+										Catatan (Opsional)
+									</Label>
+									<Textarea
+										rows={4}
+										placeholder="Tambahkan permintaan khusus..."
+										bind:value={typingRequest}
+										class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
+									/>
+								</div>
+							{/if}
 						</div>
 
-						<div class="rounded-lg border border-white/10 bg-white/5 p-4">
-							<div class="font-semibold text-secondary">Voucher</div>
-							<p class="mt-2 text-xs text-secondary/60">
-								Pilih voucher yang ingin digunakan (opsional).
-							</p>
-
+						<div class="flex items-center justify-between">
 							<Button
 								variant="outline"
-								class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
-								disabled={reservationToReschedule}
-								onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
+								class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+								onclick={goBack}>Kembali</Button
 							>
-								<span>
-									{#if redeemCode}
-										Redeem Code Applied
-									{:else}
-										{selectedVoucher
-											? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
-											: 'Pilih / Beli Voucher'}
-									{/if}
-								</span>
-								<ChevronRight class="h-4 w-4 opacity-50" />
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedBarberId ||
+									!selectedServiceId ||
+									(reservationToReschedule && (!selectedDayId || !selectedTimeId)) ||
+									(reservationToReschedule && loadingData)}
+							>
+								{#if reservationToReschedule}
+									Lanjut ke Konfirmasi
+								{:else}
+									Lanjut ke Pembayaran
+								{/if}
 							</Button>
 						</div>
 					</div>
-
-					<Separator class="bg-white/10" />
-
-					<div class="space-y-2 text-sm">
-						<div class="flex justify-between text-secondary/80">
-							<span>{selectedService?.name ?? 'Subtotal'}</span>
-							<span>{currencyFormatter.format(subtotal)}</span>
+				</div>
+			{:else if step === 'payment'}
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
+							{#if reservationToReschedule}
+								<h3 class="text-lg font-semibold text-secondary">Konfirmasi Reschedule</h3>
+								<p class="text-sm text-secondary/60">
+									Periksa kembali perubahan reservasi Anda sebelum dikonfirmasi.
+								</p>
+							{:else}
+								<h3 class="text-lg font-semibold text-secondary">Pembayaran</h3>
+								<p class="text-sm text-secondary/60">
+									Periksa kembali detail reservasi sebelum dikonfirmasi.
+								</p>
+							{/if}
 						</div>
-						<div class="flex justify-between text-senary">
-							<span>Diskon Voucher</span>
-							<span>-{currencyFormatter.format(voucherDiscount)}</span>
-						</div>
-						{#if redeemCode}
-							<div class="flex justify-between text-senary">
-								<span>Redeem Code ({redeemCode})</span>
-								<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
+
+						<div class="grid gap-4 md:grid-cols-2">
+							<div class="rounded-lg border border-senary/20 bg-senary/10 p-4 text-secondary">
+								{#if reservationToReschedule}
+									<div class="font-semibold text-senary">Ringkasan Reschedule</div>
+								{:else}
+									<div class="font-semibold text-senary">Ringkasan Reservasi</div>
+								{/if}
+								<div class="mt-3 space-y-2 text-sm">
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Tanggal</span>
+										<span class="font-medium">{selectedDateDisplay ?? '-'}</span>
+									</div>
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Jam</span>
+										<span class="font-medium">{selectedTimeDisplay ?? '-'}</span>
+									</div>
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Barber</span>
+										<span class="font-medium">{selectedBarber?.name ?? '-'}</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-secondary/70">Layanan</span>
+										<span class="font-medium">{selectedService?.name ?? '-'}</span>
+									</div>
+								</div>
 							</div>
-						{/if}
-						<div class="flex justify-between text-destructive">
-							<span>Biaya Admin</span>
-							<span>+{currencyFormatter.format(adminFee)}</span>
-						</div>
-						<div class="flex justify-between text-base font-semibold text-secondary">
-							<span>Total</span>
-							<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
-						</div>
-					</div>
 
-					<!-- Terms and Conditions Accordion -->
-					<Accordion.Root type="single" collapsible class="w-full">
-						<Accordion.Item value="tnc" class="border-white/10">
-							<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
-								Syarat & Ketentuan
-							</Accordion.Trigger>
-							<Accordion.Content class="text-sm text-secondary/70">
-								<ul class="list-disc space-y-1 pl-4">
-									<li>
-										Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
-										maksimal 1 kali.
-									</li>
-									<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
-									<li>Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.</li>
-									<li>Biaya admin tidak dapat dikembalikan.</li>
-								</ul>
-							</Accordion.Content>
-						</Accordion.Item>
-					</Accordion.Root>
+							<div class="rounded-lg border border-white/10 bg-white/5 p-4">
+								<div class="font-semibold text-secondary">Voucher</div>
+								<p class="mt-2 text-xs text-secondary/60">
+									Pilih voucher yang ingin digunakan (opsional).
+								</p>
+
+								<Button
+									variant="outline"
+									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+									disabled={reservationToReschedule}
+									onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
+								>
+									<span>
+										{#if redeemCode}
+											Redeem Code Applied
+										{:else}
+											{selectedVoucher
+												? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
+												: 'Pilih / Beli Voucher'}
+										{/if}
+									</span>
+									<ChevronRight class="h-4 w-4 opacity-50" />
+								</Button>
+							</div>
+						</div>
+
+						<Separator class="bg-white/10" />
+
+						<div class="space-y-2 text-sm">
+							<div class="flex justify-between text-secondary/80">
+								<span>{selectedService?.name ?? 'Subtotal'}</span>
+								<span>{currencyFormatter.format(subtotal)}</span>
+							</div>
+							<div class="flex justify-between text-senary">
+								<span>Diskon Voucher</span>
+								<span>-{currencyFormatter.format(voucherDiscount)}</span>
+							</div>
+							{#if redeemCode}
+								<div class="flex justify-between text-senary">
+									<span>Redeem Code ({redeemCode})</span>
+									<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
+								</div>
+							{/if}
+							<div class="flex justify-between text-destructive">
+								<span>Biaya Admin</span>
+								<span>+{currencyFormatter.format(adminFee)}</span>
+							</div>
+							<div class="flex justify-between text-base font-semibold text-secondary">
+								<span>Total</span>
+								<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
+							</div>
+						</div>
+
+						<!-- Terms and Conditions Accordion -->
+						<Accordion.Root type="single" collapsible class="w-full">
+							<Accordion.Item value="tnc" class="border-white/10">
+								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+									Syarat & Ketentuan
+								</Accordion.Trigger>
+								<Accordion.Content class="text-sm text-secondary/70">
+									<ul class="list-disc space-y-1 pl-4">
+										<li>
+											Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
+											maksimal 1 kali.
+										</li>
+										<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
+										<li>
+											Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.
+										</li>
+										<li>Biaya admin tidak dapat dikembalikan.</li>
+									</ul>
+								</Accordion.Content>
+							</Accordion.Item>
+						</Accordion.Root>
+					</div>
 
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<Button

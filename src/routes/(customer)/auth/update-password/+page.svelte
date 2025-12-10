@@ -103,6 +103,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Update Password | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -126,7 +130,7 @@
 				<div class="h-[1px] w-12 bg-senary"></div>
 			</div>
 			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Update <span class="text-gradient-gold">Password</span>
+				Perbarui <span class="text-gradient-gold">Kata Sandi</span>
 			</h1>
 		</div>
 
@@ -141,12 +145,12 @@
 					alt="three lights barbershop logo"
 					class="mx-auto mb-4"
 				/>
-				<p class="text-lg font-light text-secondary/80">Masukan password baru anda</p>
+				<p class="text-lg font-light text-secondary/80">Masukkan kata sandi baru Anda</p>
 			</div>
 
 			<form class="space-y-6" onsubmit={handleSubmit}>
 				<div class="space-y-2">
-					<Label for="newPassword" class="text-sm font-medium text-senary">Password Baru</Label>
+					<Label for="newPassword" class="text-sm font-medium text-senary">Kata Sandi Baru</Label>
 					<div class="relative">
 						<Input
 							id="newPassword"
@@ -173,7 +177,7 @@
 
 				<div class="space-y-2">
 					<Label for="confirmPassword" class="text-sm font-medium text-senary"
-						>Konfirmasi Password</Label
+						>Konfirmasi Kata Sandi</Label
 					>
 					<div class="relative">
 						<Input
@@ -210,7 +214,7 @@
 					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Memproses...' : 'Update Password'}
+					{submitting ? 'Sedang Memproses...' : 'Perbarui Kata Sandi'}
 				</Button>
 			</form>
 		</div>
