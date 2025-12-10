@@ -1181,25 +1181,81 @@
 						</Accordion.Root>
 					</div>
 
-					<!-- Terms and Conditions Accordion -->
-					<Accordion.Root type="single" collapsible class="w-full">
-						<Accordion.Item value="tnc" class="border-white/10">
-							<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
-								Syarat & Ketentuan
-							</Accordion.Trigger>
-							<Accordion.Content class="text-sm text-secondary/70">
-								<ul class="list-disc space-y-1 pl-4">
-									<li>
-										Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
-										maksimal 1 kali.
-									</li>
-									<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
-									<li>Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.</li>
-									<li>Biaya admin tidak dapat dikembalikan.</li>
-								</ul>
-							</Accordion.Content>
-						</Accordion.Item>
-					</Accordion.Root>
+							<div class="rounded-lg border border-white/10 bg-white/5 p-4">
+								<div class="font-semibold text-secondary">Voucher</div>
+								<p class="mt-2 text-xs text-secondary/60">
+									Pilih voucher yang ingin digunakan (opsional).
+								</p>
+
+								<Button
+									variant="outline"
+									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+									disabled={reservationToReschedule}
+									onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
+								>
+									<span>
+										{#if redeemCode}
+											Redeem Code Applied
+										{:else}
+											{selectedVoucher
+												? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
+												: 'Pilih / Beli Voucher'}
+										{/if}
+									</span>
+									<ChevronRight class="h-4 w-4 opacity-50" />
+								</Button>
+							</div>
+						</div>
+
+						<Separator class="bg-white/10" />
+
+						<div class="space-y-2 text-sm">
+							<div class="flex justify-between text-secondary/80">
+								<span>{selectedService?.name ?? 'Subtotal'}</span>
+								<span>{currencyFormatter.format(subtotal)}</span>
+							</div>
+							<div class="flex justify-between text-senary">
+								<span>Diskon Voucher</span>
+								<span>-{currencyFormatter.format(voucherDiscount)}</span>
+							</div>
+							{#if redeemCode}
+								<div class="flex justify-between text-senary">
+									<span>Redeem Code ({redeemCode})</span>
+									<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
+								</div>
+							{/if}
+							<div class="flex justify-between text-destructive">
+								<span>Biaya Admin</span>
+								<span>+{currencyFormatter.format(adminFee)}</span>
+							</div>
+							<div class="flex justify-between text-base font-semibold text-secondary">
+								<span>Total</span>
+								<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
+							</div>
+						</div>
+
+						<!-- Terms and Conditions Accordion -->
+						<Accordion.Root type="single" collapsible class="w-full">
+							<Accordion.Item value="tnc" class="border-white/10">
+								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+									Syarat & Ketentuan
+								</Accordion.Trigger>
+								<Accordion.Content class="text-sm text-secondary/70">
+									<ul class="list-disc space-y-1 pl-4">
+										<li>
+											Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
+											maksimal 1 kali.
+										</li>
+										<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
+										<li>
+											Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.
+										</li>
+										<li>Biaya admin tidak dapat dikembalikan.</li>
+									</ul>
+								</Accordion.Content>
+							</Accordion.Item>
+						</Accordion.Root>
+					</div>
 
 					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<Button

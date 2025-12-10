@@ -285,6 +285,9 @@
 		}
 	}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6c6c70c (add recaptcha login, responsive reservationn sheet, translate into Indonesian)
 
 	function isSameDay(date1: string, date2: string) {
 		const d1 = new Date(date1);
@@ -314,8 +317,11 @@
 			});
 		}
 	}
+<<<<<<< HEAD
 =======
 >>>>>>> ef57d19 (fix admin catalogue and reservation page)
+=======
+>>>>>>> 6c6c70c (add recaptcha login, responsive reservationn sheet, translate into Indonesian)
 </script>
 
 <Sheet {open} onOpenChange={handleOpenChange}>
@@ -381,6 +387,9 @@
 						<div bind:this={messagesContainer} class="h-full overflow-y-auto pr-2">
 							<div class="space-y-6 pb-4">
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6c6c70c (add recaptcha login, responsive reservationn sheet, translate into Indonesian)
 								{#each messages as message, i (message.created_at + message.sender)}
 									{#if i === 0 || !isSameDay(message.created_at, messages[i - 1].created_at)}
 										<div class="my-4 flex justify-center">
@@ -389,9 +398,12 @@
 											</span>
 										</div>
 									{/if}
+<<<<<<< HEAD
 =======
 								{#each messages as message (message.created_at + message.sender)}
 >>>>>>> ef57d19 (fix admin catalogue and reservation page)
+=======
+>>>>>>> 6c6c70c (add recaptcha login, responsive reservationn sheet, translate into Indonesian)
 									<div
 										class="flex {isCurrentUserMessage(message.sender)
 											? 'justify-end'

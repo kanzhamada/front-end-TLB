@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth';
 	import { onMount } from 'svelte';
-	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
 
 	let { children, data } = $props();
 
@@ -27,5 +26,4 @@
 	});
 </script>
 
-<CustomCursor />
 {@render children?.()}

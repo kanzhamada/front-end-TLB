@@ -68,21 +68,21 @@
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Waiting';
+				return 'Menunggu';
 			case 'onGoing':
 				return 'Sedang Berjalan';
 			case 'waitingForPayment':
-				return 'Waiting Payment';
+				return 'Menunggu Pembayaran';
 			case 'completed':
-				return 'Completed';
+				return 'Selesai';
 			case 'canceledByUser':
 				return 'Dibatalkan Pengguna';
 			case 'canceledByAdmin':
 				return 'Dibatalkan Admin';
 			case 'declined':
-				return 'Declined';
+				return 'Ditolak';
 			case 'expired':
-				return 'Expired';
+				return 'Kedaluwarsa';
 			case 'requestToReschedule':
 				return 'Permintaan Jadwal Ulang';
 			default:

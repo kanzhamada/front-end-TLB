@@ -348,7 +348,7 @@
 					class=" w-full bg-white text-black hover:bg-gray-200"
 					onclick={loginWithGoogle}
 				>
-					Register with Google <svg
+					Daftar dengan Google <svg
 						xmlns="http://www.w3.org/2000/svg"
 						x="0px"
 						y="0px"

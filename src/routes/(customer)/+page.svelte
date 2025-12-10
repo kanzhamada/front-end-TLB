@@ -93,7 +93,7 @@
 			<img
 				src="/Banner.webp"
 				alt=""
-				class="h-full w-full object-cover opacity-25"
+				class="h-full w-full object-cover opacity-20"
 				fetchpriority="high"
 				loading="eager"
 			/>
