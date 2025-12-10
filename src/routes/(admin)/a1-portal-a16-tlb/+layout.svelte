@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth';
 	import { onMount } from 'svelte';
+<<<<<<< HEAD
 	import CustomCursor from '$lib/components/ui/CustomCursor.svelte';
+=======
+>>>>>>> 6197886 (merge redesign customer with admin dashboard)
 
 	let { children, data } = $props();
 
@@ -26,5 +29,9 @@
 		}
 	});
 </script>
+<<<<<<< HEAD
 <CustomCursor />
+=======
+
+>>>>>>> 6197886 (merge redesign customer with admin dashboard)
 {@render children?.()}

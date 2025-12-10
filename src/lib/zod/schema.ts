@@ -117,15 +117,6 @@ export const phoneSchema = z
 		message: "Phone number must start with '08'"
 	});
 
-export const profileSchema = z.object({
-	displayName: z
-		.string()
-		.trim()
-		.min(1, 'Full name is required')
-		.max(30, 'Full name must be at most 30 characters'),
-
-	phone: phoneSchema
-});
 
 export const profileSchema = z.object({
 	displayName: z

@@ -7,9 +7,12 @@ export type Catalogue = {
 	description: string;
 	image: string; // Fallback or first image
 	catalogueImages: { imageID?: string; imageUrl: string }[];
+<<<<<<< HEAD
 	hairTypes?: string;
 	faceShapes?: string;
 	skinTones?: string;
+=======
+>>>>>>> 6197886 (merge redesign customer with admin dashboard)
 };
 
 export const getCatalogues = async (
@@ -38,10 +41,14 @@ export const getCatalogues = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+<<<<<<< HEAD
 		catalogueImages: item.catalogueImages || [],
 		hairTypes: item.hairTypes,
 		faceShapes: item.faceShapes,
 		skinTones: item.skinTones
+=======
+		catalogueImages: item.catalogueImages || []
+>>>>>>> 6197886 (merge redesign customer with admin dashboard)
 	}));
 
 	return {
@@ -72,10 +79,14 @@ export const getCatalogueById = async (
 		type: item.type,
 		description: item.description,
 		image: item.catalogueImages?.[0]?.imageUrl || item.imageUrl || '',
+<<<<<<< HEAD
 		catalogueImages: item.catalogueImages || [],
 		hairTypes: item.hairTypes,
 		faceShapes: item.faceShapes,
 		skinTones: item.skinTones
+=======
+		catalogueImages: item.catalogueImages || []
+>>>>>>> 6197886 (merge redesign customer with admin dashboard)
 	};
 
 	return {

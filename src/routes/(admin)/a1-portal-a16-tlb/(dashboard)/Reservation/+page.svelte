@@ -5,7 +5,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import {
-		Calendar, Clock, User, Scissors, CheckCircle, XCircle, Check,
+		Calendar,
+		Clock,
+		User,
+		Scissors,
+		CheckCircle,
+		XCircle,
+		Check,
 		Search,
 		Filter,
 		Trash2,
@@ -62,7 +68,7 @@
 			.filter((r) => {
 				const customerName = r.customer?.name || 'Unknown';
 				const invoice = r.invoice || '';
-				const matchesSearch = 
+				const matchesSearch =
 					customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 					invoice.toLowerCase().includes(searchQuery.toLowerCase());
 				const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(r.status);
@@ -95,12 +101,9 @@
 	const itemsPerPage = 8;
 
 	const totalPages = $derived(Math.ceil(filteredReservations.length / itemsPerPage));
-	
+
 	const paginatedReservations = $derived(
-		filteredReservations.slice(
-			(currentPage - 1) * itemsPerPage,
-			currentPage * itemsPerPage
-		)
+		filteredReservations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 	);
 
 	// Reset to page 1 when filter changes
@@ -156,8 +159,10 @@
 <div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30">
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
-		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
-		
+		<div
+			class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"
+		></div>
+
 		<div class="relative z-10 mx-auto max-w-7xl">
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
@@ -166,7 +171,9 @@
 				</div>
 				<div class="text-right">
 					<p class="text-3xl font-bold text-senary">{reservations.length}</p>
-					<p class="text-[10px] font-bold tracking-widest text-secondary/50 uppercase">Total Requests</p>
+					<p class="text-[10px] font-bold tracking-widest text-secondary/50 uppercase">
+						Total Requests
+					</p>
 				</div>
 			</div>
 
@@ -176,7 +183,8 @@
 						Reservation <span class="text-senary">Management</span>
 					</h1>
 					<p class="mt-4 max-w-xl font-light text-secondary/70">
-						Monitor and manage booking requests. Track status, view details, and handle customer appointments efficiently.
+						Monitor and manage booking requests. Track status, view details, and handle customer
+						appointments efficiently.
 					</p>
 				</div>
 			</div>
@@ -187,44 +195,70 @@
 		<div class="mx-auto max-w-7xl">
 			<!-- Stats Cards -->
 			<div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-				<div class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]">
+				<div
+					class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]"
+				>
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">Completed</p>
-							<p class="mt-2 text-3xl font-light text-secondary group-hover:text-senary transition-colors">{stats.completed}</p>
+							<p
+								class="mt-2 text-3xl font-light text-secondary transition-colors group-hover:text-senary"
+							>
+								{stats.completed}
+							</p>
 						</div>
 						<div class="rounded-full bg-green-400/10 p-3 text-green-400">
 							<TrendingUp class="h-6 w-6" />
 						</div>
 					</div>
 				</div>
-				<div class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]">
+				<div
+					class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]"
+				>
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">Pending</p>
-							<p class="mt-2 text-3xl font-light text-secondary group-hover:text-senary transition-colors">{stats.pending}</p>
+							<p
+								class="mt-2 text-3xl font-light text-secondary transition-colors group-hover:text-senary"
+							>
+								{stats.pending}
+							</p>
 						</div>
 						<div class="rounded-full bg-yellow-400/10 p-3 text-yellow-400">
 							<Clock class="h-6 w-6" />
 						</div>
 					</div>
 				</div>
-				<div class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]">
+				<div
+					class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]"
+				>
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">Ongoing</p>
-							<p class="mt-2 text-3xl font-light text-secondary group-hover:text-senary transition-colors">{stats.ongoing}</p>
+							<p
+								class="mt-2 text-3xl font-light text-secondary transition-colors group-hover:text-senary"
+							>
+								{stats.ongoing}
+							</p>
 						</div>
 						<div class="rounded-full bg-blue-400/10 p-3 text-blue-400">
 							<Users class="h-6 w-6" />
 						</div>
 					</div>
 				</div>
-				<div class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]">
+				<div
+					class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]"
+				>
 					<div class="flex items-center justify-between">
 						<div>
-							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">Success Rate</p>
-							<p class="mt-2 text-3xl font-light text-secondary group-hover:text-senary transition-colors">{stats.rate}%</p>
+							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">
+								Success Rate
+							</p>
+							<p
+								class="mt-2 text-3xl font-light text-secondary transition-colors group-hover:text-senary"
+							>
+								{stats.rate}%
+							</p>
 						</div>
 						<div class="rounded-full bg-purple-400/10 p-3 text-purple-400">
 							<CalendarDays class="h-6 w-6" />
@@ -257,7 +291,7 @@
 									class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-senary"
 								>
 									<TrendingUp class="mr-2 h-4 w-4" />
-									{sortOptions.find(o => o.value === selectedSort)?.label || 'Sort By'}
+									{sortOptions.find((o) => o.value === selectedSort)?.label || 'Sort By'}
 								</Button>
 							{/snippet}
 						</DropdownMenu.Trigger>
@@ -283,31 +317,33 @@
 									class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-senary"
 								>
 									<Filter class="mr-2 h-4 w-4" />
-									{selectedStatuses.length === 0 ? 'All Status' : `${selectedStatuses.length} Selected`}
+									{selectedStatuses.length === 0
+										? 'All Status'
+										: `${selectedStatuses.length} Selected`}
 								</Button>
 							{/snippet}
 						</DropdownMenu.Trigger>
-						<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary w-56">
+						<DropdownMenu.Content class="w-56 border-white/10 bg-slate-900 text-secondary">
 							<DropdownMenu.CheckboxItem
 								checked={selectedStatuses.length === 0}
-								onclick={() => selectedStatuses = []}
-								class="focus:bg-white/10 focus:text-senary flex items-center [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5 [&>span]:size-4 [&>span]:rounded-sm"
+								onclick={() => (selectedStatuses = [])}
+								class="flex items-center focus:bg-white/10 focus:text-senary [&>span]:size-4 [&>span]:rounded-sm [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5"
 							>
 								All Status
 							</DropdownMenu.CheckboxItem>
-							<DropdownMenu.Separator class="bg-white/20 my-2" />
+							<DropdownMenu.Separator class="my-2 bg-white/20" />
 							{#each statusOptions as option}
 								<DropdownMenu.CheckboxItem
 									checked={selectedStatuses.includes(option.value)}
 									onclick={(e) => {
 										e.preventDefault();
 										if (selectedStatuses.includes(option.value)) {
-											selectedStatuses = selectedStatuses.filter(s => s !== option.value);
+											selectedStatuses = selectedStatuses.filter((s) => s !== option.value);
 										} else {
 											selectedStatuses = [...selectedStatuses, option.value];
 										}
 									}}
-									class="focus:bg-white/10 focus:text-senary flex items-center [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5 [&>span]:size-4 [&>span]:rounded-sm"
+									class="flex items-center focus:bg-white/10 focus:text-senary [&>span]:size-4 [&>span]:rounded-sm [&>span]:border [&>span]:border-white/20 [&>span]:bg-white/5"
 								>
 									{option.label}
 								</DropdownMenu.CheckboxItem>
@@ -317,28 +353,45 @@
 				</div>
 			</div>
 
-			<div class="rounded-3xl border border-white/5 bg-black/40 backdrop-blur-md overflow-hidden">
+			<div class="overflow-hidden rounded-3xl border border-white/5 bg-black/40 backdrop-blur-md">
 				<div class="overflow-x-auto">
 					<table class="w-full text-left text-sm">
 						<thead class="border-b border-white/10 bg-white/5">
 							<tr>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Invoice</th>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Customer</th>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Date & Time</th>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Amount</th>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Status</th>
+								<th class="p-6 text-xs font-bold tracking-wider text-secondary/50 uppercase"
+									>Invoice</th
+								>
+								<th class="p-6 text-xs font-bold tracking-wider text-secondary/50 uppercase"
+									>Customer</th
+								>
+								<th class="p-6 text-xs font-bold tracking-wider text-secondary/50 uppercase"
+									>Date & Time</th
+								>
+								<th class="p-6 text-xs font-bold tracking-wider text-secondary/50 uppercase"
+									>Amount</th
+								>
+								<th class="p-6 text-xs font-bold tracking-wider text-secondary/50 uppercase"
+									>Status</th
+								>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-white/5">
 							{#each paginatedReservations as reservation}
-								<tr 
-									class="transition-colors hover:bg-white/5 cursor-pointer"
-									onclick={() => selectedReservationId = reservation.id}
+								<tr
+									class="cursor-pointer transition-colors hover:bg-white/5"
+									onclick={() => (selectedReservationId = reservation.id)}
 								>
-									<td class="p-6 font-medium text-senary">{reservation.invoice }</td>
-									<td class="p-6 font-medium text-secondary">{reservation.customer?.name || 'Unknown'}</td>
-									<td class="p-6 text-secondary/70">{reservation.dateTime?.date || 'N/A'} <span class="text-senary ml-1">{reservation.dateTime?.hour || ''}</span></td>
-									<td class="p-6 text-secondary">{formatCurrency(reservation.service?.price || 0)}</td>
+									<td class="p-6 font-medium text-senary">{reservation.invoice}</td>
+									<td class="p-6 font-medium text-secondary"
+										>{reservation.customer?.name || 'Unknown'}</td
+									>
+									<td class="p-6 text-secondary/70"
+										>{reservation.dateTime?.date || 'N/A'}
+										<span class="ml-1 text-senary">{reservation.dateTime?.hour || ''}</span></td
+									>
+									<td class="p-6 text-secondary"
+										>{formatCurrency(reservation.service?.price || 0)}</td
+									>
 									<td class="p-6">
 										<span
 											class={`rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider uppercase ${getStatusColor(
@@ -361,13 +414,13 @@
 					<Button
 						variant="ghost"
 						size="sm"
-						onclick={() => currentPage = Math.max(1, currentPage - 1)}
+						onclick={() => (currentPage = Math.max(1, currentPage - 1))}
 						disabled={currentPage === 1}
 						class="text-secondary/70 hover:bg-white/10 hover:text-secondary disabled:opacity-30"
 					>
 						Previous
 					</Button>
-					
+
 					<div class="flex items-center gap-1">
 						{#each Array(totalPages) as _, i}
 							<button
@@ -376,7 +429,7 @@
 										? 'bg-senary text-primary'
 										: 'text-secondary hover:bg-white/10'
 								}`}
-								onclick={() => currentPage = i + 1}
+								onclick={() => (currentPage = i + 1)}
 							>
 								{i + 1}
 							</button>
@@ -386,7 +439,7 @@
 					<Button
 						variant="ghost"
 						size="sm"
-						onclick={() => currentPage = Math.min(totalPages, currentPage + 1)}
+						onclick={() => (currentPage = Math.min(totalPages, currentPage + 1))}
 						disabled={currentPage === totalPages}
 						class="text-secondary/70 hover:bg-white/10 hover:text-secondary disabled:opacity-30"
 					>
