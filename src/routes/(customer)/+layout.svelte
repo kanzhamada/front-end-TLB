@@ -3,7 +3,7 @@
 	import CustomerFootbar from '$lib/components/User/CustomerFootbar.svelte';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <svelte:head>
@@ -18,5 +18,5 @@
 		<Toaster position="bottom-left" richColors />
 		{@render children()}
 	</main>
-	<CustomerFootbar />
+	<CustomerFootbar companySettings={data.companySettings} />
 </div>

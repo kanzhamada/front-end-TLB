@@ -38,9 +38,11 @@ export type Voucher = {
 
 export type CoinHistoryItem = {
 	name: string;
-	price: number;
-	title: string;
+	type: 'income' | 'expense';
+	price: number | null;
+	title: string | null;
 	created_at: string;
+	attainable_coin: number | null;
 };
 
 // API function to get user profile

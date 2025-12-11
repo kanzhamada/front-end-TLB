@@ -5,6 +5,12 @@
 	import { cn } from '$lib/utils'; // Assuming you have a cn utility, if not I will use template literals
 
 	let { catalogue, index = 0, onSelect, onBook, class: className = '' } = $props();
+
+	let isActive = $state(false);
+
+	function toggleActive() {
+		isActive = !isActive;
+	}
 </script>
 
 <div
@@ -13,6 +19,12 @@
 		'group relative overflow-hidden rounded-xl border border-white/5 bg-black/40 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:border-senary/30 hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)]',
 		className
 	)}
+	onclick={toggleActive}
+	role="button"
+	tabindex="0"
+	onkeydown={(e) => {
+		if (e.key === 'Enter' || e.key === ' ') toggleActive();
+	}}
 >
 	<div class="relative aspect-[3/4] overflow-hidden">
 		<img
@@ -26,7 +38,10 @@
 
 		<!-- Hover Overlay -->
 		<div
-			class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all duration-500 group-hover:opacity-100"
+			class={cn(
+				'absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-[2px] transition-all duration-500',
+				isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+			)}
 		>
 			<button
 				onclick={(e) => {
@@ -36,7 +51,7 @@
 				class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 py-2.5 text-[10px] font-bold tracking-widest text-white uppercase backdrop-blur-md transition hover:bg-white hover:text-black"
 			>
 				<Expand class="h-3 w-3" />
-				VIEW
+				LIHAT
 			</button>
 			<button
 				onclick={(e) => {
@@ -46,7 +61,7 @@
 				class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full bg-senary py-2.5 text-[10px] font-bold tracking-widest text-primary uppercase shadow-lg transition hover:bg-white hover:text-black"
 			>
 				<Scissors class="h-3 w-3" />
-				BOOK
+				PESAN
 			</button>
 		</div>
 
@@ -58,7 +73,12 @@
 		</div>
 
 		<div
-			class="absolute bottom-0 left-0 w-full p-5 transition-transform duration-500 group-hover:translate-y-4 group-hover:opacity-0"
+			class={cn(
+				'absolute bottom-0 left-0 w-full p-5 transition-transform duration-500',
+				isActive
+					? 'translate-y-4 opacity-0'
+					: 'translate-y-0 opacity-100 group-hover:translate-y-4 group-hover:opacity-0'
+			)}
 		>
 			<h4 class="truncate font-serif text-lg text-white">{catalogue.name}</h4>
 			{#if catalogue.description}

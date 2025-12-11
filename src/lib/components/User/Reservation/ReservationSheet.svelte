@@ -74,10 +74,10 @@
 	type Step = 'date' | 'time' | 'details' | 'payment';
 	const stepOrder: Step[] = ['date', 'time', 'details', 'payment'];
 	const steps = [
-		{ key: 'date', label: 'Date' },
-		{ key: 'time', label: 'Time' },
-		{ key: 'details', label: 'Details' },
-		{ key: 'payment', label: 'Payment' }
+		{ key: 'date', label: 'Tanggal' },
+		{ key: 'time', label: 'Waktu' },
+		{ key: 'details', label: 'Detail' },
+		{ key: 'payment', label: 'Pembayaran' }
 	] satisfies { key: Step; label: string }[];
 
 	let step: Step = $state('date');
@@ -681,6 +681,7 @@
 					voucherSelection = reservationToReschedule.voucherId || 'none';
 				}
 			}
+			// Removed else block that was causing infinite loop
 		} else {
 			loadAttempted = false;
 		}
@@ -1119,7 +1120,7 @@
 								>
 									<span>
 										{#if redeemCode}
-											Redeem Code Applied
+											Kode Redeem Digunakan
 										{:else}
 											{selectedVoucher
 												? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
@@ -1336,15 +1337,15 @@
 		try {
 			const response = await buyVoucher(voucher.voucherID, token);
 			if (response.success) {
-				toast.success('Voucher purchased successfully!');
+				toast.success('Voucher berhasil dibeli!');
 				// Reload data
 				await loadReservationData();
 			} else {
-				toast.error(response.message || 'Failed to purchase voucher');
+				toast.error(response.message || 'Gagal membeli voucher');
 			}
 		} catch (e) {
 			console.error('Error buying voucher:', e);
-			toast.error('An error occurred while purchasing the voucher');
+			toast.error('Terjadi kesalahan saat membeli voucher');
 		}
 	}}
 />

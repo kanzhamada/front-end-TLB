@@ -18,6 +18,14 @@
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
 
+	const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
+	declare global {
+		interface Window {
+			grecaptcha: any;
+		}
+	}
+
 	let tokens = $state<{
 		access_token: string;
 		refresh_token: string;
@@ -70,9 +78,21 @@
 		try {
 			console.log('Attempting update password');
 
+			let recaptchaToken = '';
+			try {
+				if (window.grecaptcha) {
+					recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, {
+						action: 'update_password'
+					});
+				}
+			} catch (e) {
+				console.error('Recaptcha execution failed:', e);
+			}
+
 			const response = await updatePassword({
 				...tokens,
-				newPassword
+				newPassword,
+				recaptchaToken
 			});
 			console.log('Update password response:', response);
 
@@ -104,6 +124,11 @@
 </script>
 
 <svelte:head>
+	<script
+		src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"
+		async
+		defer
+	></script>
 	<title>Update Password | Three Lights Barbershop</title>
 </svelte:head>
 
@@ -220,3 +245,10 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Gunakan !important untuk memastikan aturan ini menang */
+	:global(.grecaptcha-badge) {
+		visibility: hidden;
+	}
+</style>

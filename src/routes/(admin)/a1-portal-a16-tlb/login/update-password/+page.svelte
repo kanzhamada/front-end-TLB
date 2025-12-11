@@ -23,6 +23,14 @@
 	let submitting = $state(false);
 	let formError = $state<string | null>(null);
 
+	const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
+	declare global {
+		interface Window {
+			grecaptcha: any;
+		}
+	}
+
 	let tokens = $state<{
 		access_token: string;
 		refresh_token: string;
@@ -75,9 +83,21 @@
 		try {
 			console.log('Attempting admin update password');
 
+			let recaptchaToken = '';
+			try {
+				if (window.grecaptcha) {
+					recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, {
+						action: 'admin_update_password'
+					});
+				}
+			} catch (e) {
+				console.error('Recaptcha execution failed:', e);
+			}
+
 			const response = await updatePassword({
 				...tokens,
-				newPassword
+				newPassword,
+				recaptchaToken
 			});
 			console.log('Update password response:', response);
 
@@ -107,6 +127,14 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<script
+		src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"
+		async
+		defer
+	></script>
+</svelte:head>
 
 <div
 	class="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 selection:bg-senary/30"
@@ -234,3 +262,10 @@
 		&copy; {new Date().getFullYear()} Three Lights Barbershop
 	</div>
 </div>
+
+<style>
+	/* Gunakan !important untuk memastikan aturan ini menang */
+	:global(.grecaptcha-badge) {
+		visibility: hidden;
+	}
+</style>

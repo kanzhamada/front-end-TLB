@@ -2,10 +2,7 @@ import { getFromApi, putToApi, type ApiResponse } from '$lib/api/shared/api';
 
 export type Reservation = {
 	id: string;
-<<<<<<< HEAD
 	invoice: string;
-=======
->>>>>>> 6197886 (merge redesign customer with admin dashboard)
 	customer_id: string;
 	barber_id: string;
 	service_id: string;
@@ -44,13 +41,10 @@ export const getReservations = async (
 
 	const reservations: Reservation[] = result.data.map((item) => ({
 		id: item.reservationID,
-<<<<<<< HEAD
+
 		invoice: item.invoice,
-=======
->>>>>>> 6197886 (merge redesign customer with admin dashboard)
+
 		customer_id: item.user?.id || '', // Not present in log, but maybe not needed for list
-		barber_id: item.barber?.id || '',
-		service_id: item.service?.id || '',
 		date_time_id: '', // Not present
 		status: item.status,
 		notes: '',
@@ -107,10 +101,7 @@ export const getReservationById = async (
 
 	const reservation: Reservation = {
 		id: dataToMap.reservationID || dataToMap.id, // Try both
-<<<<<<< HEAD
 		invoice: dataToMap.invoice,
-=======
->>>>>>> 6197886 (merge redesign customer with admin dashboard)
 		customer_id: dataToMap.user?.id || dataToMap.customer_id || '',
 		barber_id: dataToMap.barber?.id || dataToMap.barber_id || '',
 		service_id: dataToMap.service?.id || dataToMap.service_id || '',

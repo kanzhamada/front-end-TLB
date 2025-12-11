@@ -78,6 +78,7 @@ export const updatePassword = (payload: {
 	token_type: string;
 	type: string;
 	newPassword: string;
+	recaptchaToken?: string;
 }) => request<AuthResponse>('/auth/update-password', payload);
 
 export type { LoginPayload, RegisterPayload, AuthResponse };

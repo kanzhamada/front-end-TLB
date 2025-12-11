@@ -109,14 +109,18 @@
 
 			// Map the API response to the expected format
 			coinTransactions =
-				response.data?.map((item, index) => ({
-					id: `${index + 1}`,
-					date: item.created_at,
-					description: item.title || item.name,
-					amount: item.price || 0,
-					balanceAfter: 0, // The API doesn't provide balance after, we could calculate it if needed
-					type: item.price > 0 ? 'earned' : 'spent'
-				})) || [];
+				response.data?.map((item, index) => {
+					const isIncome = item.type === 'income';
+					return {
+						id: `${index + 1}`,
+						date: item.created_at,
+						description: item.title || item.name,
+						// Income (earned) is negative in the current UI logic (green color for < 0)
+						amount: isIncome ? -(item.attainable_coin || 0) : item.price || 0,
+						balanceAfter: 0,
+						type: isIncome ? 'earned' : 'spent'
+					};
+				}) || [];
 
 			user = get(authStore).session?.user || null;
 		} catch (err) {
@@ -129,6 +133,10 @@
 
 	onMount(async () => {
 		await loadProfile();
+	});
+
+	$effect(() => {
+		console.log('coinTransactions:', paginatedTransactions);
 	});
 </script>
 
@@ -372,7 +380,7 @@
 						<p
 							class="text-lg font-bold {transaction.amount < 0 ? 'text-green-400' : 'text-red-400'}"
 						>
-							{transaction.amount < 0 ? '+' : '-'}{transaction.amount}
+							{transaction.amount < 0 ? '+' : '-'}{Math.abs(transaction.amount)}
 						</p>
 						<!-- <p class="text-sm text-secondary/50">Balance: {transaction.balanceAfter}</p> -->
 					</div>

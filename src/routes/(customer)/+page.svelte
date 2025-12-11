@@ -100,7 +100,7 @@
 		</div>
 
 		<div
-			class="relative z-10 mx-auto flex h-full max-w-7xl flex-col content-center justify-center px-6"
+			class="relative z-10 mx-auto flex h-full max-w-7xl flex-col content-center justify-center px-6 pt-20 md:pt-0"
 			in:fade={{ duration: 1000 }}
 		>
 			<div class="mb-4 flex items-center gap-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
@@ -111,7 +111,7 @@
 			</div>
 
 			<h1
-				class="max-w-5xl text-left text-5xl leading-[0.95] font-bold tracking-tighter text-secondary drop-shadow-2xl md:text-7xl lg:text-[130px]"
+				class="max-w-full text-left text-4xl leading-[0.95] font-bold tracking-tighter text-secondary drop-shadow-2xl md:max-w-5xl md:text-7xl lg:text-[130px]"
 				in:fly={{ y: 30, duration: 800, delay: 400 }}
 			>
 				Refine Your <br />
@@ -126,21 +126,28 @@
 				in:fly={{ y: 40, duration: 800, delay: 600 }}
 			>
 				<div class="grid gap-6 md:grid-cols-3 md:gap-8">
-					<a href="https://wa.me/6287855014355">
-						<div
-							class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5 active:bg-white/5"
-						>
+					{#if data.companySettings?.phone}
+						<a href="https://wa.me/{data.companySettings.phone}">
 							<div
-								class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary group-active:scale-110 group-active:bg-senary group-active:text-primary"
+								class="group flex items-start gap-4 rounded-xl p-4 transition-all hover:bg-white/5 active:bg-white/5"
 							>
-								<Phone class="h-6 w-6" />
+								<div
+									class="rounded-full border border-senary/30 bg-senary/10 p-3 text-senary transition-all group-hover:scale-110 group-hover:bg-senary group-hover:text-primary group-active:scale-110 group-active:bg-senary group-active:text-primary"
+								>
+									<Phone class="h-6 w-6" />
+								</div>
+								<div>
+									<h3 class="text-lg font-bold text-secondary">Kontak Kami</h3>
+									<p class="font-light text-secondary/70">
+										+{data.companySettings.phone.replace(
+											/(\d{2})(\d{3})(\d{4})(\d{4})/,
+											'$1 $2-$3-$4'
+										)}
+									</p>
+								</div>
 							</div>
-							<div>
-								<h3 class="text-lg font-bold text-secondary">Kontak Kami</h3>
-								<p class="font-light text-secondary/70">+62 878-5501-4355</p>
-							</div>
-						</div>
-					</a>
+						</a>
+					{/if}
 
 					<a href="#location">
 						<div
@@ -154,7 +161,7 @@
 							<div>
 								<h3 class="text-lg font-bold text-secondary">Lokasi</h3>
 								<p class="font-light text-secondary/70">
-									Jl. Terusan Sudimoro, Gembrung, Mojolangu
+									{data.companySettings?.location || 'Lokasi belum tersedia'}
 								</p>
 							</div>
 						</div>
@@ -205,7 +212,7 @@
 				<div class="h-1 w-24 rounded-full bg-senary/50"></div>
 			</div>
 
-			<div class="grid grid-cols-1 items-center gap-16 md:grid-cols-3">
+			<div class="grid grid-cols-1 items-center gap-8 md:grid-cols-3 md:gap-16">
 				<div
 					class="group aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 shadow-2xl transition-transform duration-700 hover:scale-[1.02] active:scale-[1.02]"
 				>
@@ -239,7 +246,7 @@
 
 			<div class="mt-32 grid grid-cols-1 gap-12 md:grid-cols-1">
 				<Card
-					class="group relative self-center overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-8 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10 active:border-senary/30 active:bg-white/10 md:p-12"
+					class="group relative self-center overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-6 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10 active:border-senary/30 active:bg-white/10 md:p-12"
 				>
 					<div
 						class="absolute top-0 right-0 p-12 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 group-active:scale-110 group-active:rotate-12"
@@ -251,20 +258,19 @@
 					</div>
 					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
 						<h3
-							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-4xl font-bold whitespace-nowrap text-transparent md:text-5xl"
+							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-3xl font-bold whitespace-nowrap text-transparent md:text-5xl"
 						>
 							Visi
 						</h3>
 						<div class="flex-1 border-l border-senary/20 pl-8">
-							<p class="text-left text-xl leading-relaxed font-light text-secondary/80">
-								“Menjadi barbershop yang memberikan pelayanan rapi, nyaman, dan tepat bagi setiap
-								pelanggan dengan memberikan hasil potongan yang sesuai kebutuhan.”
+							<p class="text-left text-lg leading-relaxed font-light text-secondary/80 md:text-xl">
+								{data.companySettings?.vision || 'Visi belum tersedia'}
 							</p>
 						</div>
 					</CardHeader>
 				</Card>
 				<Card
-					class="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-8 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10 active:border-senary/30 active:bg-white/10 md:p-12"
+					class="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 p-6 text-secondary backdrop-blur-md transition-all duration-500 hover:border-senary/30 hover:bg-white/10 active:border-senary/30 active:bg-white/10 md:p-12"
 				>
 					<div
 						class="absolute bottom-0 left-0 p-12 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-12 group-active:scale-110 group-active:-rotate-12"
@@ -276,16 +282,14 @@
 					</div>
 					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
 						<div class="flex-1 border-r border-senary/20 pr-8">
-							<p class="text-left text-xl leading-relaxed font-light text-secondary/80">
-								1. Memberikan layanan potong rambut yang rapi dan sesuai karakter wajah pelanggan.<br
-								/>
-								2. Meningkatkan kualitas pelayanan melalui rekomendasi model rambut yang lebih personal.<br
-								/>
-								3. Menjaga kenyamanan dan kepuasan pelanggan melalui pelayanan yang ramah dan profesional.
+							<p
+								class="text-left text-lg leading-relaxed font-light whitespace-pre-line text-secondary/80 md:text-xl"
+							>
+								{data.companySettings?.mission || 'Misi belum tersedia'}
 							</p>
 						</div>
 						<h3
-							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-4xl font-bold whitespace-nowrap text-transparent md:text-5xl"
+							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-3xl font-bold whitespace-nowrap text-transparent md:text-5xl"
 						>
 							Misi
 						</h3>
@@ -301,7 +305,7 @@
 				<MapPin class="mb-4 h-8 w-8 text-senary" />
 				<h2 class="mb-4 text-4xl font-bold text-secondary md:text-5xl">Lokasi</h2>
 				<p class="max-w-2xl text-xl font-light text-secondary/70">
-					Jl. Terusan Sudimoro, Gembrung, Mojolangu, Kec. Lowokwaru, Kota Malang, Jawa Timur 65142
+					{data.companySettings?.location || 'Lokasi belum tersedia'}
 				</p>
 			</div>
 
@@ -311,33 +315,25 @@
 				<div
 					class="pointer-events-none absolute inset-0 z-10 bg-senary/10 transition-colors duration-500 group-hover:bg-transparent group-active:bg-transparent"
 				></div>
-				<!-- <iframe
-					src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.664880952302!2d112.62762049999999!3d-7.930025999999999!2m3!1f0!2f0!3f0!3m2!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd62900086d3bb9%3A0xeabf779c52c82c86!2sThree%20Lights%20Barbershop!5e0!3m2!1sid!2sid!4v1762238470079!5m2!1sid!2sid"
-					width="100%"
-					height="100%"
-					style="border:0;"
-					allowfullscreen=""
-					loading="lazy"
-					referrerpolicy="no-referrer-when-downgrade"
-					class="contrast-125 grayscale invert-[0.8] transition-all duration-700 hover:contrast-100 hover:grayscale-0 hover:invert-0"
-				></iframe> -->
-
-				<iframe
-					src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d431.983126857858!2d112.62721699667367!3d-7.930409286893467!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd62900086d3bb9%3A0xeabf779c52c82c86!2sThree%20Lights%20Barbershop!5e0!3m2!1sid!2sid!4v1763730654011!5m2!1sid!2sid"
-					width="100%"
-					height="100%"
-					style="border:0;"
-					allowfullscreen="true"
-					loading="lazy"
-					referrerpolicy="no-referrer-when-downgrade"
-				></iframe>
+				{#if data.companySettings?.maps_link}
+					<iframe
+						src={data.companySettings.maps_link}
+						width="100%"
+						height="100%"
+						style="border:0;"
+						allowfullscreen="true"
+						loading="lazy"
+						referrerpolicy="no-referrer-when-downgrade"
+						title="Google Maps Location"
+					></iframe>
+				{/if}
 			</div>
 		</div>
 	</section>
 
 	<section class="relative z-10 py-20 md:py-32" id="schedule-and-service">
 		<div class="container mx-auto px-4">
-			<div class="grid grid-cols-1 gap-16 md:grid-cols-2 md:gap-24">
+			<div class="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-24">
 				<div>
 					<div class="mb-8 flex items-center gap-4">
 						<Clock class="h-8 w-8 text-senary" />

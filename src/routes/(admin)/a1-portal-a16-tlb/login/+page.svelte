@@ -1,5 +1,13 @@
 <script lang="ts">
-	import AdminLoginForm from '$lib/components/auth/AdminLoginForm.svelte';
+	import { goto } from '$app/navigation';
+	import { login } from '$lib/api/auth';
+	import { authStore } from '$lib/stores/auth';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { toast } from 'svelte-sonner';
+	import { browser } from '$app/environment';
+	import { Loader2 } from 'lucide-svelte';
 	import {
 		Card,
 		CardContent,
@@ -8,8 +16,98 @@
 		CardTitle
 	} from '$lib/components/ui/card';
 
-	let { form } = $props();
+	const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
+	declare global {
+		interface Window {
+			grecaptcha: any;
+		}
+	}
+
+	let email = $state('');
+	let password = $state('');
+	let submitting = $state(false);
+	let formError = $state<string | null>(null);
+
+	function handleError(message: string) {
+		formError = message;
+		toast.error(message);
+	}
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		if (submitting) return;
+
+		formError = null;
+		submitting = true;
+
+		try {
+			console.log('Attempting admin login with:', { email });
+
+			let recaptchaToken = '';
+			try {
+				if (window.grecaptcha) {
+					recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, {
+						action: 'admin_login'
+					});
+				}
+			} catch (e) {
+				console.error('Recaptcha execution failed:', e);
+			}
+
+			const response = await login({ email, password, recaptchaToken });
+			console.log('Login response:', response);
+
+			const success = response.success ?? response.sucess ?? false;
+
+			if (!success || !response.data?.session) {
+				const errorMessage = response.message ?? 'Login failed. Please try again.';
+				handleError(errorMessage);
+				console.log('Login failed:', response);
+				return;
+			}
+
+			authStore.setSession(response.data.session);
+
+			// Set cookies for server-side auth (hooks.server.ts)
+			const { access_token, refresh_token, expires_at } = response.data.session;
+			// expires_at is usually a timestamp in seconds. Calculate max-age.
+			// If expires_at is missing, default to 7 days.
+			let maxAge = 60 * 60 * 24 * 7;
+			if (expires_at) {
+				const nowInSeconds = Math.floor(Date.now() / 1000);
+				maxAge = expires_at - nowInSeconds;
+			}
+
+			document.cookie = `sb-access-token=${access_token}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+			document.cookie = `sb-refresh-token=${refresh_token}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax; Secure`; // 30 days
+
+			toast.success('Login successful!');
+			await goto('/a1-portal-a16-tlb');
+		} catch (error) {
+			console.error('Login error:', error);
+
+			if (browser) {
+				const customError = error as { response?: { message?: string } };
+				const message = customError?.response?.message ?? 'Login failed. Please try again.';
+				handleError(message);
+			} else {
+				handleError('Login failed. Please try again.');
+			}
+		} finally {
+			submitting = false;
+		}
+	}
 </script>
+
+<svelte:head>
+	<script
+		src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"
+		async
+		defer
+	></script>
+	<title>Admin Login | Three Lights Barbershop</title>
+</svelte:head>
 
 <div
 	class="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 selection:bg-senary/30"
@@ -56,7 +154,62 @@
 			</CardDescription>
 		</CardHeader>
 		<CardContent class="px-8 pb-10">
-			<AdminLoginForm actionUrl="?/login" formError={form?.message} />
+			<form class="space-y-6" onsubmit={handleSubmit}>
+				<div class="space-y-2">
+					<Label for="email" class="text-sm font-medium text-senary">Email Address</Label>
+					<Input
+						id="email"
+						type="email"
+						placeholder="admin@example.com"
+						bind:value={email}
+						required
+						autocomplete="email"
+						disabled={submitting}
+						class="h-12 border-white/10 bg-white/5 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+					/>
+				</div>
+
+				<div class="space-y-2">
+					<Label for="password" class="text-sm font-medium text-senary">Password</Label>
+					<Input
+						id="password"
+						type="password"
+						placeholder="••••••••"
+						bind:value={password}
+						required
+						autocomplete="current-password"
+						disabled={submitting}
+						class="h-12 border-white/10 bg-white/5 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+					/>
+					<div class="text-right text-sm">
+						<a
+							href="/a1-portal-a16-tlb/login/forget-password"
+							class="font-medium text-senary transition-colors hover:text-senary/80"
+						>
+							Forget password?
+						</a>
+					</div>
+				</div>
+
+				{#if formError}
+					<div class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+						{formError}
+					</div>
+				{/if}
+
+				<Button
+					type="submit"
+					class="h-12 w-full bg-senary font-bold tracking-wide text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all hover:bg-senary/90 hover:shadow-[0_0_25px_-5px_rgba(212,175,55,0.5)]"
+					disabled={submitting}
+				>
+					{#if submitting}
+						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+						Authenticating...
+					{:else}
+						Access Dashboard
+					{/if}
+				</Button>
+			</form>
 		</CardContent>
 	</Card>
 
@@ -64,3 +217,10 @@
 		&copy; {new Date().getFullYear()} Three Lights Barbershop
 	</div>
 </div>
+
+<style>
+	/* Gunakan !important untuk memastikan aturan ini menang */
+	:global(.grecaptcha-badge) {
+		visibility: hidden;
+	}
+</style>
