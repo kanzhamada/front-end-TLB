@@ -1,6 +1,6 @@
 import { getFromApi } from '$lib/api/shared/api';
 
-export interface RecentReservation {
+export interface ReservationItem {
 	reservationID: string;
 	customerName: string;
 	serviceName: string;
@@ -8,18 +8,9 @@ export interface RecentReservation {
 	date: string;
 	time: string;
 	status: string;
-	created_at: string;
 }
 
-export interface PendingCorrection {
-	reservationID: string;
-	customerName: string;
-	status: string;
-	date: string;
-	time: string;
-}
-
-export interface UpcomingReservation {
+export interface UpcomingItem {
 	reservationID: string;
 	customerName: string;
 	serviceName: string;
@@ -27,29 +18,28 @@ export interface UpcomingReservation {
 	time: string;
 }
 
-export interface RevenueItem {
-	day?: string;
-	week?: string;
-	month?: string;
-	revenue: number;
+export interface OperationalStats {
+	unread_chat_count: number;
+	pending_actions: ReservationItem[];
+	ongoing_reservations: ReservationItem[];
+	upcoming_reservations: UpcomingItem[];
+}
+
+export interface FinanceStats {
+	online: number;
+	offline: number;
+	total: number;
+}
+
+export interface FinanceOverview {
+	today: FinanceStats;
+	week: FinanceStats;
+	month: FinanceStats;
 }
 
 export interface DashboardData {
-	general: {
-		totalReservation: number;
-		activeBarbers: number;
-		recentReservations: RecentReservation[];
-		pendingCorrections: PendingCorrection[];
-		upcomingReservations: UpcomingReservation[];
-	};
-	revenue: {
-		totalRevenue: number;
-		overview: {
-			weekly: RevenueItem[];
-			monthly: RevenueItem[];
-			yearly: RevenueItem[];
-		};
-	};
+	operational: OperationalStats;
+	finance_overview: FinanceOverview;
 }
 
 export async function getDashboardInfo(fetch: any, token: string) {

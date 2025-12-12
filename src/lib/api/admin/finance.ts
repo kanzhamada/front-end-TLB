@@ -22,35 +22,96 @@ export type Expense = {
 	date: string;
 	description: string;
 	nominal: number;
+	category?: string;
+};
+
+export type RevenueBreakdown = {
+	total: number;
+	online: {
+		total: number;
+		downPayment: number;
+		settlement: number;
+	};
+	offline: {
+		total: number;
+		cash: number;
+		qris: number;
+	};
+};
+
+export type ExpenseBreakdown = {
+	total: number;
+};
+
+export type CashFlowPeriodStats = {
+	revenue: RevenueBreakdown;
+	expenses: ExpenseBreakdown;
+	netProfit: number;
+};
+
+// Chart Types
+export type ChartItem = {
+	label: string;
+	revenue: number;
+	expenses: number;
 };
 
 export type CashFlowStats = {
-	daily: {
-		offline_income: number;
-		online_income: number;
-		expenses: number;
-		cash_flow: number;
+	daily: CashFlowPeriodStats;
+	weekly: CashFlowPeriodStats;
+	monthly: CashFlowPeriodStats;
+	charts: {
+		weekly: ChartItem[];
+		monthly: ChartItem[];
+		yearly: ChartItem[];
 	};
-	weekly: {
-		offline_income: number;
-		online_income: number;
-		expenses: number;
-		cash_flow: number;
-	};
-	monthly: {
-		offline_income: number;
-		online_income: number;
-		expenses: number;
-		cash_flow: number;
-	};
+};
+
+// Unified Income History
+export type UnifiedIncomeItem = {
+	id: string;
+	date: string;
+	source: 'Online' | 'Offline';
+	type: string;
+	amount: number;
+	description: string;
+};
+
+// ... existing offline income functions ...
+
+export const getUnifiedIncome = async (
+	fetch: typeof window.fetch,
+	token: string,
+	startDate?: string,
+	endDate?: string
+): Promise<ApiResponse<UnifiedIncomeItem[]>> => {
+	let path = '/admin/income';
+	const params = new URLSearchParams();
+	if (startDate) params.append('startDate', startDate);
+	if (endDate) params.append('endDate', endDate);
+	
+	const queryString = params.toString();
+	if (queryString) path += `?${queryString}`;
+
+	return getFromApi<UnifiedIncomeItem[]>(fetch, path, token);
 };
 
 // Offline Income
 export const getOfflineIncome = async (
 	fetch: typeof window.fetch,
-	token: string
+	token: string,
+	startDate?: string,
+	endDate?: string
 ): Promise<ApiResponse<OfflineIncome[]>> => {
-	return getFromApi<OfflineIncome[]>(fetch, '/admin/offline-income', token);
+	let path = '/admin/offline-income';
+	const params = new URLSearchParams();
+	if (startDate) params.append('startDate', startDate);
+	if (endDate) params.append('endDate', endDate);
+	
+	const queryString = params.toString();
+	if (queryString) path += `?${queryString}`;
+
+	return getFromApi<OfflineIncome[]>(fetch, path, token);
 };
 
 export const createOfflineIncome = async (
@@ -81,9 +142,19 @@ export const deleteOfflineIncome = async (
 // Expenses
 export const getExpenses = async (
 	fetch: typeof window.fetch,
-	token: string
+	token: string,
+	startDate?: string,
+	endDate?: string
 ): Promise<ApiResponse<Expense[]>> => {
-	return getFromApi<Expense[]>(fetch, '/admin/expenses', token);
+	let path = '/admin/expenses';
+	const params = new URLSearchParams();
+	if (startDate) params.append('startDate', startDate);
+	if (endDate) params.append('endDate', endDate);
+	
+	const queryString = params.toString();
+	if (queryString) path += `?${queryString}`;
+
+	return getFromApi<Expense[]>(fetch, path, token);
 };
 
 export const createExpense = async (

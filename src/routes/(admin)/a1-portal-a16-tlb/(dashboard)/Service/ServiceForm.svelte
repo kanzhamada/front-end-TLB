@@ -5,7 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { toast } from 'svelte-sonner';
-	import { X, Loader2, Scissors, Pencil, Trash2, Coins } from 'lucide-svelte';
+	import { X, Loader2, Pencil, Trash2, Coins } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
@@ -150,12 +150,6 @@
 			{#if mode === 'view' && service}
 				<!-- View Mode -->
 				<div class="flex flex-col items-center space-y-6">
-					<div class="relative h-32 w-32 overflow-hidden rounded-full border-2 border-senary/50 shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]">
-						<div class="flex h-full w-full items-center justify-center bg-white/5 text-secondary/30">
-							<Scissors class="h-12 w-12" />
-						</div>
-					</div>
-
 					<div class="text-center">
 						<h3 class="text-2xl font-bold text-secondary">{service.name}</h3>
 						<p class="text-senary text-xl font-medium mt-1">{formatCurrency(service.price)}</p>

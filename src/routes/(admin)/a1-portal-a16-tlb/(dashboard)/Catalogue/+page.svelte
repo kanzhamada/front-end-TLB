@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cn, optimizeImage } from '$lib/utils';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
@@ -214,7 +215,7 @@
 					>
 						<div class="relative aspect-[3/4] overflow-hidden">
 							<img
-								src={`${catalogue.image}?width=400&resize=cover&format=webp`}
+								src={optimizeImage(catalogue.image, 400)}
 								alt={catalogue.name}
 								class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
 								loading="lazy"

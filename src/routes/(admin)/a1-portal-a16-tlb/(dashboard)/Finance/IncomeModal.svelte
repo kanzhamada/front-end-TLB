@@ -20,7 +20,7 @@
 		income?: OfflineIncome | null;
 		token: string;
 		open: boolean;
-		onClose: () => void;
+		onClose?: () => void;
 		onUpdate: () => void;
 	}>();
 
@@ -82,6 +82,11 @@
 		}
 	}
 
+	function handleClose() {
+		if (onClose) onClose();
+		else open = false;
+	}
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!formData.date || !formData.type || !formData.serviceId) {
@@ -100,7 +105,7 @@
 		if (res.success) {
 			toast.success(`Income ${income ? 'updated' : 'recorded'} successfully`);
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || `Failed to ${income ? 'update' : 'record'} income`);
 		}
@@ -124,7 +129,7 @@
 		if (res.success) {
 			toast.success('Record deleted successfully');
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
@@ -137,17 +142,17 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
-		onclick={onClose}
+		onclick={handleClose}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && onClose()}
+		onkeydown={(e) => e.key === 'Escape' && handleClose()}
 	>
 		<div
 			class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			role="document"
 			tabindex="0"
-			onkeydown={(e) => e.key === 'Escape' && onClose()}
+			onkeydown={(e) => e.key === 'Escape' && handleClose()}
 			in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -165,7 +170,7 @@
 					</p>
 				</div>
 				<button
-					onclick={onClose}
+					onclick={handleClose}
 					class="rounded-full p-2 text-secondary/50 transition-colors hover:bg-white/10 hover:text-white"
 				>
 					<X class="h-5 w-5" />
@@ -273,7 +278,7 @@
 							<Button 
 								type="button"
 								variant="outline" 
-								onclick={onClose} 
+								onclick={handleClose} 
 								disabled={loading}
 								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
 							>

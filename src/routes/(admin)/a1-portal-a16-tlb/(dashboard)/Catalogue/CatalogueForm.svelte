@@ -88,9 +88,9 @@
 			const file = input.files[0];
 			
 			// Validation
-			const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+			const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 			if (!validTypes.includes(file.type)) {
-				toast.error('Invalid file type. Please upload JPG or PNG.');
+				toast.error('Invalid file type. Please upload JPG, PNG or WebP.');
 				input.value = ''; // Reset input
 				return;
 			}
@@ -108,7 +108,7 @@
 	}
 
 	function handleCrop(blob: Blob) {
-		const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+		const file = new File([blob], 'cropped-image.webp', { type: 'image/webp' });
 		const newItem: ImageItem = {
 			id: crypto.randomUUID(),
 			file: file,

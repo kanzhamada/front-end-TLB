@@ -194,10 +194,11 @@ All API responses follow this structure:
   "dateTimeId": "datetime-uuid",
   "notes": "Short hair please",
   "voucherId": "voucher-uuid",
-  "redeemCode": "PROMO2023"
+  "redeemCode": "PROMO2023",
+  "paymentMethod": "gopay"
 }
 ```
-*Note: `notes`, `voucherId`, and `redeemCode` are optional. `voucherId` and `redeemCode` are mutually exclusive.*
+*Note: `notes`, `voucherId`, and `redeemCode` are optional. `paymentMethod` is required (e.g., 'gopay', 'bank_transfer', 'qris', 'shopeepay', 'dana').*
 
 **Response Body Success (201)**:
 ```json
@@ -230,6 +231,7 @@ All API responses follow this structure:
   "reservationId": "reservation-uuid"
 }
 ```
+*Note: `paymentMethod` is now retrieved from the reservation details.*
 
 **Response Body Success (200)**:
 ```json
@@ -445,10 +447,9 @@ All API responses follow this structure:
   "success": true,
   "message": "Dashboard info fetched successfully",
   "data": {
-    "general": {
-      "totalReservation": 150,
-      "activeBarbers": 5,
-      "recentReservations": [
+    "operational": {
+      "unread_chat_count": 5,
+      "pending_actions": [
         {
           "reservationID": "uuid",
           "customerName": "John Doe",
@@ -456,45 +457,34 @@ All API responses follow this structure:
           "barberName": "Barber A",
           "date": "2024-01-20",
           "time": "10:00",
-          "status": "pending",
-          "created_at": "2024-01-19T10:00:00Z"
+          "status": "waiting"
         }
       ],
-      "pendingCorrections": [
+      "ongoing_reservations": [
         {
           "reservationID": "uuid",
-          "customerName": "Jane Doe",
-          "status": "requestToReschedule",
-          "date": "2024-01-21",
-          "time": "11:00"
+          "customerName": "John Doe",
+          "serviceName": "Haircut",
+          "barberName": "Barber A",
+          "date": "2024-01-20", // TODAY
+          "time": "10:00",
+          "status": "pending"
         }
       ],
-      "upcomingReservations": [
+      "upcoming_reservations": [
         {
           "reservationID": "uuid",
           "customerName": "Bob Smith",
           "serviceName": "Shave",
-          "date": "2024-01-22",
+          "date": "2024-01-21",
           "time": "09:00"
         }
       ]
     },
-    "revenue": {
-      "totalRevenue": 5000000,
-      "overview": {
-        "weekly": [
-          { "day": "Monday", "revenue": 500000 },
-          { "day": "Tuesday", "revenue": 600000 }
-        ],
-        "monthly": [
-          { "week": "Week 1", "revenue": 2000000 },
-          { "week": "Week 2", "revenue": 2500000 }
-        ],
-        "yearly": [
-          { "month": "January", "revenue": 10000000 },
-          { "month": "February", "revenue": 12000000 }
-        ]
-      }
+    "finance_overview": {
+      "today": { "online": 100000, "offline": 50000, "total": 150000 },
+      "week": { "online": 500000, "offline": 300000, "total": 800000 },
+      "month": { "online": 2000000, "offline": 1500000, "total": 3500000 }
     }
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
@@ -598,6 +588,26 @@ All API responses follow this structure:
     "phoneNumber": "08123456789",
     "active": true
   },
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
+}
+```
+
+### Delete Barber
+**Endpoint**: `DELETE /admin/delete-barber/:id`
+
+**Headers**:
+- `Authorization`: `Bearer <admin_token>`
+
+**Description**:
+Soft deletes a barber by setting their `deleted_at` timestamp. The barber will no longer appear in active lists but historical data is preserved.
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Barber deleted successfully.",
+  "data": null,
   "timestamp": "2024-01-15T10:30:00.000Z",
   "status": 200
 }
@@ -891,6 +901,7 @@ All API responses follow this structure:
 - `hairTypes`: String
 - `faceShapes`: String
 - `skinTones`: String
+- `deletedImageIds`: String (JSON Array of Strings, e.g., `["uuid1", "uuid2"]`)
 
 **Response Body Success (200)**:
 ```json
@@ -1085,9 +1096,11 @@ All API responses follow this structure:
 {
   "date": "2023-10-27",
   "description": "Electricity Bill",
-  "nominal": 500000
+  "nominal": 500000,
+  "category": "Utilities"
 }
 ```
+*Note: `category` is optional, defaults to 'General'.*
 
 **Response Body Success (200)**:
 ```json
@@ -1110,6 +1123,10 @@ All API responses follow this structure:
 **Headers**:
 - `Authorization`: `Bearer <admin_token>`
 
+**Query Parameters**:
+- `startDate` (Optional): "YYYY-MM-DD"
+- `endDate` (Optional): "YYYY-MM-DD"
+
 **Response Body Success (200)**:
 ```json
 {
@@ -1120,7 +1137,8 @@ All API responses follow this structure:
       "id": "expense-uuid",
       "date": "2023-10-27",
       "description": "Electricity Bill",
-      "nominal": 500000
+      "nominal": 500000,
+      "category": "Utilities"
     }
   ],
   "timestamp": "...",
@@ -1140,7 +1158,8 @@ All API responses follow this structure:
 {
   "date": "2023-10-28",
   "description": "Water Bill",
-  "nominal": 200000
+  "nominal": 200000,
+  "category": "Utilities"
 }
 ```
 
@@ -1191,12 +1210,90 @@ All API responses follow this structure:
   "message": "Cash flow stats fetched successfully",
   "data": {
     "daily": {
-      "offline_income": 150000,
-      "online_income": 0,
-      "expenses": 50000,
-      "cash_flow": 100000
+      "revenue": {
+        "total": 150000,
+        "online": {
+           "total": 100000,
+           "downPayment": 50000,
+           "settlement": 50000
+        },
+        "offline": {
+           "total": 50000,
+           "cash": 30000,
+           "qris": 20000
+        }
+      },
+      "expenses": {
+        "total": 50000
+      },
+      "netProfit": 100000
     },
     "weekly": { ... },
+    "monthly": { ... },
+    "charts": {
+      "weekly": [
+        { "label": "Monday", "revenue": 50000, "expenses": 10000 },
+        { "label": "Tuesday", "revenue": 70000, "expenses": 20000 }
+      ],
+      "monthly": [
+        { "label": "Week 1", "revenue": 300000, "expenses": 100000 },
+        { "label": "Week 2", "revenue": 450000, "expenses": 150000 }
+      ],
+      "yearly": [
+        { "label": "January", "revenue": 1500000, "expenses": 500000 },
+        { "label": "February", "revenue": 1800000, "expenses": 600000 }
+      ]
+    }
+  },
+  "timestamp": "...",
+  "status": 200
+}
+```
+
+### Finance: View Unified Income History
+**Endpoint**: `GET /admin/income`
+
+**Headers**:
+- `Authorization`: `Bearer <admin_token>`
+
+**Query Parameters**:
+- `startDate` (Optional): "YYYY-MM-DD"
+- `endDate` (Optional): "YYYY-MM-DD"
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Income history fetched successfully",
+  "data": [
+    {
+      "id": "uuid",
+      "date": "2024-01-20",
+      "source": "Online",
+      "type": "Down Payment",
+      "amount": 50000,
+      "description": "Haircut - John Doe"
+    },
+    {
+      "id": "uuid",
+      "date": "2024-01-19",
+      "source": "Offline",
+      "type": "Tunai",
+      "amount": 100000,
+      "description": "Premium Shave"
+    }
+  ],
+  "timestamp": "...",
+  "status": 200
+}
+```
+
+### Finance: View Offline Income
+**Endpoint**: `GET /admin/offline-income`
+
+**Query Parameters**:
+- `startDate` (Optional): "YYYY-MM-DD"
+- `endDate` (Optional): "YYYY-MM-DD"
     "monthly": { ... }
   },
   "timestamp": "...",
@@ -1550,6 +1647,33 @@ All API responses follow this structure:
     "phone": "08987654321",
     "instagram": "@newbarber",
     "updated_at": "..."
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "status": 200
+}
+```
+
+### Payment Fees: Get Fee Structure
+**Endpoint**: `GET /shared/payment-fees`
+
+**Headers**: None
+
+**Response Body Success (200)**:
+```json
+{
+  "success": true,
+  "message": "Payment fees details",
+  "data": {
+    "bank_transfer": {
+      "type": "fixed",
+      "value": 4000,
+      "label": "Bank Transfer"
+    },
+    "gopay": {
+      "type": "percentage",
+      "value": 0.02,
+      "label": "GoPay"
+    }
   },
   "timestamp": "2024-01-15T10:30:00.000Z",
   "status": 200

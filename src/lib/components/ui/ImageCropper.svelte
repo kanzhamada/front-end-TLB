@@ -107,7 +107,7 @@
 		return new Promise((resolve) => {
 			canvas.toBlob((blob) => {
 				resolve(blob);
-			}, 'image/jpeg', 0.9);
+			}, 'image/webp', 0.85);
 		});
 	}
 </script>

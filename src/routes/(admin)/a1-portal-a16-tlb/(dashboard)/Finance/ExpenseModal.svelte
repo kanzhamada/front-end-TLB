@@ -14,12 +14,13 @@
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
+	import * as Select from '$lib/components/ui/select';
 
 	let { expense = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		expense?: Expense | null;
 		token: string;
 		open: boolean;
-		onClose: () => void;
+		onClose?: () => void;
 		onUpdate: () => void;
 	}>();
 
@@ -32,7 +33,8 @@
 	let formData = $state({
 		date: '',
 		description: '',
-		nominal: 0
+		nominal: 0,
+		category: 'General'
 	});
 
 	// Date handling
@@ -54,7 +56,8 @@
 				formData = {
 					date: expense.date,
 					description: expense.description,
-					nominal: expense.nominal
+					nominal: expense.nominal,
+					category: expense.category || 'General' // Default to General if missing
 				};
 				try {
 					if (expense.date) dateValue = parseDate(expense.date.split('T')[0]);
@@ -71,9 +74,15 @@
 		formData = {
 			date: new Date().toISOString().split('T')[0],
 			description: '',
-			nominal: 0
+			nominal: 0,
+			category: 'General'
 		};
 		dateValue = parseDate(new Date().toISOString().split('T')[0]);
+	}
+
+	function handleClose() {
+		if (onClose) onClose();
+		else open = false;
 	}
 
 	async function handleSubmit(e: Event) {
@@ -94,7 +103,7 @@
 		if (res.success) {
 			toast.success(`Expense ${expense ? 'updated' : 'recorded'} successfully`);
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || `Failed to ${expense ? 'update' : 'record'} expense`);
 		}
@@ -118,7 +127,7 @@
 		if (res.success) {
 			toast.success('Record deleted successfully');
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
@@ -131,17 +140,17 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
-		onclick={onClose}
+		onclick={handleClose}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && onClose()}
+		onkeydown={(e) => e.key === 'Escape' && handleClose()}
 	>
 		<div
 			class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			role="document"
 			tabindex="0"
-			onkeydown={(e) => e.key === 'Escape' && onClose()}
+			onkeydown={(e) => e.key === 'Escape' && handleClose()}
 			in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -159,7 +168,7 @@
 					</p>
 				</div>
 				<button
-					onclick={onClose}
+					onclick={handleClose}
 					class="rounded-full p-2 text-secondary/50 transition-colors hover:bg-white/10 hover:text-white"
 				>
 					<X class="h-5 w-5" />
@@ -193,6 +202,28 @@
 						</Popover.Root>
 					</div>
 
+					<!-- Category -->
+					<div class="space-y-2">
+						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Category</Label>
+						<Select.Root 
+							selected={{ value: formData.category, label: formData.category }}
+							onSelectedChange={(v) => {
+								if (v) formData.category = v.value as string;
+							}}
+						>
+							<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:text-white transition-colors">
+								<Select.Value placeholder="Select category" />
+							</Select.Trigger>
+							<Select.Content class="bg-slate-950 border-white/10 text-secondary">
+								{#each ['Payroll & Staffing', 'Consumables / Supplies', 'Maintenance & Repairs', 'Marketing & Promotion', 'Utilities', 'General', 'Other'] as category}
+									<Select.Item value={category} label={category} class="hover:bg-white/5 cursor-pointer data-[highlighted]:bg-white/5 data-[highlighted]:text-white">
+										{category}
+									</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+					</div>
+
 					<!-- Description -->
 					<div class="space-y-2">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Description</Label>
@@ -223,7 +254,7 @@
 								<Button 
 									type="button"
 									variant="outline" 
-									onclick={onClose} 
+									onclick={handleClose} 
 									disabled={loading}
 									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
 								>
@@ -252,7 +283,7 @@
 							<Button 
 								type="button"
 								variant="outline" 
-								onclick={onClose} 
+								onclick={handleClose} 
 								disabled={loading}
 								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
 							>

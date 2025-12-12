@@ -156,19 +156,9 @@
 			{#if mode === 'view' && barber}
 				<!-- View Mode -->
 				<div class="flex flex-col items-center space-y-6">
-					<div class="relative h-32 w-32 overflow-hidden rounded-full border-2 border-senary/50 shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]">
-						<div class="flex h-full w-full items-center justify-center bg-white/5 text-secondary/30">
-							<User class="h-12 w-12" />
-						</div>
-					</div>
-
 					<div class="text-center">
 						<h3 class="text-2xl font-bold text-secondary">{barber.name}</h3>
 						<p class="text-senary">{barber.experience || 'N/A'} Experience</p>
-						<div class="mt-2 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1">
-							<div class={`mr-2 h-2 w-2 rounded-full ${barber.active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
-							<span class="text-xs font-medium text-secondary/80">{barber.active ? 'Active' : 'Inactive'}</span>
-						</div>
 					</div>
 
 					<div class="w-full space-y-4 rounded-2xl border border-white/5 bg-white/5 p-6">
