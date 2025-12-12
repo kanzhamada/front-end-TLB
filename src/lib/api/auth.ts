@@ -15,6 +15,7 @@ type AuthResponse = {
 type LoginPayload = {
 	email: string;
 	password: string;
+	recaptchaToken?: string;
 };
 
 type RegisterPayload = {
@@ -75,11 +76,25 @@ async function request<T>(path: string, payload?: unknown, token?: string): Prom
 	}
 }
 
+
+
 export const login = (payload: LoginPayload) => request<AuthResponse>('/auth/login', payload);
 
 export const register = (payload: RegisterPayload) =>
 	request<AuthResponse>('/auth/register', payload);
 
-export const logout = (token: string) => request<AuthResponse>('/auth/logout', null, token);
+export const forgotPassword = (payload: { email: string, isAdmin?: boolean }) =>
+	request<AuthResponse>('/auth/forgot-password', payload);
+
+export const updatePassword = (payload: {
+	access_token: string;
+	refresh_token: string;
+	expires_in: string;
+	expires_at: string;
+	token_type: string;
+	type: string;
+	newPassword: string;
+	recaptchaToken?: string;
+}) => request<AuthResponse>('/auth/update-password', payload);
 
 export type { LoginPayload, RegisterPayload, AuthResponse };

@@ -145,7 +145,12 @@
 </script>
 
 <Tooltip.Provider>
-	<Sidebar.Root bind:ref {collapsible} {...restProps} class="border-r border-white/10 bg-slate-950/50 backdrop-blur-md">
+	<Sidebar.Root
+		bind:ref
+		{collapsible}
+		{...restProps}
+		class="border-r border-white/10 bg-slate-950/50 backdrop-blur-md"
+	>
 		<Sidebar.Header class="border-b border-white/10 bg-transparent">
 			<img src="/three_lights_barbershop_logo.svg" alt="Three Lights Barbershop" class="p-4" />
 		</Sidebar.Header>
@@ -173,8 +178,7 @@
 													<span
 														class="absolute inline-flex h-full w-full animate-ping rounded-full bg-senary opacity-75"
 													></span>
-													<span class="relative inline-flex h-3 w-3 rounded-full bg-senary"
-													></span>
+													<span class="relative inline-flex h-3 w-3 rounded-full bg-senary"></span>
 												</span>
 												<span
 													class="absolute -top-0.5 -right-0.5 flex items-center justify-center text-[0.6rem] font-bold text-primary"
@@ -194,17 +198,16 @@
 		<Sidebar.Footer class="border-t border-white/10 bg-transparent">
 			<Sidebar.Menu class="px-2 pb-4">
 				<Sidebar.MenuItem>
-					<!-- Replaced form with client-side handler -->
-					<div class="w-full">
+					<form action="?/logout" method="POST" class="w-full">
 						<Sidebar.MenuButton
-							onclick={handleLogout}
+							type="submit"
 							tooltipContent="Sign out of your account"
 							class="w-full justify-start rounded-xl px-4 py-3 text-red-400/80 transition-all duration-300 hover:bg-red-500/10 hover:pl-6 hover:text-red-400"
 						>
 							<LogoutIcon class="h-5 w-5" />
 							<span class="ml-3 text-base font-light">Logout</span>
 						</Sidebar.MenuButton>
-					</div>
+					</form>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
 			<div class="items-left flex justify-center space-x-2 p-4 text-xs text-secondary/50">

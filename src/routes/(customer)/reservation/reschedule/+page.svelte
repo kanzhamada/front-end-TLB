@@ -7,6 +7,7 @@
 	import { getReservationDetails, type ReservationResponse } from '$lib/api/customer/reservation';
 	import { Button } from '$lib/components/ui/button';
 	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { ChevronLeft } from 'lucide-svelte';
 	import {
 		Calendar,
 		Clock,
@@ -35,7 +36,7 @@
 
 		const token = get(authStore).session?.access_token;
 		if (!token) {
-			console.error('User not authenticated, redirecting to login');
+			console.error('Pengguna tidak terautentikasi, mengalihkan ke halaman login');
 			goto('/auth/login');
 			return;
 		}
@@ -43,14 +44,13 @@
 		try {
 			const response = await getReservationDetails(reservationId, token);
 			if (!response.success || !response.data || response.data.length === 0) {
-				throw new Error(response.message || 'Failed to load reservation details');
+				throw new Error(response.message || 'Gagal memuat detail reservasi');
 			}
 
 			reservation = response.data[0];
 		} catch (err) {
 			console.error('Error loading reservation details:', err);
-			error =
-				err instanceof Error ? err.message : 'An error occurred while loading reservation details';
+			error = err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat detail reservasi';
 		} finally {
 			loading = false;
 		}
@@ -64,23 +64,23 @@
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Waiting';
+				return 'Menunggu';
 			case 'onGoing':
-				return 'On Going';
+				return 'Sedang Berjalan';
 			case 'waitingForPayment':
-				return 'Waiting Payment';
+				return 'Menunggu Pembayaran';
 			case 'completed':
-				return 'Completed';
+				return 'Selesai';
 			case 'canceledByUser':
-				return 'Canceled by User';
+				return 'Dibatalkan Pengguna';
 			case 'canceledByAdmin':
-				return 'Canceled by Admin';
+				return 'Dibatalkan Admin';
 			case 'declined':
-				return 'Declined';
+				return 'Ditolak';
 			case 'expired':
-				return 'Expired';
+				return 'Kedaluwarsa';
 			case 'requestToReschedule':
-				return 'Reschedule Request';
+				return 'Permintaan Jadwal Ulang';
 			default:
 				return status;
 		}
@@ -108,6 +108,10 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>Jadwal Ulang Reservasi | Three Lights Barbershop</title>
+</svelte:head>
 
 <div class="relative container mx-auto my-20 min-h-screen p-4 md:p-8">
 	{#if loading}
@@ -140,11 +144,19 @@
 	{:else if error}
 		<div class="space-y-6">
 			<div class="flex items-center gap-4">
+				<Button
+					variant="ghost"
+					size="icon"
+					class="rounded-lg bg-senary/10 p-2 text-secondary hover:bg-white/10 hover:text-senary"
+					onclick={() => goto('/profile/reservation')}
+				>
+					<ChevronLeft class="size-6" />
+				</Button>
 				<div class="rounded-xl border border-white/10 bg-white/5 p-3">
 					<RotateCcw class="size-8 text-senary" />
 				</div>
 				<div>
-					<h1 class="text-2xl font-bold text-secondary">Reschedule Reservasi</h1>
+					<h1 class="text-2xl font-bold text-secondary">Jadwal Ulang Reservasi</h1>
 					<p class="text-secondary/60">Ubah tanggal dan waktu reservasi Anda</p>
 				</div>
 			</div>
@@ -166,11 +178,19 @@
 	{:else if reservation}
 		<div class="space-y-8" in:fade>
 			<div class="flex items-center gap-4">
+				<Button
+					variant="ghost"
+					size="icon"
+					class="rounded-lg bg-senary/10 p-2 text-secondary hover:bg-white/10 hover:text-senary"
+					onclick={() => goto('/profile/reservation')}
+				>
+					<ChevronLeft class="size-6" />
+				</Button>
 				<div class="rounded-xl border border-white/10 bg-white/5 p-3">
 					<RotateCcw class="size-8 text-senary" />
 				</div>
 				<div>
-					<h1 class="text-2xl font-bold text-secondary">Reschedule Reservasi</h1>
+					<h1 class="text-2xl font-bold text-secondary">Jadwal Ulang Reservasi</h1>
 					<p class="text-secondary/60">Ubah tanggal dan waktu reservasi Anda</p>
 				</div>
 			</div>
@@ -246,7 +266,7 @@
 					<div class="mt-8 flex justify-end">
 						<ReservationSheet
 							triggerClass="bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:bg-senary/90"
-							triggerText="Reschedule Reservasi"
+							triggerText="Jadwal Ulang Reservasi"
 							reservationToReschedule={reservation}
 							on:reservationCompleted={handleRescheduleCompleted}
 						/>

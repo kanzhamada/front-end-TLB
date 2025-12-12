@@ -7,11 +7,13 @@ export const chatInbox: Writable<ChatInboxItem[]> = writable([]);
 
 // Function to update unread count
 export function updateUnreadCount(count: number) {
+	console.log('[Store] updateUnreadCount:', count);
 	unreadChatCount.set(count);
 }
 
 // Function to update chat inbox
 export function updateChatInbox(inbox: ChatInboxItem[]) {
+	console.log('[Store] updateChatInbox:', inbox.length, 'items');
 	chatInbox.set(inbox);
 }
 

@@ -73,6 +73,29 @@ export type Schedule = {
 	created_at: string;
 	updated_at: string;
 };
+
+export type CompanySettings = {
+	id: string;
+	phone: string;
+	vision: string;
+	mission: string;
+	location: string;
+	admin_fee: number;
+	instagram: string;
+	maps_link: string;
+	updated_at: string;
+	countdown_payment: number;
+};
+
+export type PaymentFee = {
+	type: 'fixed' | 'percentage';
+	value: number;
+	label: string;
+};
+
+export type PaymentFees = {
+	[key: string]: PaymentFee;
+};
 // --- End Type Definitions ---
 
 // --- Helper Functions ---
@@ -216,7 +239,7 @@ async function sendToApi<T>(
 		}
 
 		const response = await fetch(`${API_URL}${path}`, options);
-		
+
 		console.log(`[API Response] ${method} ${path}`, {
 			status: response.status,
 			statusText: response.statusText,
@@ -526,6 +549,44 @@ export const getCatalogueById = async (
 			...result,
 			data: undefined
 		} as ApiResponse<Catalogue>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
+	};
+};
+
+export const getCompanySettings = async (
+	fetch: typeof window.fetch
+): Promise<ApiResponse<CompanySettings>> => {
+	const result = await getFromApi<CompanySettings>(fetch, '/shared/settings');
+
+	if (!result.success || !result.data) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<CompanySettings>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
+	};
+};
+
+export const getPaymentFees = async (
+	fetch: typeof window.fetch
+): Promise<ApiResponse<PaymentFees>> => {
+	const result = await getFromApi<PaymentFees>(fetch, '/shared/payment-fees');
+
+	if (!result.success || !result.data) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<PaymentFees>;
 	}
 
 	return {

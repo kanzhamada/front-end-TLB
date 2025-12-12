@@ -14,7 +14,7 @@
 	import { authStore } from '$lib/stores/auth';
 	import { getCoinHistory, type CoinHistoryItem } from '$lib/api/customer/profile';
 	import type { UserProfile } from '$lib/stores/auth';
-	import { Coins, TrendingUp, TrendingDown, Sparkles } from 'lucide-svelte';
+	import { Coins, TrendingUp, TrendingDown, Sparkles, RefreshCw } from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { getProfile } from '$lib/api/customer/profile';
@@ -109,14 +109,18 @@
 
 			// Map the API response to the expected format
 			coinTransactions =
-				response.data?.map((item, index) => ({
-					id: `${index + 1}`,
-					date: item.created_at,
-					description: item.title || item.name,
-					amount: item.price || 0,
-					balanceAfter: 0, // The API doesn't provide balance after, we could calculate it if needed
-					type: item.price > 0 ? 'earned' : 'spent'
-				})) || [];
+				response.data?.map((item, index) => {
+					const isIncome = item.type === 'income';
+					return {
+						id: `${index + 1}`,
+						date: item.created_at,
+						description: item.title || item.name,
+						// Income (earned) is negative in the current UI logic (green color for < 0)
+						amount: isIncome ? -(item.attainable_coin || 0) : item.price || 0,
+						balanceAfter: 0,
+						type: isIncome ? 'earned' : 'spent'
+					};
+				}) || [];
 
 			user = get(authStore).session?.user || null;
 		} catch (err) {
@@ -130,7 +134,15 @@
 	onMount(async () => {
 		await loadProfile();
 	});
+
+	$effect(() => {
+		console.log('coinTransactions:', paginatedTransactions);
+	});
 </script>
+
+<svelte:head>
+	<title>Profile - Coin History | Three Lights Barbershop</title>
+</svelte:head>
 
 {#if loading}
 	<div class="space-y-8" in:fade>
@@ -203,15 +215,32 @@
 {:else}
 	<div class="space-y-8" in:fade>
 		<!-- Header -->
-		<div class="flex items-center gap-4">
-			<div
-				class="rounded-xl border border-senary/20 bg-senary/10 p-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-			>
-				<Coins class="size-8 text-senary" />
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div class="flex items-center gap-4">
+				<div
+					class="rounded-xl border border-senary/20 bg-senary/10 p-3 shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+				>
+					<Coins class="size-8 text-senary" />
+				</div>
+				<div>
+					<h2 class="text-2xl font-bold text-secondary">Riwayat Koin</h2>
+					<p class="text-secondary/60">Kelola dan lacak aktivitas koin Anda</p>
+				</div>
 			</div>
-			<div>
-				<h2 class="text-2xl font-bold text-secondary">Coin History</h2>
-				<p class="text-secondary/60">Manage and track your coin activity</p>
+			<div class="flex flex-col items-end gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+						onclick={() => window.location.reload()}
+					disabled={loading}
+				>
+					<RefreshCw class="mr-2 size-4 {loading ? 'animate-spin' : ''}" />
+					Refresh
+				</Button>
+				<p class="text-xs text-secondary/40">
+					Klik refresh jika data belum diperbarui
+				</p>
 			</div>
 		</div>
 
@@ -222,7 +251,7 @@
 			>
 				<div class="relative z-10 text-center">
 					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
-						Current Balance
+						Saldo Saat Ini
 					</p>
 					<p
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-senary drop-shadow-lg"
@@ -240,7 +269,9 @@
 				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-green-500/30 hover:bg-white/10"
 			>
 				<div class="relative z-10 text-center">
-					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">Total Earned</p>
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
+						Total Didapat
+					</p>
 					<p
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-green-400 drop-shadow-lg"
 					>
@@ -259,7 +290,9 @@
 				class="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-red-500/30 hover:bg-white/10"
 			>
 				<div class="relative z-10 text-center">
-					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">Total Spent</p>
+					<p class="text-sm font-medium tracking-wider text-secondary/60 uppercase">
+						Total Dibelanjakan
+					</p>
 					<p
 						class="mt-2 flex items-center justify-center gap-2 text-3xl font-bold text-red-400 drop-shadow-lg"
 					>
@@ -281,7 +314,7 @@
 					: 'text-secondary/60 hover:text-secondary'}"
 				onclick={() => (activeTab = 'all')}
 			>
-				All Transactions
+				Semua Transaksi
 				{#if activeTab === 'all'}
 					<div
 						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
@@ -295,7 +328,7 @@
 					: 'text-secondary/60 hover:text-secondary'}"
 				onclick={() => (activeTab = 'earned')}
 			>
-				Earned
+				Didapat
 				{#if activeTab === 'earned'}
 					<div
 						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
@@ -309,7 +342,7 @@
 					: 'text-secondary/60 hover:text-secondary'}"
 				onclick={() => (activeTab = 'spent')}
 			>
-				Spent
+				Dibelanjakan
 				{#if activeTab === 'spent'}
 					<div
 						class="absolute bottom-0 left-0 h-0.5 w-full bg-senary shadow-[0_0_10px_rgba(212,175,55,0.5)]"
@@ -343,7 +376,20 @@
 								{transaction.description}
 							</p>
 							<p class="text-sm text-secondary/50">
-								{new Date(transaction.date).toLocaleString()}
+								{(() => {
+									const date = new Date(transaction.date);
+									date.setHours(date.getHours());
+									return date
+										.toLocaleString('id-ID', {
+											year: 'numeric',
+											month: 'numeric',
+											day: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit',
+											timeZone: 'Asia/Jakarta'
+										})
+										.replace(/\//g, '-');
+								})()} WIB
 							</p>
 						</div>
 					</div>
@@ -351,7 +397,7 @@
 						<p
 							class="text-lg font-bold {transaction.amount < 0 ? 'text-green-400' : 'text-red-400'}"
 						>
-							{transaction.amount < 0 ? '+' : '-'}{transaction.amount}
+							{transaction.amount < 0 ? '+' : '-'}{Math.abs(transaction.amount)}
 						</p>
 						<!-- <p class="text-sm text-secondary/50">Balance: {transaction.balanceAfter}</p> -->
 					</div>
@@ -363,7 +409,7 @@
 					<div class="mb-4 rounded-full bg-white/5 p-4">
 						<Coins class="size-8 opacity-50" />
 					</div>
-					<p>No transactions found</p>
+					<p>Tidak ada transaksi ditemukan</p>
 				</div>
 			{/if}
 		</div>

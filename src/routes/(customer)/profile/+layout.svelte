@@ -30,6 +30,7 @@
 	let showEditModal = $state(false);
 	let showChangePasswordModal = $state(false);
 	let profileData = $state<ProfileData | null>(null);
+
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let isUpdating = $state(false);
@@ -77,6 +78,7 @@
 
 			console.debug('Setting profileData to response.data:', response.data);
 			profileData = response.data;
+			console.log('photo profile', profileData?.photoProfile);
 		} catch (err) {
 			console.error('Error loading profile for edit:', err);
 			error = err instanceof Error ? err.message : 'An error occurred while loading profile';
@@ -227,9 +229,13 @@
 					<div class="flex flex-col items-center text-center">
 						<div class="relative">
 							<Avatar class="size-24 border-2 border-senary shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-								<AvatarFallback class="bg-primary text-2xl text-senary">
-									{profileData?.displayName.charAt(0) ?? 'U'}
-								</AvatarFallback>
+								{#if profileData?.photoProfile}
+									<img src={profileData.photoProfile} alt={profileData?.displayName ?? 'User'} />
+								{:else}
+									<AvatarFallback class="bg-primary text-2xl text-senary">
+										{profileData?.displayName?.charAt(0)?.toUpperCase() ?? 'U'}
+									</AvatarFallback>
+								{/if}
 							</Avatar>
 						</div>
 
@@ -240,14 +246,8 @@
 							<p class="truncate text-sm text-secondary/60">{profileData?.email}</p>
 
 							<div class="mt-4 space-y-2 rounded-xl bg-black/20 p-3 text-sm">
-								{#if profileData?.phone}
-									<p class="flex items-center justify-between text-secondary/80">
-										<span class="text-xs tracking-wider text-secondary/50 uppercase">Phone</span>
-										<span>{profileData?.phone}</span>
-									</p>
-								{/if}
 								<p class="flex items-center justify-between">
-									<span class="text-xs tracking-wider text-secondary/50 uppercase">Balance</span>
+									<span class="text-xs tracking-wider text-secondary/50 uppercase">Saldo</span>
 									<span class="flex items-center gap-1 font-bold text-senary">
 										<Wallet class="size-3" />
 										{profileData?.coin ?? 0}
@@ -261,14 +261,14 @@
 									class="w-full border-white/10 bg-transparent text-secondary transition-all hover:border-senary/30 hover:bg-white/5 hover:text-senary"
 									onclick={openEditModal}
 								>
-									Edit Profile
+									Edit Profil
 								</Button>
 								<Button
 									variant="outline"
 									class="w-full border-white/10 bg-transparent text-secondary transition-all hover:border-senary/30 hover:bg-white/5 hover:text-senary"
 									onclick={() => (showChangePasswordModal = true)}
 								>
-									Change Password
+									Ganti Kata Sandi
 								</Button>
 								<Button
 									variant="outline"
@@ -276,7 +276,7 @@
 									onclick={handleLogout}
 								>
 									<LogOut class="mr-2 size-4" />
-									Sign Out
+									Keluar
 								</Button>
 							</div>
 						</div>
@@ -295,7 +295,7 @@
 								: 'border border-transparent text-secondary/70 hover:bg-white/5 hover:text-secondary'}"
 						>
 							<Calendar class="size-5" />
-							<span>Reservations</span>
+							<span>Reservasi</span>
 						</a>
 						<a
 							href="/profile/coin"
@@ -306,7 +306,7 @@
 								: 'border border-transparent text-secondary/70 hover:bg-white/5 hover:text-secondary'}"
 						>
 							<Wallet class="size-5" />
-							<span>Coin History</span>
+							<span>Riwayat Koin</span>
 						</a>
 						<a
 							href="/profile/voucher"
@@ -317,7 +317,7 @@
 								: 'border border-transparent text-secondary/70 hover:bg-white/5 hover:text-secondary'}"
 						>
 							<Ticket class="size-5" />
-							<span>My Vouchers</span>
+							<span>Voucher Saya</span>
 						</a>
 					</nav>
 				</div>
@@ -346,7 +346,7 @@
 				class="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#05120e] p-6 shadow-2xl"
 				in:fly={{ y: 20 }}
 			>
-				<h3 class="mb-6 text-xl font-bold text-secondary">Edit Profile</h3>
+				<h3 class="mb-6 text-xl font-bold text-secondary">Edit Profil</h3>
 
 				{#if loading}
 					<div class="animate-pulse space-y-4">
@@ -359,7 +359,7 @@
 						<div class="space-y-2">
 							<div class="flex items-center gap-2 text-sm text-senary">
 								<User class="size-4" />
-								<label class="font-medium">Full Name</label>
+								<label class="font-medium">Nama Lengkap</label>
 							</div>
 							<input
 								type="text"
@@ -374,7 +374,7 @@
 						<div class="space-y-2">
 							<div class="flex items-center gap-2 text-sm text-senary">
 								<Phone class="size-4" />
-								<label class="font-medium">Phone Number</label>
+								<label class="font-medium">Nomor Telepon</label>
 							</div>
 							<input
 								type="text"
@@ -399,7 +399,7 @@
 							class="text-secondary hover:bg-white/5 hover:text-white"
 							onclick={() => (showEditModal = false)}
 						>
-							Cancel
+							Batal
 						</Button>
 						<Button
 							class="bg-senary text-primary hover:bg-senary/90"
@@ -407,9 +407,9 @@
 							disabled={isUpdating}
 						>
 							{#if isUpdating}
-								Saving...
+								Menyimpan...
 							{:else}
-								Save Changes
+								Simpan Perubahan
 							{/if}
 						</Button>
 					</div>
@@ -429,7 +429,7 @@
 				class="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#05120e] p-6 shadow-2xl"
 				in:fly={{ y: 20 }}
 			>
-				<h3 class="mb-6 text-xl font-bold text-secondary">Change Password</h3>
+				<h3 class="mb-6 text-xl font-bold text-secondary">Ganti Kata Sandi</h3>
 
 				{#if error && showChangePasswordModal}
 					<div class="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-400">
@@ -442,13 +442,13 @@
 					<div class="space-y-2">
 						<div class="flex items-center gap-2 text-sm text-senary">
 							<Lock class="size-4" />
-							<label class="font-medium">Current Password</label>
+							<label class="font-medium">Kata Sandi Saat Ini</label>
 						</div>
 						<div class="relative">
 							<input
 								type={showCurrentPassword ? 'text' : 'password'}
 								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-								placeholder="Enter current password"
+								placeholder="Masukkan kata sandi saat ini"
 								value={currentPassword}
 								oninput={(e) => {
 									const target = e.target as HTMLInputElement;
@@ -471,13 +471,13 @@
 					<div class="space-y-2">
 						<div class="flex items-center gap-2 text-sm text-senary">
 							<Lock class="size-4" />
-							<label class="font-medium">New Password</label>
+							<label class="font-medium">Kata Sandi Baru</label>
 						</div>
 						<div class="relative">
 							<input
 								type={showNewPassword ? 'text' : 'password'}
 								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-								placeholder="Enter new password"
+								placeholder="Masukkan kata sandi baru"
 								value={newPassword}
 								oninput={(e) => {
 									const target = e.target as HTMLInputElement;
@@ -500,13 +500,13 @@
 					<div class="space-y-2">
 						<div class="flex items-center gap-2 text-sm text-senary">
 							<Lock class="size-4" />
-							<label class="font-medium">Confirm New Password</label>
+							<label class="font-medium">Konfirmasi Kata Sandi Baru</label>
 						</div>
 						<div class="relative">
 							<input
 								type={showConfirmPassword ? 'text' : 'password'}
 								class="w-full rounded-lg border border-white/10 bg-black/20 p-3 pr-10 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-1 focus:ring-senary/20 focus:outline-none"
-								placeholder="Confirm new password"
+								placeholder="Konfirmasi kata sandi baru"
 								value={confirmPassword}
 								oninput={(e) => {
 									const target = e.target as HTMLInputElement;
@@ -534,7 +534,7 @@
 						class="text-secondary hover:bg-white/5 hover:text-white"
 						onclick={() => (showChangePasswordModal = false)}
 					>
-						Cancel
+						Batal
 					</Button>
 					<Button
 						class="bg-senary text-primary hover:bg-senary/90"
@@ -542,9 +542,9 @@
 						disabled={isChangingPassword}
 					>
 						{#if isChangingPassword}
-							Saving...
+							Menyimpan...
 						{:else}
-							Change Password
+							Ganti Kata Sandi
 						{/if}
 					</Button>
 				</div>

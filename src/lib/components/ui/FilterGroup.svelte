@@ -2,8 +2,8 @@
 	let { options, selectedFilter, onSelect } = $props();
 </script>
 
-<div class="flex flex-wrap items-center gap-4">
-	<span class="text-xs font-bold tracking-widest text-secondary/80 uppercase">Filter By:</span>
+<div class="flex flex-wrap items-center gap-2">
+	<span class="text-xs font-bold tracking-widest text-secondary/80 uppercase">Filter:</span>
 	{#each options as option}
 		<button
 			onclick={() => onSelect(option.value)}

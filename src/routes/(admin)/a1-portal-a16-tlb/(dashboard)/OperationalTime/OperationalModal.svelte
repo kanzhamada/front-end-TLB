@@ -11,7 +11,6 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { Input } from "$lib/components/ui/input";
-	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { operational = null, token, open = $bindable(false), onClose, onUpdate, initialDate = undefined } = $props<{
 		operational?: OperationalTime | null;
@@ -117,19 +116,12 @@
 		}
 		loading = false;
 	}
-	
-	// Delete Confirmation State
-	let confirmOpen = $state(false);
-	let deleteLoading = $state(false);
 
-	function initiateDelete() {
-		confirmOpen = true;
-	}
-
-	async function confirmDelete() {
+	async function handleDelete() {
 		if (!operational) return;
-		
-		deleteLoading = true;
+		if (!confirm('Are you sure you want to delete this schedule? This action cannot be undone.')) return;
+
+		loading = true;
 		const res = await deleteOperationalTime(fetch, operational.id, token);
 		
 		if (res.success) {
@@ -139,8 +131,7 @@
 		} else {
 			toast.error(res.message || 'Failed to delete schedule');
 		}
-		deleteLoading = false;
-		confirmOpen = false;
+		loading = false;
 	}
 </script>
 
@@ -224,20 +215,9 @@
 									</button>
 								</div>
 							{/each}
-							
-							<button 
-								type="button"
-								onclick={addHour}
-								class="h-[36px] px-3 rounded-lg border border-dashed border-white/20 hover:border-senary/50 hover:bg-senary/10 text-xs text-secondary/50 hover:text-senary flex items-center gap-2 transition-all"
-							>
-								<Plus class="h-4 w-4" />
-								<span>Add Slot</span>
-							</button>
-
 							{#if hours.length === 0}
-								<div class="w-full flex flex-col items-center justify-center py-6 text-secondary/30">
-									<Clock class="h-8 w-8 mb-2 opacity-20" />
-									<span class="text-xs italic">No time slots added. Business is closed.</span>
+								<div class="text-center py-4 text-xs text-secondary/40 border border-dashed border-white/10 rounded-lg">
+									No time slots added
 								</div>
 							{/if}
 						</div>
@@ -249,7 +229,7 @@
 							<Button 
 								type="button"
 								variant="destructive" 
-								onclick={initiateDelete}
+								onclick={handleDelete}
 								disabled={loading}
 								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 h-11 px-6"
 							>
@@ -278,7 +258,7 @@
 								{#if loading}
 									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 								{/if}
-								{operational ? 'Save Changes' : 'Set Override'}
+								{operational ? 'Save Changes' : 'Create Schedule'}
 							</Button>
 						</div>
 					</div>
@@ -286,16 +266,6 @@
 			</div>
 		</div>
 	</div>
-
-	<AdminConfirmDialog 
-		bind:open={confirmOpen}
-		title="Remove Override"
-		description="Are you sure you want to remove this date override? The schedule will revert to the standard weekly template."
-		variant="destructive"
-		confirmText="Remove Override"
-		loading={deleteLoading}
-		onConfirm={confirmDelete}
-	/>
 {/if}
 
 

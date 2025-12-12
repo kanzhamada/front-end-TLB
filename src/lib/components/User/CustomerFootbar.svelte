@@ -2,11 +2,15 @@
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import Instagram from '@lucide/svelte/icons/instagram';
 	import Phone from '@lucide/svelte/icons/phone';
+
+	export let companySettings;
 </script>
 
-<footer class="border-t border-white/10 bg-primary/40 py-16 text-secondary/80 backdrop-blur-md">
-	<div class="container mx-auto px-4">
-		<div class="mb-12 grid grid-cols-1 gap-12 md:grid-cols-3">
+<footer
+	class="border-t border-white/10 bg-primary/40 py-12 text-secondary/80 backdrop-blur-md md:py-16"
+>
+	<div class="mx-auto max-w-6xl px-6 md:px-4">
+		<div class="mb-12 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
 			<div>
 				<img src="/three_lights_barbershop_logo.svg" alt="" />
 			</div>
@@ -31,22 +35,31 @@
 			<div>
 				<h4 class="mb-6 font-bold text-secondary">Kontak Kami</h4>
 				<div class="mb-6 flex items-center gap-4">
-					<a href="https://www.instagram.com/threelightsbarbershop/" target="_blank">
-						<Instagram class="h-6 w-6 text-senary" />
-					</a>
-					<a href="https://wa.me/6287855014355" target="_blank">
-						<Phone class="h-6 w-6 text-senary" />
-					</a>
+					{#if companySettings?.instagram}
+						<a
+							href="https://www.instagram.com/{companySettings.instagram}/"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<Instagram class="h-6 w-6 text-senary" />
+						</a>
+					{/if}
+					{#if companySettings?.phone}
+						<a
+							href="https://wa.me/{companySettings.phone}"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<Phone class="h-6 w-6 text-senary" />
+						</a>
+					{/if}
 				</div>
 				<div class="space-y-4">
 					<div>
 						<h5 class="mb-2 font-semibold text-secondary">Lokasi</h5>
 						<p class="flex items-start gap-3 text-sm">
 							<MapPin class="mt-1 h-4 w-4 flex-shrink-0 text-senary" />
-							<span
-								>Jl. Terusan Sudimoro, Gembrung, Mojolangu, Kec. Lowokwaru, Kota Malang, Jawa Timur
-								65142</span
-							>
+							<span>{companySettings?.location || 'Lokasi belum tersedia'}</span>
 						</p>
 					</div>
 				</div>

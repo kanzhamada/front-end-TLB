@@ -41,6 +41,10 @@
 		onRedeemApply: (code: string, discount: number) => void;
 	}>();
 
+	$effect(() => {
+		console.log('availableVouchers', availableVouchers);
+	});
+
 	let redeemCodeInput = $state('');
 	let redeemLoading = $state(false);
 
@@ -49,7 +53,7 @@
 
 		const token = get(authStore).session?.access_token;
 		if (!token) {
-			toast.error('Please login to redeem code');
+			toast.error('Silakan login untuk menukarkan kode');
 			return;
 		}
 
@@ -78,11 +82,11 @@
 				redeemCodeInput = '';
 			} else {
 				console.log(data);
-				toast.warning(data.error || data.message || 'Invalid redeem code');
+				toast.warning(data.error || data.message || 'Kode penukaran tidak valid');
 			}
 		} catch (error) {
 			console.error('Error redeeming code:', error);
-			toast.error('Failed to validate redeem code');
+			toast.error('Gagal memvalidasi kode penukaran');
 		} finally {
 			redeemLoading = false;
 		}
@@ -92,7 +96,7 @@
 
 	function formatDate(dateString: string | undefined) {
 		if (!dateString) return '-';
-		return new Date(dateString).toLocaleDateString('en-US', {
+		return new Date(dateString).toLocaleDateString('id-ID', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric'
@@ -107,9 +111,9 @@
 	>
 		<div class="mb-6 flex items-center justify-between border-b border-white/5 p-6">
 			<div>
-				<SheetTitle class="mb-6 text-2xl font-bold text-secondary">Select Voucher</SheetTitle>
+				<SheetTitle class="mb-6 text-2xl font-bold text-secondary">Pilih Voucher</SheetTitle>
 				<SheetDescription class="text-sm text-secondary/60">
-					Choose a voucher or buy a new one
+					Pilih voucher atau beli yang baru
 				</SheetDescription>
 			</div>
 			<div class="flex items-center gap-4">
@@ -117,7 +121,7 @@
 					class="flex items-center gap-2 rounded-full border border-senary/20 bg-senary/10 px-4 py-2"
 				>
 					<Coins class="h-4 w-4 text-senary" />
-					<span class="font-bold text-senary">{userCoins} Coins</span>
+					<span class="font-bold text-senary">{userCoins} Koin</span>
 				</div>
 			</div>
 		</div>
@@ -126,7 +130,7 @@
 		<div class="px-6 pb-4">
 			<div class="flex gap-2">
 				<Input
-					placeholder="Enter redeem code"
+					placeholder="Masukkan kode penukaran"
 					bind:value={redeemCodeInput}
 					class="border-white/10 bg-white/5 text-secondary placeholder:text-secondary/40 focus-visible:ring-senary"
 				/>
@@ -138,7 +142,7 @@
 					{#if redeemLoading}
 						<Loader2 class="h-4 w-4 animate-spin" />
 					{:else}
-						Apply
+						Gunakan
 					{/if}
 				</Button>
 			</div>
@@ -165,7 +169,7 @@
 				)}
 				onclick={() => (activeTab = 'available')}
 			>
-				Available to Buy
+				Tersedia untuk Dibeli
 				{#if activeTab === 'available'}
 					<div class="absolute bottom-0 left-0 h-0.5 w-full bg-senary"></div>
 				{/if}
@@ -190,8 +194,8 @@
 							<X class="h-6 w-6 text-secondary" />
 						</div>
 						<div>
-							<h3 class="font-bold text-secondary">Don't use voucher</h3>
-							<p class="text-sm text-secondary/60">Proceed without discount</p>
+							<h3 class="font-bold text-secondary">Jangan gunakan voucher</h3>
+							<p class="text-sm text-secondary/60">Lanjutkan tanpa diskon</p>
 						</div>
 					</button>
 
@@ -228,7 +232,7 @@
 										</span>
 									{:else if voucher.discountPercentage}
 										<span class="rounded-full bg-senary/20 px-2 py-1 text-xs font-bold text-senary">
-											{voucher.discountPercentage}% OFF
+											Diskon {voucher.discountPercentage}%
 										</span>
 									{/if}
 									{#if voucher.count > 1}
@@ -247,11 +251,11 @@
 									{voucher.title ?? voucher.name}
 								</h3>
 								<p class="text-xs font-medium text-senary/80">
-									{voucher.serviceName ?? 'All Services'}
+									{voucher.serviceName ?? 'Semua Layanan'}
 								</p>
 								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
 								<p class="pt-2 text-xs text-secondary/40">
-									Expires: {formatDate(
+									Berlaku sampai: {formatDate(
 										voucher.expireDate ?? voucher.expiredAt ?? voucher.expiredDate
 									)}
 								</p>
@@ -262,12 +266,12 @@
 
 				{#if ownedVouchers.length === 0}
 					<div class="mt-8 text-center">
-						<p class="text-secondary/50">You don't have any vouchers yet.</p>
+						<p class="text-secondary/50">Anda belum memiliki voucher.</p>
 						<button
 							class="mt-2 text-senary hover:underline"
 							onclick={() => (activeTab = 'available')}
 						>
-							Browse available vouchers
+							Lihat voucher yang tersedia
 						</button>
 					</div>
 				{/if}
@@ -295,11 +299,11 @@
 							<div class="mb-4 space-y-1">
 								<h3 class="line-clamp-1 font-bold text-secondary">{voucher.title}</h3>
 								<p class="text-xs font-medium text-senary/80">
-									{voucher.serviceName ?? 'All Services'}
+									{voucher.serviceName ?? 'Semua Layanan'}
 								</p>
 								<p class="line-clamp-2 text-sm text-secondary/60">{voucher.description}</p>
 								<p class="pt-2 text-xs text-secondary/40">
-									Valid until: {formatDate(voucher.expireDate)}
+									Berlaku sampai: {formatDate(voucher.expireDate)}
 								</p>
 							</div>
 
@@ -309,7 +313,7 @@
 								disabled={userCoins < voucher.price}
 							>
 								{#if userCoins < voucher.price}
-									Coin tidak cukup
+									Koin tidak cukup
 								{:else}
 									Beli <Coins class="h-3 w-3" /> {voucher.price}
 								{/if}
@@ -320,7 +324,7 @@
 
 				{#if availableVouchers.length === 0}
 					<div class="mt-8 text-center text-secondary/50">
-						No vouchers available for purchase at the moment.
+						Tidak ada voucher yang tersedia untuk dibeli saat ini.
 					</div>
 				{/if}
 			{/if}

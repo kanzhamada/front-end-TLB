@@ -43,14 +43,14 @@
 		sending = true;
 
 		const result = await sendMessage(fetch, session.chatID, newMessage, token);
-		
+
 		if (result.success) {
 			const sentMsg: MessageDetail = {
 				sender: adminId, // Use the actual admin ID
 				content: newMessage, // Optimistic update
 				created_at: new Date().toISOString()
 			};
-			
+
 			onMessageSent(sentMsg);
 			newMessage = '';
 		} else {
@@ -69,7 +69,8 @@
 	// Helper to format date for separator
 	function formatDate(dateString: string) {
 		const date = new Date(dateString);
-		return date.toLocaleDateString('en-GB', { // DD/MM/YYYY format
+		return date.toLocaleDateString('en-GB', {
+			// DD/MM/YYYY format
 			day: 'numeric',
 			month: 'numeric',
 			year: 'numeric'
@@ -91,7 +92,7 @@
 		let currentDate = '';
 		let currentGroup: MessageDetail[] = [];
 
-		messages.forEach(msg => {
+		messages.forEach((msg) => {
 			const msgDate = formatDate(msg.created_at);
 			if (msgDate !== currentDate) {
 				if (currentGroup.length > 0) {
@@ -121,7 +122,7 @@
 		>
 			<ArrowLeft class="h-5 w-5" />
 		</Button>
-		
+
 		<AvatarPrimitive.Root class="h-10 w-10 rounded-full border border-white/10">
 			<AvatarPrimitive.Image
 				src={session.customerPhoto}
@@ -134,12 +135,9 @@
 				{(session.customerName || '?').charAt(0)}
 			</AvatarPrimitive.Fallback>
 		</AvatarPrimitive.Root>
-		
+
 		<div>
 			<h2 class="text-lg font-bold text-secondary">{session.customerName || 'Unknown Customer'}</h2>
-			{#if session.customerPhone}
-				<p class="text-xs text-senary/70 font-medium">{session.customerPhone}</p>
-			{/if}
 		</div>
 	</div>
 
@@ -148,7 +146,9 @@
 		{#each groupedMessages as group}
 			<!-- Date Separator -->
 			<div class="flex justify-center my-4">
-				<span class="px-3 py-1 rounded-full bg-white/5 text-[10px] font-medium text-secondary/50 border border-white/5">
+				<span
+					class="px-3 py-1 rounded-full bg-white/5 text-[10px] font-medium text-secondary/50 border border-white/5"
+				>
 					{group.date}
 				</span>
 			</div>
@@ -160,7 +160,7 @@
 					Otherwise -> Left (Customer).
 				-->
 				{@const isAdmin = message.sender === adminId || message.sender === 'admin'}
-				
+
 				<div class={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
 					<div
 						class={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-sm break-all whitespace-pre-wrap ${

@@ -76,7 +76,7 @@
 								{:else if voucher.price}
 									{voucher.price}% OFF
 								{:else}
-									SPECIAL OFFER
+									PENAWARAN SPESIAL
 								{/if}
 							</span>
 						</div>
@@ -89,22 +89,22 @@
 						<!-- Details -->
 						<div class="mb-8 space-y-3 rounded-xl border border-white/5 bg-white/5 p-4">
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-secondary/50">Valid Until</span>
+								<span class="text-secondary/50">Berlaku Sampai</span>
 								<span class="font-medium text-secondary">{formatDate(voucher.expireDate)}</span>
 							</div>
 							<div class="h-px bg-white/5"></div>
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-secondary/50">Price</span>
+								<span class="text-secondary/50">Harga</span>
 								<div class="flex items-center gap-1.5 font-bold text-senary">
 									<Coins class="h-4 w-4" />
-									<span>{voucher.price} Coins</span>
+									<span>{voucher.price} Koin</span>
 								</div>
 							</div>
 							<!-- Service Name (if available in voucher or passed prop - for now assuming it might be in voucher or we handle it in parent) -->
 							{#if voucher.serviceName}
 								<div class="h-px bg-white/5"></div>
 								<div class="flex items-center justify-between text-sm">
-									<span class="text-secondary/50">Service</span>
+									<span class="text-secondary/50">Layanan</span>
 									<span class="font-medium text-secondary">{voucher.serviceName}</span>
 								</div>
 							{/if}
@@ -117,9 +117,9 @@
 							class="w-full rounded-xl bg-senary py-6 text-sm font-bold tracking-widest text-primary uppercase transition hover:bg-white hover:shadow-lg hover:shadow-senary/20 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#if userCoins < voucher.price}
-								Not enough coins ({userCoins} / {voucher.price})
+								Koin tidak cukup ({userCoins} / {voucher.price})
 							{:else}
-								Buy Voucher
+								Beli Voucher
 							{/if}
 						</Button>
 					</div>

@@ -3,7 +3,6 @@
 	import AdminSidebar from '$lib/components/Admin/AdminSidebar.svelte';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import { onMount } from 'svelte';
-	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 
@@ -88,7 +87,6 @@
 		<div class="relative flex-1 z-10">
 			{@render children?.()}
 		</div>
-		<Toaster richColors position="top-right" theme="dark" class="pointer-events-auto" />
 	</Sidebar.Inset>
 </Sidebar.Provider>
 

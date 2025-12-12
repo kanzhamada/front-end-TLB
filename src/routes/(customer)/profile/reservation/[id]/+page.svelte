@@ -3,6 +3,7 @@
 	import { get } from 'svelte/store';
 	import { authStore } from '$lib/stores/auth';
 	import { getReservationDetails, type ReservationResponse } from '$lib/api/customer/reservation';
+	import { getPaymentFees, getCompanySettings, type PaymentFees } from '$lib/api/shared/api';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
@@ -27,6 +28,9 @@
 	let reservation: ReservationResponse | null = $state(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let paymentFees = $state<PaymentFees | null>(null);
+	let adminFee = $state(0);
+	let paymentMethodFee = $state(0);
 
 	onMount(async () => {
 		await loadReservation();
@@ -46,15 +50,28 @@
 				throw new Error('User not authenticated');
 			}
 
-			const response = await getReservationDetails(params.id, token);
-			if (!response.success) {
-				throw new Error(response.message || 'Failed to load reservation details');
+			const [reservationRes, feesRes, settingsRes] = await Promise.all([
+				getReservationDetails(params.id, token),
+				getPaymentFees(fetch),
+				getCompanySettings(fetch)
+			]);
+
+			if (!reservationRes.success) {
+				throw new Error(reservationRes.message || 'Failed to load reservation details');
 			}
 
-			if (response.data && response.data.length > 0) {
-				reservation = response.data[0];
+			if (reservationRes.data && reservationRes.data.length > 0) {
+				reservation = reservationRes.data[0];
 			} else {
 				throw new Error('Reservation not found');
+			}
+
+			if (feesRes.success && feesRes.data) {
+				paymentFees = feesRes.data;
+			}
+
+			if (settingsRes.success && settingsRes.data) {
+				adminFee = settingsRes.data.admin_fee;
 			}
 		} catch (err) {
 			console.error('Error loading reservation details:', err);
@@ -70,21 +87,21 @@
 			case 'waiting':
 				return 'Waiting';
 			case 'onGoing':
-				return 'On Going';
+				return 'Sedang Berjalan';
 			case 'waitingForPayment':
 				return 'Waiting Payment';
 			case 'completed':
 				return 'Completed';
 			case 'canceledByUser':
-				return 'Canceled by User';
+				return 'Dibatalkan Pengguna';
 			case 'canceledByAdmin':
-				return 'Canceled by Admin';
+				return 'Dibatalkan Admin';
 			case 'declined':
 				return 'Declined';
 			case 'expired':
 				return 'Expired';
 			case 'requestToReschedule':
-				return 'Reschedule Request';
+				return 'Permintaan Jadwal Ulang';
 			default:
 				return status;
 		}
@@ -115,18 +132,35 @@
 	function getFulfillmentStatusText(status: string): string {
 		switch (status) {
 			case 'pendingDownPayment':
-				return 'Pending Down Payment';
+				return 'Menunggu Uang Muka';
 			case 'downPaymentPaid':
-				return 'Down Payment Paid';
+				return 'Uang Muka Dibayar';
 			case 'fullyPaid':
-				return 'Fully Paid';
+				return 'Lunas';
 			case 'refunded':
-				return 'Refunded';
+				return 'Dikembalikan';
 			case 'failed':
-				return 'Failed';
+				return 'Gagal';
 			default:
 				return status;
 		}
+	}
+
+	function getPaymentMethodLabel(method: string): string {
+		const labels: Record<string, string> = {
+			shopeepay: 'ShopeePay',
+			gopay: 'GoPay',
+			dana: 'Dana',
+			qris: 'QRIS',
+			permata_va: 'Permata Virtual Account',
+			bca_va: 'BCA Virtual Account',
+			mandiri_bill: 'Mandiri Bill Payment',
+			bni_va: 'BNI Virtual Account',
+			bri_va: 'BRI Virtual Account',
+			danamon_va: 'Danamon Virtual Account',
+			bank_transfer: 'Bank Transfer'
+		};
+		return labels[method] || method;
 	}
 
 	const currencyFormatter = new Intl.NumberFormat('id-ID', {
@@ -134,7 +168,50 @@
 		currency: 'IDR',
 		maximumFractionDigits: 0
 	});
+	$effect(() => {
+		if (reservation?.payment_method && paymentFees) {
+			let feeConfig;
+			const method = reservation.payment_method;
+			if (['shopeepay', 'gopay', 'dana', 'qris'].includes(method)) {
+				const key = method === 'qris' ? 'qris' : method;
+				feeConfig = paymentFees[key];
+			} else {
+				// Assume bank transfer if not in the list above, or check specifically
+				// The payload for bank transfer is 'bank_transfer' but the response might be specific bank code?
+				// User request says response has "payment_method": "qris".
+				// If it's bank transfer, it might be 'bank_transfer' or specific code.
+				// Based on previous task, we send 'bank_transfer' payload.
+				// So we should check for 'bank_transfer' key.
+				feeConfig = paymentFees['bank_transfer'];
+			}
+
+			if (feeConfig) {
+				if (feeConfig.type === 'fixed') {
+					paymentMethodFee = feeConfig.value;
+				} else if (feeConfig.type === 'percentage') {
+					// We need to calculate based on subtotal (service price - voucher + admin?)
+					// Total = Service + Admin + PaymentFee - Voucher
+					// PaymentFee = (Service + Admin - Voucher) * % ?
+					// Let's approximate or use the logic from ReservationSheet.
+					// In ReservationSheet: baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
+					// Here:
+					const subtotal = reservation.downPayment;
+					const voucher = reservation.voucherValue || 0;
+
+					// Admin fee is added to total.
+					// Let's assume base is (Price - Voucher).
+					const baseAmount = Math.max(subtotal - voucher, 0);
+
+					paymentMethodFee = Math.ceil(baseAmount * feeConfig.value);
+				}
+			}
+		}
+	});
 </script>
+
+<svelte:head>
+	<title>Profile - Reservation Details | Three Lights Barbershop</title>
+</svelte:head>
 
 <div class="space-y-10" in:fade>
 	<!-- Header -->
@@ -148,8 +225,8 @@
 			<ChevronLeft class="size-6" />
 		</Button>
 		<div>
-			<h3 class="text-xl font-bold text-secondary">Reservation Details</h3>
-			<p class="text-secondary/60">View complete information about your appointment</p>
+			<h3 class="text-xl font-bold text-secondary">Detail Reservasi</h3>
+			<p class="text-secondary/60">Lihat informasi lengkap tentang janji temu Anda</p>
 		</div>
 	</div>
 
@@ -180,7 +257,7 @@
 				class="mt-4 border-red-500/30 text-red-400 hover:bg-red-500/10"
 				onclick={reloadReservation}
 			>
-				Try Again
+				Coba Lagi
 			</Button>
 		</div>
 	{:else if reservation}
@@ -193,7 +270,7 @@
 							<Receipt class="size-5 text-senary" />
 						</div>
 						<div>
-							<p class="text-sm text-secondary/60">Invoice ID</p>
+							<p class="text-sm text-secondary/60">ID Tagihan</p>
 							<p class="font-mono text-lg font-bold text-secondary">
 								#{reservation.invoice || reservation.reservationID}
 							</p>
@@ -225,13 +302,13 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<Scissors class="size-5" />
-								Service Information
+								Informasi Layanan
 							</h3>
 							<div class="space-y-4 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-start justify-between gap-4">
 									<div>
 										<p class="font-medium text-secondary">{reservation.service.name}</p>
-										<p class="text-sm text-secondary/60">Professional Hair Service</p>
+										<p class="text-sm text-secondary/60">Layanan Rambut Profesional</p>
 									</div>
 									<p class="font-bold text-senary">
 										{reservation.service.price
@@ -243,7 +320,7 @@
 									<Separator class="bg-white/10" />
 									<div>
 										<p class="mb-1 text-xs font-medium tracking-wider text-secondary/40 uppercase">
-											Notes
+											Catatan
 										</p>
 										<p class="text-sm text-secondary/80">{reservation.notes}</p>
 									</div>
@@ -254,7 +331,7 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<User class="size-5" />
-								Barber Details
+								Detail Barber
 							</h3>
 							<div class="rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-center gap-4">
@@ -265,7 +342,7 @@
 									</div>
 									<div>
 										<p class="font-bold text-secondary">{reservation.barber.name}</p>
-										<p class="text-sm text-secondary/60">Professional Barber</p>
+										<p class="text-sm text-secondary/60">Barber Profesional</p>
 									</div>
 								</div>
 							</div>
@@ -277,16 +354,16 @@
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<Calendar class="size-5" />
-								Schedule
+								Jadwal
 							</h3>
 							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex items-center gap-3">
 									<Calendar class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Date</p>
+										<p class="text-xs text-secondary/40">Tanggal</p>
 										<p class="font-medium text-secondary">{reservation.dateTime.date}</p>
 										{#if reservation.newDateTime?.date}
-											<p class="text-xs text-secondary/40">New Date (Reschedule)</p>
+											<p class="text-xs text-secondary/40">Tanggal Baru (Jadwal Ulang)</p>
 											<p class="font-medium text-secondary">{reservation.newDateTime?.date}</p>
 										{/if}
 									</div>
@@ -295,10 +372,10 @@
 								<div class="flex items-center gap-3">
 									<Clock class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Time</p>
+										<p class="text-xs text-secondary/40">Waktu</p>
 										<p class="font-medium text-secondary">{reservation.dateTime.hour}</p>
 										{#if reservation.newDateTime?.hour}
-											<p class="text-xs text-secondary/40">New Time (Reschedule)</p>
+											<p class="text-xs text-secondary/40">Waktu Baru (Jadwal Ulang)</p>
 											<p class="font-medium text-secondary">{reservation.newDateTime?.hour}</p>
 										{/if}
 									</div>
@@ -307,17 +384,49 @@
 								<div class="flex items-center gap-3">
 									<MapPin class="size-5 text-secondary/60" />
 									<div>
-										<p class="text-xs text-secondary/40">Location</p>
+										<p class="text-xs text-secondary/40">Lokasi</p>
 										<p class="font-medium text-secondary">Three Lights Barbershop</p>
 									</div>
 								</div>
 							</div>
 						</div>
 
+						{#if reservation.payment_method}
+							<div>
+								<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
+									<CreditCard class="size-5" />
+									Metode Pembayaran
+								</h3>
+								<div class="rounded-xl border border-white/5 bg-white/5 p-5">
+									<div class="flex items-center gap-3">
+										<div class="flex size-10 items-center justify-center rounded bg-white/10">
+											{#if ['shopeepay', 'gopay', 'dana', 'qris'].includes(reservation.payment_method)}
+												<img
+													src="/payment-method/{reservation.payment_method === 'qris'
+														? 'qris'
+														: reservation.payment_method}.svg"
+													alt={getPaymentMethodLabel(reservation.payment_method)}
+													class="h-6 w-6 object-contain"
+												/>
+											{:else}
+												<CreditCard class="size-5 text-secondary/60" />
+											{/if}
+										</div>
+										<div>
+											<p class="font-medium text-secondary">
+												{getPaymentMethodLabel(reservation.payment_method)}
+											</p>
+											<p class="text-xs text-secondary/40">Metode yang dipilih</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						{/if}
+
 						<div>
 							<h3 class="mb-4 flex items-center gap-2 text-lg font-semibold text-senary">
 								<CreditCard class="size-5" />
-								Payment Summary
+								Ringkasan Pembayaran
 							</h3>
 							<div class="space-y-3 rounded-xl border border-white/5 bg-white/5 p-5">
 								<div class="flex justify-between text-sm">
@@ -330,7 +439,7 @@
 								</div>
 								{#if reservation.voucherValue}
 									<div class="flex justify-between text-sm text-green-400">
-										<span>Voucher Discount</span>
+										<span>Diskon Voucher</span>
 										<span
 											>- {reservation.voucherValue
 												? currencyFormatter.format(reservation.voucherValue)
@@ -339,15 +448,31 @@
 									</div>
 								{/if}
 								<div class="flex justify-between text-sm text-secondary/70">
-									<span>Admin Fee</span>
-									<span>+ {currencyFormatter.format(5000)}</span>
+									<span>Biaya Admin</span>
+									<span
+										>+ {reservation.voucherValue
+											? currencyFormatter.format(
+													reservation.totalPayment +
+														reservation.voucherValue -
+														reservation.service.price
+												)
+											: currencyFormatter.format(
+													reservation.totalPayment - reservation.service.price
+												)}</span
+									>
 								</div>
+								{#if paymentMethodFee > 0}
+									<div class="flex justify-between text-sm text-secondary/70">
+										<span>Biaya Layanan</span>
+										<span>+ {currencyFormatter.format(paymentMethodFee)}</span>
+									</div>
+								{/if}
 								<Separator class="bg-white/10" />
 								<div class="flex justify-between text-lg font-bold">
 									<span class="text-senary">Total</span>
 									<span class="text-secondary"
 										>{reservation.totalPayment
-											? currencyFormatter.format(reservation.totalPayment)
+											? currencyFormatter.format(reservation.totalPayment + paymentMethodFee)
 											: 'TBD'}</span
 									>
 								</div>
@@ -355,7 +480,7 @@
 									<span class="text-senary">Biaya DP</span>
 									<span class="text-secondary"
 										>{reservation.downPayment
-											? currencyFormatter.format(reservation.downPayment)
+											? currencyFormatter.format(reservation.downPayment + paymentMethodFee)
 											: 'TBD'}</span
 									>
 								</div>

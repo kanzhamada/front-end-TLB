@@ -4,11 +4,20 @@
 	import { authStore } from '$lib/stores/auth';
 	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
 	import {
+		Sheet,
+		SheetContent,
+		SheetHeader,
+		SheetTitle,
+		SheetDescription
+	} from '$lib/components/ui/sheet';
+	import {
 		getReservations,
 		type ReservationResponse,
 		cancelReservation,
 		createTransaction
 	} from '$lib/api/customer/reservation';
+	import { getMessagesByReservation } from '$lib/api/shared/chat';
+	import { supabase } from '$lib/supabase/client';
 	import { goto } from '$app/navigation';
 	import {
 		AlertDialog,
@@ -34,8 +43,15 @@
 		AlertCircle,
 		MessageCircle,
 		Sparkles,
-		History
+		History,
+		RefreshCw
 	} from 'lucide-svelte';
+// ... (keeping existing imports if needed, but replace_file_content works on chunks)
+
+// I will do two edits. One for import, one for the header.
+// Actually I can do it in one go if I use multi_replace_file_content or just separate calls.
+// Let's use multi_replace_file_content for efficiency.
+
 	import CustomerChatModal from '$lib/components/User/Chat/CustomerChatModal.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import Countdown from '$lib/components/User/Reservation/Countdown.svelte';
@@ -45,6 +61,10 @@
 	let reservations: ReservationResponse[] = $state([]);
 	let activeReservations: ReservationResponse[] = $state([]);
 	let historyReservations: ReservationResponse[] = $state([]);
+	let unreadCounts: Record<string, number> = $state({});
+	$effect(() => {
+		console.log('unreadCounts', unreadCounts);
+	});
 	let historyPage = $state(1);
 	let historyItemsPerPage = 5;
 	let paginatedHistoryReservations = $derived(
@@ -74,6 +94,11 @@
 	let reservationToCancel = $state<ReservationResponse | null>(null);
 	let showDownPaymentWarning = $state(false);
 	let processingReservationId = $state<string | null>(null);
+
+	// Payment Sheet State
+	let showPaymentSheet = $state(false);
+	let paymentToken = $state<string | null>(null);
+	let currentReservationForPayment = $state<ReservationResponse | null>(null);
 
 	// Check if user is authenticated before allowing access to this page
 	onMount(async () => {
@@ -105,7 +130,19 @@
 
 			reservations = response.data || [];
 			activeReservations = reservations.filter((res) => activeStatuses.includes(res.status));
-			historyReservations = reservations.filter((res) => historyStatuses.includes(res.status));
+			historyReservations = reservations
+				.filter((res) => historyStatuses.includes(res.status))
+				.sort((a, b) => {
+					const dateA = new Date(a.updated_at || a.created_at).getTime();
+					const dateB = new Date(b.updated_at || b.created_at).getTime();
+					return dateB - dateA;
+				});
+
+			// Fetch unread counts for active reservations
+			await fetchUnreadCounts(activeReservations, token);
+
+			// Cleanup stale Midtrans sessions
+			cleanupMidtransSessions(reservations);
 		} catch (err) {
 			console.error('Error loading reservations:', err);
 			error = err instanceof Error ? err.message : 'An error occurred while loading reservations';
@@ -114,26 +151,114 @@
 		}
 	}
 
+	function cleanupMidtransSessions(currentReservations: ReservationResponse[]) {
+		if (typeof window === 'undefined') return;
+
+		const waitingForPaymentIds = new Set(
+			currentReservations
+				.filter((r) => r.status === 'waitingForPayment')
+				.map((r) => r.reservationID)
+		);
+
+		// Iterate over all localStorage keys
+		for (let i = 0; i < localStorage.length; i++) {
+			const key = localStorage.key(i);
+			if (key && key.startsWith('midtrans_token_')) {
+				const reservationId = key.replace('midtrans_token_', '');
+				
+				// If the reservation is not in waitingForPayment status, remove the token
+				if (!waitingForPaymentIds.has(reservationId)) {
+					console.log(`Removing stale Midtrans token for reservation: ${reservationId}`);
+					localStorage.removeItem(key);
+					// Decrement i because removeItem shifts indices
+					i--;
+				}
+			}
+		}
+	}
+
+	async function fetchUnreadCounts(reservations: ReservationResponse[], token: string) {
+		const currentUserId = await get(authStore).session?.user?.id;
+		console.log('currentUserId', currentUserId);
+		if (!currentUserId) {
+			console.error('Cannot fetch unread counts: User ID is undefined');
+			return;
+		}
+		console.log('Fetching unread counts for user:', currentUserId);
+
+		for (const reservation of reservations) {
+			try {
+				// Try to get chat ID from chats table directly first
+				let chatID: string | null = null;
+
+				const { data: chatData, error: chatError } = await supabase
+					.from('chats')
+					.select('chatID')
+					.eq('reservationID', reservation.reservationID)
+					.single();
+
+				if (!chatError && chatData) {
+					chatID = chatData.chatID;
+				} else {
+					// Fallback to API if direct query fails (e.g. RLS or table structure diff)
+					console.log('Chat ID not found in chats table, trying API for reservation:', reservation.reservationID);
+					const chatResponse = await getMessagesByReservation(reservation.reservationID, token);
+					if (chatResponse.success && chatResponse.data?.chatID) {
+						chatID = chatResponse.data.chatID;
+					}
+				}
+
+				if (chatID) {
+					// Get unread count
+					const { count, error } = await supabase
+						.from('messages')
+						.select('*', { count: 'exact', head: true })
+						.eq('chatID', chatID)
+						.eq('read', false)
+						.neq('sender', currentUserId);
+
+					if (!error) {
+						console.log(`Unread count for reservation ${reservation.reservationID} (chat ${chatID}):`, count);
+						// Use spread to ensure reactivity
+						unreadCounts = {
+							...unreadCounts,
+							[reservation.reservationID]: count || 0
+						};
+					} else {
+						console.error(`Error fetching unread count for chat ${chatID}:`, error);
+					}
+				} else {
+					console.log('No chatID found for reservation:', reservation.reservationID);
+				}
+			} catch (err) {
+				console.error(
+					`Error fetching unread count for reservation ${reservation.reservationID}:`,
+					err
+				);
+			}
+		}
+	}
+
 	function getStatusText(status: string): string {
 		switch (status) {
 			case 'waiting':
-				return 'Waiting';
+				return 'Menunggu';
 			case 'onGoing':
-				return 'On Going';
+				return 'Sedang Berjalan';
 			case 'waitingForPayment':
-				return 'Waiting Payment';
+				return 'Menunggu Pembayaran';
 			case 'completed':
-				return 'Completed';
+				return 'Selesai';
 			case 'canceledByUser':
-				return 'Canceled by User';
+				return 'Dibatalkan Pengguna';
 			case 'canceledByAdmin':
-				return 'Canceled by Admin';
+				return 'Dibatalkan Admin';
 			case 'declined':
-				return 'Declined';
+				return 'Ditolak';
 			case 'expired':
-				return 'Expired';
+				return 'Kedaluwarsa';
 			case 'requestToReschedule':
-				return 'Reschedule Request';
+				return 'Permintaan Jadwal Ulang';
 			default:
 				return status;
 		}
@@ -198,46 +323,192 @@
 		}
 	}
 
+	// Reschedule Warning State
+	let showRescheduleWarning = $state(false);
+	let reservationToReschedule = $state<ReservationResponse | null>(null);
+
 	async function handleRescheduleReservation(reservation: ReservationResponse) {
-		// Navigate to the reschedule page with the reservation ID
-		goto(`/reservation/reschedule?id=${reservation.reservationID}`);
+		reservationToReschedule = reservation;
+		showRescheduleWarning = true;
 	}
+
+	async function confirmReschedule() {
+		if (reservationToReschedule) {
+			goto(`/reservation/reschedule?id=${reservationToReschedule.reservationID}`);
+			showRescheduleWarning = false;
+			reservationToReschedule = null;
+		}
+	}
+
+	// async function handlePayNow(reservation: ReservationResponse) {
+	// 	const token = get(authStore).session?.access_token;
+	// 	console.log('Token:', token);
+	// 	if (!token) {
+	// 		error = 'User not authenticated';
+	// 		return;
+	// 	}
+
+	// 	processingReservationId = reservation.reservationID;
+
+	// 	try {
+	// 		const response = await createTransaction(reservation.reservationID, token);
+	// 		if (!response.success) {
+	// 			throw new Error(response.message || 'Failed to create transaction');
+	// 		}
+
+	// 		// Use Midtrans Snap
+	// 		if (response.data?.token) {
+	// 			// @ts-ignore
+	// 			window.snap.pay(response.data.token, {
+	// 				onSuccess: function (result: any) {
+	// 					console.log('Payment success:', result);
+	// 					toast.success('Pembayaran berhasil!');
+	// 					loadReservations();
+	// 				},
+	// 				onPending: function (result: any) {
+	// 					console.log('Payment pending:', result);
+	// 					toast.info('Menunggu pembayaran...');
+	// 					loadReservations();
+	// 				},
+	// 				onError: function (result: any) {
+	// 					console.error('Payment error:', result);
+	// 					toast.error('Pembayaran gagal!');
+	// 				},
+	// 				onClose: function () {
+	// 					console.log('Customer closed the popup without finishing the payment');
+	// 					toast.info('Pembayaran belum diselesaikan.');
+	// 				}
+	// 			});
+	// 		} else if (response.data?.redirect_url) {
+	// 			// Fallback to redirect if no token (should not happen with new backend)
+	// 			window.location.href = response.data.redirect_url;
+	// 		}
+	// 	} catch (err) {
+	// 		console.error('Error creating transaction:', err);
+	// 		error = err instanceof Error ? err.message : 'An error occurred while creating transaction';
+	// 	} finally {
+	// 		processingReservationId = null;
+	// 	}
+	// }
+
+	// Function to open chat modal
+	function openChatModal(reservation: any) {
+		console.log('Opening chat modal for reservation:', reservation);
+		console.log('Passing userId to chat modal:', get(authStore).session?.user?.id);
+		selectedReservation = reservation;
+		showChatModal = true;
+		// Reset unread count when opening chat
+		if (unreadCounts[reservation.reservationID]) {
+			unreadCounts[reservation.reservationID] = 0;
+		}
+	}
+
+	// Watch for sheet close to hide snap
+	$effect(() => {
+		if (!showPaymentSheet && typeof window !== 'undefined' && (window as any).snap) {
+			try {
+				(window as any).snap.hide();
+			} catch (e) {
+				console.error('Error hiding snap:', e);
+			}
+		}
+	});
 
 	async function handlePayNow(reservation: ReservationResponse) {
 		const token = get(authStore).session?.access_token;
-		console.log('Token:', token);
 		if (!token) {
 			error = 'User not authenticated';
 			return;
 		}
 
 		processingReservationId = reservation.reservationID;
+		currentReservationForPayment = reservation;
 
 		try {
-			const response = await createTransaction(reservation.reservationID, token);
-			if (!response.success) {
-				throw new Error(response.message || 'Failed to create transaction');
+			// Check for existing token in localStorage
+			const localStorageKey = `midtrans_token_${reservation.reservationID}`;
+			const cachedToken = localStorage.getItem(localStorageKey);
+
+			if (cachedToken) {
+				console.log('Using cached token:', cachedToken);
+				paymentToken = cachedToken;
+			} else {
+				// If no cached token, create new transaction
+				const response = await createTransaction(reservation.reservationID, token);
+				if (!response.success) {
+					throw new Error(response.message || 'Failed to create transaction');
+				}
+
+				if (response.data?.token) {
+					paymentToken = response.data.token;
+					// Save token to localStorage
+					localStorage.setItem(localStorageKey, paymentToken!);
+				} else if (response.data?.redirect_url) {
+					window.location.href = response.data.redirect_url;
+					return;
+				}
 			}
 
-			// Redirect to payment page using the redirect_url from the response
-			if (response.data?.redirect_url) {
-				// Open the payment page in the same tab (redirect user)
-				window.location.href = response.data.redirect_url;
+			if (paymentToken) {
+				showPaymentSheet = true;
+
+				// Wait for Sheet to open and container to exist
+				setTimeout(() => {
+					// @ts-ignore
+					if (window.snap) {
+						// Ensure clean state by hiding first
+						try {
+							// @ts-ignore
+							window.snap.hide();
+						} catch (e) {
+							console.log('Snap already hidden or not initialized');
+						}
+
+						// @ts-ignore
+						window.snap.embed(paymentToken, {
+							embedId: 'snap-container',
+							onSuccess: function (result: any) {
+								console.log('Payment success:', result);
+								toast.success('Pembayaran berhasil!');
+								showPaymentSheet = false;
+								// Remove token from localStorage on success
+								localStorage.removeItem(localStorageKey);
+								loadReservations();
+							},
+							onPending: function (result: any) {
+								console.log('Payment pending:', result);
+								toast.info('Menunggu pembayaran...');
+								showPaymentSheet = false;
+								loadReservations();
+							},
+							onError: function (result: any) {
+								console.error('Payment error:', result);
+								toast.error('Pembayaran gagal!');
+							},
+							onClose: function () {
+								console.log('Customer closed the popup without finishing the payment');
+								toast.info('Pembayaran belum diselesaikan. Anda dapat melanjutkannya nanti.');
+							}
+						});
+					}
+				}, 100);
 			}
 		} catch (err) {
 			console.error('Error creating transaction:', err);
-			error = err instanceof Error ? err.message : 'An error occurred while creating transaction';
+			toast.error(err instanceof Error ? err.message : 'Gagal memproses pembayaran');
 		} finally {
 			processingReservationId = null;
 		}
 	}
-
-	// Function to open chat modal
-	function openChatModal(reservation: any) {
-		selectedReservation = reservation;
-		showChatModal = true;
-	}
 </script>
+
+<svelte:head>
+	<title>Profile - Reservation | Three Lights Barbershop</title>
+	<script
+		src="https://app.sandbox.midtrans.com/snap/snap.js"
+		data-client-key={import.meta.env.PUBLIC_MIDTRANS_CLIENT_KEY}
+	></script>
+</svelte:head>
 
 {#if loading}
 	<div class="space-y-10" in:fade>
@@ -331,8 +602,8 @@
 				<Calendar class="size-8 text-senary" />
 			</div>
 			<div>
-				<h2 class="text-2xl font-bold text-secondary">Reservations</h2>
-				<p class="text-secondary/60">Manage your appointments</p>
+				<h2 class="text-2xl font-bold text-secondary">Reservasi</h2>
+				<p class="text-secondary/60">Kelola janji temu Anda</p>
 			</div>
 		</div>
 
@@ -345,13 +616,41 @@
 	</div>
 {:else}
 	<div class="space-y-10" in:fade>
+		<!-- Header with Refresh -->
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div class="flex items-center gap-4">
+				<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+					<Calendar class="size-8 text-senary" />
+				</div>
+				<div>
+					<h2 class="text-2xl font-bold text-secondary">Reservasi</h2>
+					<p class="text-secondary/60">Kelola dan pantau status reservasi Anda</p>
+				</div>
+			</div>
+			<div class="flex flex-col items-end gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+						onclick={() => window.location.reload()}
+					disabled={loading}
+				>
+					<RefreshCw class="mr-2 size-4 {loading ? 'animate-spin' : ''}" />
+					Refresh Data
+				</Button>
+				<p class="text-xs text-secondary/40">
+					Klik refresh jika data belum diperbarui
+				</p>
+			</div>
+		</div>
+
 		<!-- Active Reservations Section -->
 		<section>
 			<div class="mb-6 flex items-center gap-3">
 				<div class="rounded-lg bg-senary/10 p-2">
 					<Calendar class="size-8 text-senary" />
 				</div>
-				<h3 class="text-xl font-bold text-secondary">Active Reservations</h3>
+				<h3 class="text-xl font-bold text-secondary">Reservasi Aktif</h3>
 			</div>
 
 			{#if activeReservations.length === 0}
@@ -361,8 +660,8 @@
 					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
 						<Calendar class="size-8 text-secondary/40" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold text-secondary">No active reservations</h3>
-					<p class="text-sm text-secondary/50">You don't have any upcoming appointments.</p>
+					<h3 class="mb-2 text-lg font-semibold text-secondary">Tidak ada reservasi aktif</h3>
+					<p class="text-sm text-secondary/50">Anda tidak memiliki janji temu yang akan datang.</p>
 
 					<ReservationSheet
 						triggerClass="mt-6 bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:bg-senary/90"
@@ -384,15 +683,20 @@
 								<div class="space-y-4">
 									<div>
 										<p class="text-sm font-medium text-secondary/70">
-											Pesanan Dibuat pada: {new Date(reservation.created_at)
-												.toLocaleString('id-ID', {
-													year: 'numeric',
-													month: 'numeric',
-													day: 'numeric',
-													hour: '2-digit',
-													minute: '2-digit'
-												})
-												.replace(/\//g, '-')}
+											Pesanan Dibuat pada: {(() => {
+												const date = new Date(reservation.created_at);
+												date.setHours(date.getHours() + 7); // Add 7 hours
+												return date
+													.toLocaleString('id-ID', {
+														year: 'numeric',
+														month: 'numeric',
+														day: 'numeric',
+														hour: '2-digit',
+														minute: '2-digit',
+														timeZone: 'Asia/Jakarta'
+													})
+													.replace(/\//g, '-');
+											})()} WIB
 										</p>
 										<h3 class="flex items-center gap-2 text-lg font-bold text-secondary">
 											<Scissors class="size-5 text-senary" />
@@ -414,7 +718,7 @@
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/70">
 											<Clock class="size-4 text-senary/70" />
-											<span>{reservation.dateTime.hour}</span>
+											<span>{reservation.dateTime.hour} WIB</span>
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/70">
 											<User class="size-4 text-senary/70" />
@@ -422,34 +726,23 @@
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/70">
 											<Scissors class="size-4 text-senary/70" />
-											<span>Service: {reservation.service.name}</span>
+											<span>Layanan: {reservation.service.name}</span>
 										</div>
 									</div>
-
-									{#if reservation.status === 'waitingForPayment'}
-										<div
-											class="mt-4 mb-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-4"
-										>
-											<div class="mb-2 flex items-center gap-2 text-orange-300">
-												<Clock class="size-4 animate-pulse" />
-												<span class="text-sm font-medium">Payment Deadline</span>
-											</div>
-											<Countdown
-												date={reservation.updated_at ||
-													reservation.created_at ||
-													new Date().toISOString()}
-												onExpire={() => {
-													reservation.status = 'expired';
-												}}
-											/>
-											<p class="mt-2 text-xs text-orange-300/70">
-												Please complete payment before the timer expires to avoid automatic
-												cancellation.
-											</p>
-										</div>
-									{/if}
 								</div>
 							</div>
+							{#if reservation.status === 'waitingForPayment'}
+								<div class="mt-4 mb-4">
+									<Countdown
+										date={reservation.updated_at ||
+											reservation.created_at ||
+											new Date().toISOString()}
+										onExpire={() => {
+											reservation.status = 'expired';
+										}}
+									/>
+								</div>
+							{/if}
 
 							<div class="mt-4 flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
 								{#if reservation.status === 'waiting'}
@@ -463,16 +756,23 @@
 											<Skeleton class="h-4 w-16 bg-white/10" />
 										{:else}
 											<X class="mr-2 size-4" />
-											Cancel
+											Batal
 										{/if}
 									</Button>
 									<Button
 										variant="outline"
-										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										class="relative border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
 										onclick={() => openChatModal(reservation)}
 									>
 										<MessageCircle class="mr-2 size-4" />
 										Chat
+										{#if unreadCounts[reservation.reservationID] > 0}
+											<span
+												class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+											>
+												{unreadCounts[reservation.reservationID]}
+											</span>
+										{/if}
 									</Button>
 								{:else if reservation.status === 'onGoing'}
 									<Button
@@ -485,7 +785,7 @@
 											<Skeleton class="h-4 w-20 bg-white/10" />
 										{:else}
 											<RotateCcw class="mr-2 size-4" />
-											Reschedule
+											Jadwal Ulang
 										{/if}
 									</Button>
 									<Button
@@ -498,16 +798,23 @@
 											<Skeleton class="h-4 w-16 bg-white/10" />
 										{:else}
 											<X class="mr-2 size-4" />
-											Cancel
+											Batal
 										{/if}
 									</Button>
 									<Button
 										variant="outline"
-										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										class="relative border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
 										onclick={() => openChatModal(reservation)}
 									>
 										<MessageCircle class="mr-2 size-4" />
 										Chat
+										{#if unreadCounts[reservation.reservationID] > 0}
+											<span
+												class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+											>
+												{unreadCounts[reservation.reservationID]}
+											</span>
+										{/if}
 									</Button>
 								{:else if reservation.status === 'requestToReschedule'}
 									<Button
@@ -520,16 +827,23 @@
 											<Skeleton class="h-4 w-16 bg-white/10" />
 										{:else}
 											<X class="mr-2 size-4" />
-											Cancel
+											Batal
 										{/if}
 									</Button>
 									<Button
 										variant="outline"
-										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										class="relative border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
 										onclick={() => openChatModal(reservation)}
 									>
 										<MessageCircle class="mr-2 size-4" />
 										Chat
+										{#if unreadCounts[reservation.reservationID] > 0}
+											<span
+												class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+											>
+												{unreadCounts[reservation.reservationID]}
+											</span>
+										{/if}
 									</Button>
 								{:else if reservation.status === 'waitingForPayment'}
 									<Button
@@ -541,7 +855,7 @@
 											<Skeleton class="h-4 w-20 bg-white/20" />
 										{:else}
 											<CreditCard class="mr-2 size-4" />
-											Pay Now
+											Bayar Sekarang
 										{/if}
 									</Button>
 									<Button
@@ -554,16 +868,23 @@
 											<Skeleton class="h-4 w-16 bg-white/10" />
 										{:else}
 											<X class="mr-2 size-4" />
-											Cancel
+											Batal
 										{/if}
 									</Button>
 									<Button
 										variant="outline"
-										class="border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
+										class="relative border-senary/30 text-senary transition-all duration-300 hover:border-senary hover:bg-senary/10 hover:text-senary"
 										onclick={() => openChatModal(reservation)}
 									>
 										<MessageCircle class="mr-2 size-4" />
 										Chat
+										{#if unreadCounts[reservation.reservationID] > 0}
+											<span
+												class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
+											>
+												{unreadCounts[reservation.reservationID]}
+											</span>
+										{/if}
 									</Button>
 								{/if}
 								<Button
@@ -572,7 +893,7 @@
 									onclick={() => goto(`/profile/reservation/${reservation.reservationID}`)}
 								>
 									<Eye class="mr-2 size-4" />
-									Details
+									Detail
 								</Button>
 							</div>
 						</div>
@@ -587,7 +908,7 @@
 				<div class="rounded-lg bg-white/5 p-2">
 					<History class="size-5 text-secondary/70" />
 				</div>
-				<h3 class="text-xl font-bold text-secondary">History</h3>
+				<h3 class="text-xl font-bold text-secondary">Riwayat</h3>
 			</div>
 
 			{#if historyReservations.length === 0}
@@ -597,8 +918,8 @@
 					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
 						<History class="size-8 text-secondary/40" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold text-secondary">No history found</h3>
-					<p class="text-sm text-secondary/50">You don't have any past reservations.</p>
+					<h3 class="mb-2 text-lg font-semibold text-secondary">Tidak ada riwayat ditemukan</h3>
+					<p class="text-sm text-secondary/50">Anda tidak memiliki reservasi sebelumnya.</p>
 				</div>
 			{:else}
 				<div class="space-y-4">
@@ -610,15 +931,20 @@
 								<div class="space-y-4">
 									<div>
 										<p class="text-sm font-medium text-secondary/70">
-											Pesanan Dibuat pada: {new Date(reservation.created_at)
-												.toLocaleString('id-ID', {
-													year: 'numeric',
-													month: 'numeric',
-													day: 'numeric',
-													hour: '2-digit',
-													minute: '2-digit'
-												})
-												.replace(/\//g, '-')}
+											Pesanan Dibuat pada: {(() => {
+												const date = new Date(reservation.created_at);
+												date.setHours(date.getHours() + 7); // Add 7 hours
+												return date
+													.toLocaleString('id-ID', {
+														year: 'numeric',
+														month: 'numeric',
+														day: 'numeric',
+														hour: '2-digit',
+														minute: '2-digit',
+														timeZone: 'Asia/Jakarta'
+													})
+													.replace(/\//g, '-');
+											})()} WIB
 										</p>
 										<h3 class="flex items-center gap-2 font-semibold text-secondary/80">
 											<Scissors class="size-4 text-senary/50" />
@@ -640,7 +966,7 @@
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/60">
 											<Clock class="size-3" />
-											<span>{reservation.dateTime.hour}</span>
+											<span>{reservation.dateTime.hour} WIB</span>
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/60">
 											<User class="size-3" />
@@ -648,7 +974,7 @@
 										</div>
 										<div class="flex items-center gap-2 text-sm text-secondary/60">
 											<Scissors class="size-3" />
-											<span>Service: {reservation.service.name}</span>
+											<span>Layanan: {reservation.service.name}</span>
 										</div>
 									</div>
 								</div>
@@ -708,7 +1034,23 @@
 		reservation={selectedReservation}
 		open={showChatModal}
 		onClose={() => (showChatModal = false)}
+		userId={$authStore.session?.user?.id || ''}
 	/>
+
+	<Sheet bind:open={showPaymentSheet}>
+		<SheetContent side="right" class="w-full border-l border-white/10 bg-black/95 p-0 sm:max-w-md">
+			<SheetHeader class="px-6 py-4">
+				<SheetTitle class="text-senary">Pembayaran</SheetTitle>
+				<SheetDescription class="text-secondary/60">
+					Selesaikan pembayaran Anda untuk reservasi #{currentReservationForPayment?.invoice ||
+						currentReservationForPayment?.reservationID}
+				</SheetDescription>
+			</SheetHeader>
+			<div class="h-full w-full overflow-y-auto px-6 pb-6">
+				<div id="snap-container" class="w-full"></div>
+			</div>
+		</SheetContent>
+	</Sheet>
 {/if}
 <!-- Customer Chat Modal -->
 
@@ -716,16 +1058,16 @@
 <AlertDialog open={showCancelDialog}>
 	<AlertDialogContent class="border border-white/10 bg-primary text-secondary">
 		<AlertDialogHeader>
-			<AlertDialogTitle class="text-white">Cancel Reservation?</AlertDialogTitle>
+			<AlertDialogTitle class="text-white">Batalkan Reservasi?</AlertDialogTitle>
 			<AlertDialogDescription class="text-secondary/70">
 				{#if showDownPaymentWarning}
 					<div
 						class="mt-2 mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300"
 					>
-						<p>Warning: Down payment cannot be refunded.</p>
+						<p>Peringatan: Uang muka tidak dapat dikembalikan.</p>
 					</div>
 				{/if}
-				Are you sure you want to cancel this reservation? This action cannot be undone.
+				Apakah Anda yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat dibatalkan.
 			</AlertDialogDescription>
 		</AlertDialogHeader>
 		<AlertDialogFooter>
@@ -736,13 +1078,47 @@
 					reservationToCancel = null;
 				}}
 			>
-				No, Keep It
+				Tidak, Simpan
 			</AlertDialogCancel>
 			<AlertDialogAction
 				class="bg-red-600 text-white hover:bg-red-700"
 				onclick={confirmCancelReservation}
 			>
-				Yes, Cancel It
+				Ya, Batalkan
+			</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>
+
+<!-- Reschedule Warning Dialog -->
+<AlertDialog open={showRescheduleWarning}>
+	<AlertDialogContent class="border border-white/10 bg-primary text-secondary">
+		<AlertDialogHeader>
+			<AlertDialogTitle class="text-white">Syarat & Ketentuan Reschedule</AlertDialogTitle>
+			<AlertDialogDescription class="text-secondary/70">
+				<div
+					class="mt-2 mb-4 rounded-lg border border-senary/30 bg-senary/10 p-3 text-sm text-senary"
+				>
+					<p>Penting: Reservasi hanya dapat di-reschedule maksimal 1 kali.</p>
+				</div>
+				Apakah Anda yakin ingin melanjutkan proses reschedule?
+			</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel
+				class="border-white/10 bg-transparent text-secondary hover:bg-white/10 hover:text-white"
+				onclick={() => {
+					showRescheduleWarning = false;
+					reservationToReschedule = null;
+				}}
+			>
+				Batal
+			</AlertDialogCancel>
+			<AlertDialogAction
+				class="bg-senary text-primary hover:bg-senary/90"
+				onclick={confirmReschedule}
+			>
+				Lanjut Reschedule
 			</AlertDialogAction>
 		</AlertDialogFooter>
 	</AlertDialogContent>

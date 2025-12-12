@@ -44,7 +44,10 @@
 		// Import with alias
 		getOperational as getOperationalApi, // Import with alias
 		getOwnedVouchers as getOwnedVouchersApi, // Import with alias
-		getServices as getServicesApi // Import with alias
+		getServices as getServicesApi, // Import with alias
+		getPaymentFees,
+		getCompanySettings,
+		type PaymentFees
 	} from '$lib/api/shared/api';
 	import { createReservation } from '$lib/api/customer/reservation';
 	import {
@@ -74,10 +77,10 @@
 	type Step = 'date' | 'time' | 'details' | 'payment';
 	const stepOrder: Step[] = ['date', 'time', 'details', 'payment'];
 	const steps = [
-		{ key: 'date', label: 'Date' },
-		{ key: 'time', label: 'Time' },
-		{ key: 'details', label: 'Details' },
-		{ key: 'payment', label: 'Payment' }
+		{ key: 'date', label: 'Tanggal' },
+		{ key: 'time', label: 'Waktu' },
+		{ key: 'details', label: 'Detail' },
+		{ key: 'payment', label: 'Pembayaran' }
 	] satisfies { key: Step; label: string }[];
 
 	let step: Step = $state('date');
@@ -100,16 +103,49 @@
 	let selectedBarberId = $state<string | null>(null);
 	let selectedServiceId = $state<string | null>(null);
 	let specialRequest = $state('');
+	let typingRequest = $state('');
+
 	$effect(() => {
 		specialRequest = initialNote;
-		console.log(specialRequest);
+		console.log('specialRequest', specialRequest);
 	});
+
 	let voucherSelection = $state('none');
 	let redeemCode = $state<string | null>(null);
 	let redeemCodeDiscount = $state(0);
 	let showVoucherModal = $state(false);
 	let showReservationModal = $state(false);
 	let agreeTnc = $state(false);
+	let selectedPaymentMethod = $state<string | null>(null);
+	let paymentFees = $state<PaymentFees | null>(null);
+	let adminFee = $state(0);
+	let paymentMethodFee = $state(0);
+
+	const paymentMethods = [
+		{
+			category: 'E-Wallet',
+			items: [
+				{ id: 'shopeepay', label: 'ShopeePay', icon: 'shopeepay' },
+				{ id: 'gopay', label: 'GoPay', icon: 'gopay' },
+				{ id: 'dana', label: 'Dana', icon: 'dana' }
+			]
+		},
+		{
+			category: 'QRIS',
+			items: [{ id: 'qris', label: 'QRIS', icon: 'qris' }]
+		},
+		{
+			category: 'Bank Transfer',
+			items: [
+				{ id: 'permata_va', label: 'Permata Virtual Account', icon: 'permata' },
+				{ id: 'bca_va', label: 'BCA Virtual Account', icon: 'bca' },
+				{ id: 'mandiri_bill', label: 'Mandiri Bill Payment', icon: 'mandiri' },
+				{ id: 'bni_va', label: 'BNI Virtual Account', icon: 'bni' },
+				{ id: 'bri_va', label: 'BRI Virtual Account', icon: 'bri' },
+				{ id: 'danamon_va', label: 'Danamon Virtual Account', icon: 'danamon' }
+			]
+		}
+	];
 
 	let loadAttempted = $state(false);
 	let showLoginAlert = $state(false);
@@ -124,7 +160,6 @@
 		showReservationModal = true;
 	}
 
-	const adminFee = 4000;
 	const currencyFormatter = new Intl.NumberFormat('id-ID', {
 		style: 'currency',
 		currency: 'IDR',
@@ -183,7 +218,7 @@
 	let selectedVoucher = $state<OwnedVoucher | null>(null);
 	let subtotal = $state(0);
 	let voucherDiscount = $state(0);
-	let total = $state(adminFee);
+	let total = $state(0);
 	let selectedDateDisplay = $state<string | null>(null);
 	let selectedTimeDisplay = $state<string | null>(null);
 
@@ -204,7 +239,10 @@
 			voucherSelection,
 			redeemCode,
 			redeemCodeDiscount,
-			agreeTnc
+			redeemCode,
+			redeemCodeDiscount,
+			agreeTnc,
+			selectedPaymentMethod
 		};
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
@@ -227,6 +265,7 @@
 				redeemCode = state.redeemCode || null;
 				redeemCodeDiscount = state.redeemCodeDiscount || 0;
 				agreeTnc = state.agreeTnc || false;
+				selectedPaymentMethod = state.selectedPaymentMethod || null;
 
 				// If we have saved state, we should open the modal automatically if it was closed during flow
 				// But user requirement says "This behavior also applies when the user closes the modal"
@@ -349,7 +388,43 @@
 	});
 
 	$effect(() => {
-		total = Math.max(subtotal - voucherDiscount - redeemCodeDiscount + adminFee, 0);
+		if (selectedPaymentMethod && paymentFees) {
+			let feeConfig;
+			if (['shopeepay', 'gopay', 'dana', 'qris'].includes(selectedPaymentMethod)) {
+				// Map qris to qris key in paymentFees
+				const key = selectedPaymentMethod === 'qris' ? 'qris' : selectedPaymentMethod;
+				feeConfig = paymentFees[key];
+			} else {
+				// Bank transfers
+				feeConfig = paymentFees['bank_transfer'];
+			}
+
+			if (feeConfig) {
+				if (feeConfig.type === 'fixed') {
+					paymentMethodFee = feeConfig.value;
+				} else if (feeConfig.type === 'percentage') {
+					// Percentage of subtotal? Or subtotal - discount? Usually gross amount.
+					// Let's assume subtotal for now, or subtotal - voucher?
+					// Usually payment fee is based on the amount to be paid.
+					// Amount to be paid = subtotal - voucher - redeem + admin
+					// But admin fee is added to total.
+					// Let's calculate base amount first.
+					const baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
+					paymentMethodFee = Math.ceil((baseAmount + adminFee) * 0.5 * feeConfig.value);
+				}
+			} else {
+				paymentMethodFee = 0;
+			}
+		} else {
+			paymentMethodFee = 0;
+		}
+	});
+
+	$effect(() => {
+		total = Math.max(
+			subtotal - voucherDiscount - redeemCodeDiscount + adminFee + paymentMethodFee,
+			0
+		);
 	});
 
 	$effect(() => {
@@ -364,6 +439,37 @@
 	$effect(() => {
 		selectedTimeDisplay = selectedTime?.time ?? null;
 	});
+
+	// Example Calculation Logic
+	let examplePaymentMethod = $derived(selectedPaymentMethod || 'qris');
+	let exampleFeeConfig = $derived.by(() => {
+		if (!paymentFees) return null;
+		const key =
+			examplePaymentMethod === 'qris'
+				? 'qris'
+				: ['shopeepay', 'gopay', 'dana'].includes(examplePaymentMethod)
+					? examplePaymentMethod
+					: 'bank_transfer';
+		return paymentFees[key];
+	});
+
+	let exampleServiceFee = $derived.by(() => {
+		if (!exampleFeeConfig) return 0;
+		if (exampleFeeConfig.type === 'fixed') return exampleFeeConfig.value;
+
+		const baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
+		return Math.ceil((baseAmount + adminFee) * 0.5 * exampleFeeConfig.value);
+	});
+
+	let exampleTotal = $derived(
+		Math.max(subtotal - voucherDiscount - redeemCodeDiscount + adminFee + exampleServiceFee, 0)
+	);
+
+	let exampleDP = $derived.by(() => {
+		return Math.ceil((exampleTotal - exampleServiceFee) * 0.5 + exampleServiceFee);
+	});
+
+	let exampleSisa = $derived(exampleTotal - exampleDP);
 
 	let error = $state<string | null>(null);
 	$effect(() => {
@@ -385,6 +491,7 @@
 		redeemCodeDiscount = 0;
 		specialRequest = '';
 		agreeTnc = false;
+		selectedPaymentMethod = null;
 		clearState();
 	}
 
@@ -416,10 +523,12 @@
 		dataError = null;
 
 		try {
-			const [operationalRes, barbersRes, servicesRes] = await Promise.all([
+			const [operationalRes, barbersRes, servicesRes, feesRes, settingsRes] = await Promise.all([
 				getOperationalApi(fetch),
 				getBarbersApi(fetch),
-				getServicesApi(fetch)
+				getServicesApi(fetch),
+				getPaymentFees(fetch),
+				getCompanySettings(fetch)
 			]);
 
 			if (!operationalRes.success) {
@@ -447,6 +556,14 @@
 			} else {
 				services = [];
 				if (servicesRes.message) toast.warning(servicesRes.message);
+			}
+
+			if (feesRes.success && feesRes.data) {
+				paymentFees = feesRes.data;
+			}
+
+			if (settingsRes.success && settingsRes.data) {
+				adminFee = settingsRes.data.admin_fee;
 			}
 
 			const token = get(authStore).session?.access_token;
@@ -571,6 +688,11 @@
 			return;
 		}
 
+		if (!selectedPaymentMethod && !reservationToReschedule) {
+			error = 'Silakan pilih metode pembayaran terlebih dahulu.';
+			return;
+		}
+
 		const token = get(authStore).session?.access_token;
 		if (!token) {
 			showLoginAlert = true;
@@ -609,6 +731,17 @@
 				});
 				dispatch('reservationCompleted', { success: true, type: 'reschedule' });
 			} else {
+				const isBankTransfer = [
+					'permata_va',
+					'bca_va',
+					'mandiri_bill',
+					'bni_va',
+					'bri_va',
+					'danamon_va'
+				].includes(selectedPaymentMethod!);
+
+				const payloadPaymentMethod = isBankTransfer ? 'bank_transfer' : selectedPaymentMethod!;
+
 				const response = await createReservation(
 					{
 						barberId: selectedBarberId,
@@ -616,7 +749,8 @@
 						dateTimeId: selectedTimeId,
 						notes: specialRequest ? specialRequest.trim() : undefined,
 						voucherId: voucherSelection !== 'none' ? voucherSelection : undefined,
-						redeemCode: redeemCode ?? undefined
+						redeemCode: redeemCode ?? undefined,
+						paymentMethod: payloadPaymentMethod
 					},
 					token
 				);
@@ -677,11 +811,8 @@
 					specialRequest = reservationToReschedule.notes || '';
 					voucherSelection = reservationToReschedule.voucherId || 'none';
 				}
-				// If loadAttempted is true, do nothing here, wait for user action or sheet close/reopen
-			} else {
-				// If sheet is closed, reset the attempt flag
-				loadAttempted = false;
 			}
+			// Removed else block that was causing infinite loop
 		} else {
 			loadAttempted = false;
 		}
@@ -702,9 +833,9 @@
 			<SheetDescription class="sr-only">Create a new reservation</SheetDescription>
 		</SheetHeader>
 
-		<div class="mb-6 flex items-center justify-between gap-3">
+		<div class="mb-6 flex items-center justify-around gap-1 sm:justify-between sm:gap-3">
 			{#each steps as { key, label }, index (key)}
-				<div class="flex flex-1 items-center">
+				<div class="flex flex-1 items-center justify-center sm:justify-start">
 					<div
 						class={cn(
 							'flex size-10 items-center justify-center rounded-full border-2 transition-colors',
@@ -723,7 +854,7 @@
 					</div>
 					<span
 						class={cn(
-							'ml-2 text-sm font-medium transition-colors',
+							'ml-2 hidden text-sm font-medium transition-colors sm:block',
 							step === key || isPastStep(key) ? 'text-senary' : 'text-muted-foreground'
 						)}>{label}</span
 					>
@@ -750,447 +881,705 @@
 					>
 				</div>
 			{:else if step === 'date'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Pilih Tanggal Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							Pilih tahun, bulan, dan tanggal yang tersedia untuk melanjutkan.
-						</p>
-					</div>
-
-					<div class="space-y-4">
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
 						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tahun</Label>
-							<div class="flex flex-wrap gap-2">
-								{#each availableYears as year (year)}
-									<button
-										type="button"
-										class={cn(
-											'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-											selectedYear === year
-												? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-												: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-										)}
-										onclick={() => selectYear(year)}
-									>
-										{year}
-									</button>
-								{/each}
-							</div>
+							<h3 class="text-lg font-semibold text-secondary">Pilih Tanggal Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								Pilih tahun, bulan, dan tanggal yang tersedia untuk melanjutkan.
+							</p>
 						</div>
 
-						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Bulan</Label>
-							{#if availableMonths.length === 0}
-								<p class="text-sm text-muted-foreground">Silakan pilih tahun terlebih dahulu.</p>
-							{:else}
+						<div class="space-y-4">
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tahun</Label>
 								<div class="flex flex-wrap gap-2">
-									{#each availableMonths as month (month)}
+									{#each availableYears as year (year)}
 										<button
 											type="button"
 											class={cn(
 												'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-												selectedMonth === month
+												selectedYear === year
 													? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
 													: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 											)}
-											onclick={() => selectMonth(month)}
+											onclick={() => selectYear(year)}
 										>
-											{monthFormatter.format(new Date(2000, month - 1, 1))}
+											{year}
 										</button>
 									{/each}
 								</div>
-							{/if}
-						</div>
+							</div>
 
-						<div>
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tanggal</Label>
-							{#if availableDays.length === 0}
-								<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
-							{:else}
-								<div
-									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[500px] overflow-y-auto pr-2"
-								>
-									<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-										{#each availableDays as day (day.id)}
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Bulan</Label>
+								{#if availableMonths.length === 0}
+									<p class="text-sm text-muted-foreground">Silakan pilih tahun terlebih dahulu.</p>
+								{:else}
+									<div class="flex flex-wrap gap-2">
+										{#each availableMonths as month (month)}
 											<button
 												type="button"
 												class={cn(
-													'rounded-xl border px-3 py-3 text-center transition-all duration-300',
-													day.available
-														? selectedDayId === day.id
-															? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-															: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-														: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+													'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
+													selectedMonth === month
+														? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+														: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
 												)}
-												onclick={() => selectDay(day.id, day.available)}
-												disabled={!day.available}
+												onclick={() => selectMonth(month)}
 											>
-												<div class="text-lg font-semibold">{day.day}</div>
-												<div class="text-xs capitalize">{day.weekday}</div>
+												{monthFormatter.format(new Date(2000, month - 1, 1))}
 											</button>
 										{/each}
 									</div>
-								</div>
-							{/if}
-						</div>
-					</div>
+								{/if}
+							</div>
 
-					<div class="flex justify-end">
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedDayId}>Pilih Jam</Button
-						>
+							<div>
+								<Label class="mb-2 block text-sm font-semibold text-secondary/80">Tanggal</Label>
+								{#if availableDays.length === 0}
+									<p class="text-sm text-muted-foreground">Tidak ada tanggal yang tersedia.</p>
+								{:else}
+									<div
+										class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[500px] overflow-y-auto pr-2"
+									>
+										<div class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+											{#each availableDays as day (day.id)}
+												<button
+													type="button"
+													class={cn(
+														'rounded-xl border px-3 py-3 text-center transition-all duration-300',
+														day.available
+															? selectedDayId === day.id
+																? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+																: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+															: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+													)}
+													onclick={() => selectDay(day.id, day.available)}
+													disabled={!day.available}
+												>
+													<div class="text-lg font-semibold">{day.day}</div>
+													<div class="text-xs capitalize">{day.weekday}</div>
+												</button>
+											{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex justify-end">
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedDayId}>Pilih Jam</Button
+							>
+						</div>
 					</div>
 				</div>
 			{:else if step === 'time'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Pilih Jam Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							Tanggal dipilih:
-							<span class="font-medium text-senary">
-								{selectedDateDisplay ?? '-'}
-							</span>
-						</p>
-					</div>
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
+							<h3 class="text-lg font-semibold text-secondary">Pilih Jam Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								Tanggal dipilih:
+								<span class="font-medium text-senary">
+									{selectedDateDisplay ?? '-'}
+								</span>
+							</p>
+						</div>
 
-					<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-						{#each timesForSelectedDay as hour (hour.id)}
-							<button
-								type="button"
-								class={cn(
-									'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
-									hour.status === 'available'
-										? selectedTimeId === hour.id
-											? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
-											: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
-										: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
-								)}
-								onclick={() => selectTime(hour.id, hour.status === 'available')}
-								disabled={hour.status !== 'available'}
+						<div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+							{#each timesForSelectedDay as hour (hour.id)}
+								<button
+									type="button"
+									class={cn(
+										'rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-300',
+										hour.status === 'available'
+											? selectedTimeId === hour.id
+												? 'border-senary bg-senary text-primary shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+												: 'border-white/10 bg-white/5 text-secondary hover:border-senary/50 hover:bg-white/10'
+											: 'cursor-not-allowed border-white/5 bg-white/5 text-white/20'
+									)}
+									onclick={() => selectTime(hour.id, hour.status === 'available')}
+									disabled={hour.status !== 'available'}
+								>
+									{hour.time}
+								</button>
+							{/each}
+						</div>
+
+						<div class="flex items-center justify-between">
+							<Button
+								variant="outline"
+								class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+								onclick={goBack}>Kembali</Button
 							>
-								{hour.time}
-							</button>
-						{/each}
-					</div>
-
-					<div class="flex items-center justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
-							onclick={goBack}>Kembali</Button
-						>
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedTimeId}>Detail Janji</Button
-						>
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedTimeId}>Detail Janji</Button
+							>
+						</div>
 					</div>
 				</div>
 			{:else if step === 'details'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-lg font-semibold text-secondary">Detail Reservasi</h3>
-						<p class="text-sm text-secondary/60">
-							{#if reservationToReschedule}
-								Barber dan layanan tidak dapat diubah saat reschedule.
-							{:else}
-								Pilih barber dan layanan yang Anda inginkan.
-							{/if}
-						</p>
-					</div>
-
-					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-						<!-- Left Column: Barber Selection -->
-						<div class="flex flex-col gap-2">
-							<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
-							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
-							>
-								{#if barbers.length === 0}
-									<p class="text-sm text-muted-foreground">
-										Tidak ada barber yang tersedia saat ini.
-									</p>
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
+							<h3 class="text-lg font-semibold text-secondary">Detail Reservasi</h3>
+							<p class="text-sm text-secondary/60">
+								{#if reservationToReschedule}
+									Barber dan layanan tidak dapat diubah saat reschedule.
 								{:else}
-									<div class="grid grid-cols-1 gap-3">
-										{#each barbers as barber (barber.id)}
-											<button
-												type="button"
-												class={cn(
-													'rounded-xl border p-4 text-left transition-all duration-300',
-													selectedBarberId === barber.id
-														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
-													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-												)}
-												onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
-												disabled={reservationToReschedule}
-											>
-												<div
-													class={cn(
-														'font-semibold',
-														selectedBarberId === barber.id ? 'text-senary' : 'text-secondary'
-													)}
-												>
-													{barber.name}
-												</div>
-												{#if barber.experience}
-													<p class="text-xs text-secondary/60">
-														Pengalaman: {barber.experience}
-													</p>
-												{/if}
-												{#if barber.skills}
-													<p class="text-xs text-secondary/60">Keahlian: {barber.skills}</p>
-												{/if}
-											</button>
-										{/each}
-									</div>
+									Pilih barber dan layanan yang Anda inginkan.
 								{/if}
-							</div>
+							</p>
 						</div>
 
-						<!-- Right Column: Service Selection -->
-						<div class="flex flex-col gap-2">
-							<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
-							<div
-								class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
-							>
-								{#if services.length === 0}
-									<p class="text-sm text-muted-foreground">
-										Tidak ada layanan yang tersedia saat ini.
-									</p>
-								{:else}
-									<div class="space-y-3">
-										{#each services as service (service.id)}
-											<button
-												type="button"
-												class={cn(
-													'flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-300',
-													selectedServiceId === service.id
-														? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-														: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
-													reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
-												)}
-												onclick={() => !reservationToReschedule && (selectedServiceId = service.id)}
-												disabled={reservationToReschedule}
-											>
-												<div>
+						<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+							<!-- Left Column: Barber Selection -->
+							<div class="flex flex-col gap-2">
+								<h4 class="text-sm font-semibold text-secondary/80">Pilih Barber</h4>
+								<div
+									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
+								>
+									{#if barbers.length === 0}
+										<p class="text-sm text-muted-foreground">
+											Tidak ada barber yang tersedia saat ini.
+										</p>
+									{:else}
+										<div class="grid grid-cols-1 gap-3">
+											{#each barbers as barber (barber.id)}
+												<button
+													type="button"
+													class={cn(
+														'rounded-xl border p-4 text-left transition-all duration-300',
+														selectedBarberId === barber.id
+															? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+															: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+														reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+													)}
+													onclick={() => !reservationToReschedule && (selectedBarberId = barber.id)}
+													disabled={reservationToReschedule}
+												>
 													<div
 														class={cn(
 															'font-semibold',
-															selectedServiceId === service.id ? 'text-senary' : 'text-secondary'
+															selectedBarberId === barber.id ? 'text-senary' : 'text-secondary'
 														)}
 													>
-														{service.name}
+														{barber.name}
 													</div>
-													<p class="text-xs text-secondary/60">{service.description}</p>
-												</div>
-												<div class="text-sm font-semibold text-senary">
-													{currencyFormatter.format(service.price)}
-												</div>
-											</button>
-										{/each}
-									</div>
-								{/if}
+													{#if barber.experience}
+														<p class="text-xs text-secondary/60">
+															Pengalaman: {barber.experience}
+														</p>
+													{/if}
+													{#if barber.skills}
+														<p class="text-xs text-secondary/60">Keahlian: {barber.skills}</p>
+													{/if}
+												</button>
+											{/each}
+										</div>
+									{/if}
+								</div>
 							</div>
-						</div>
 
-						<!-- Bottom: Notes (Spanning Full Width) -->
-						<div class="col-span-1 md:col-span-2">
-							<Label class="mb-2 block text-sm font-semibold text-secondary/80">
-								Catatan (Opsional)
-							</Label>
-							<Textarea
-								rows={4}
-								placeholder="Tambahkan permintaan khusus..."
-								bind:value={specialRequest}
-								class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
-							/>
-						</div>
-					</div>
+							<!-- Right Column: Service Selection -->
+							<div class="flex flex-col gap-2">
+								<h4 class="text-sm font-semibold text-secondary/80">Pilih Layanan</h4>
+								<div
+									class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 h-[200px] overflow-y-auto pr-2 md:h-[400px]"
+								>
+									{#if services.length === 0}
+										<p class="text-sm text-muted-foreground">
+											Tidak ada layanan yang tersedia saat ini.
+										</p>
+									{:else}
+										<div class="space-y-3">
+											{#each services as service (service.id)}
+												<button
+													type="button"
+													class={cn(
+														'flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all duration-300',
+														selectedServiceId === service.id
+															? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+															: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10',
+														reservationToReschedule ? 'cursor-not-allowed opacity-60' : ''
+													)}
+													onclick={() =>
+														!reservationToReschedule && (selectedServiceId = service.id)}
+													disabled={reservationToReschedule}
+												>
+													<div>
+														<div
+															class={cn(
+																'font-semibold',
+																selectedServiceId === service.id ? 'text-senary' : 'text-secondary'
+															)}
+														>
+															{service.name}
+														</div>
+														<p class="text-xs text-secondary/60">{service.description}</p>
+													</div>
+													<div class="text-sm font-semibold text-senary">
+														{currencyFormatter.format(service.price)}
+													</div>
+												</button>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
 
-					<div class="flex items-center justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
-							onclick={goBack}>Kembali</Button
-						>
-						<Button
-							class="bg-senary text-primary hover:bg-senary/90"
-							onclick={goNext}
-							disabled={!selectedBarberId ||
-								!selectedServiceId ||
-								(reservationToReschedule && (!selectedDayId || !selectedTimeId)) ||
-								(reservationToReschedule && loadingData)}
-						>
-							{#if reservationToReschedule}
-								Lanjut ke Konfirmasi
+							<!-- Bottom: Notes (Spanning Full Width) -->
+							{#if specialRequest}
+								<div class="col-span-1 md:col-span-2">
+									<Label class="mb-2 block text-sm font-semibold text-secondary/80">
+										Catatan (Opsional)
+									</Label>
+									<Textarea
+										rows={4}
+										placeholder="Tambahkan permintaan khusus..."
+										bind:value={specialRequest}
+										class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
+									/>
+								</div>
 							{:else}
-								Lanjut ke Pembayaran
+								<div class="col-span-1 md:col-span-2">
+									<Label class="mb-2 block text-sm font-semibold text-secondary/80">
+										Catatan (Opsional)
+									</Label>
+									<Textarea
+										rows={4}
+										placeholder="Tambahkan permintaan khusus..."
+										bind:value={typingRequest}
+										class="border-white/10 bg-white/5 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/50"
+									/>
+								</div>
 							{/if}
-						</Button>
+						</div>
+
+						<div class="flex items-center justify-between">
+							<Button
+								variant="outline"
+								class="border-white/10 text-secondary hover:bg-white/10 hover:text-white"
+								onclick={goBack}>Kembali</Button
+							>
+							<Button
+								class="bg-senary text-primary hover:bg-senary/90"
+								onclick={goNext}
+								disabled={!selectedBarberId ||
+									!selectedServiceId ||
+									(reservationToReschedule && (!selectedDayId || !selectedTimeId)) ||
+									(reservationToReschedule && loadingData)}
+							>
+								{#if reservationToReschedule}
+									Lanjut ke Konfirmasi
+								{:else}
+									Lanjut ke Pembayaran
+								{/if}
+							</Button>
+						</div>
 					</div>
 				</div>
 			{:else if step === 'payment'}
-				<div class="space-y-6">
-					<div>
-						{#if reservationToReschedule}
-							<h3 class="text-lg font-semibold text-secondary">Konfirmasi Reschedule</h3>
-							<p class="text-sm text-secondary/60">
-								Periksa kembali perubahan reservasi Anda sebelum dikonfirmasi.
-							</p>
-						{:else}
-							<h3 class="text-lg font-semibold text-secondary">Pembayaran</h3>
-							<p class="text-sm text-secondary/60">
-								Periksa kembali detail reservasi sebelum dikonfirmasi.
-							</p>
-						{/if}
-					</div>
-
-					<div class="grid gap-4 md:grid-cols-2">
-						<div class="rounded-lg border border-senary/20 bg-senary/10 p-4 text-secondary">
+				<div
+					class="scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-senary/50 max-h-[60vh] overflow-y-auto pr-2"
+				>
+					<div class="space-y-6">
+						<div>
 							{#if reservationToReschedule}
-								<div class="font-semibold text-senary">Ringkasan Reschedule</div>
+								<h3 class="text-lg font-semibold text-secondary">Konfirmasi Reschedule</h3>
+								<p class="text-sm text-secondary/60">
+									Periksa kembali perubahan reservasi Anda sebelum dikonfirmasi.
+								</p>
 							{:else}
-								<div class="font-semibold text-senary">Ringkasan Reservasi</div>
+								<h3 class="text-lg font-semibold text-secondary">Pembayaran</h3>
+								<p class="text-sm text-secondary/60">
+									Periksa kembali detail reservasi sebelum dikonfirmasi.
+								</p>
 							{/if}
-							<div class="mt-3 space-y-2 text-sm">
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Tanggal</span>
-									<span class="font-medium">{selectedDateDisplay ?? '-'}</span>
-								</div>
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Jam</span>
-									<span class="font-medium">{selectedTimeDisplay ?? '-'}</span>
-								</div>
-								<div class="flex justify-between border-b border-senary/10 pb-2">
-									<span class="text-secondary/70">Barber</span>
-									<span class="font-medium">{selectedBarber?.name ?? '-'}</span>
-								</div>
-								<div class="flex justify-between">
-									<span class="text-secondary/70">Layanan</span>
-									<span class="font-medium">{selectedService?.name ?? '-'}</span>
+						</div>
+
+						<div class="grid gap-4 md:grid-cols-2">
+							<div class="rounded-lg border border-senary/20 bg-senary/10 p-4 text-secondary">
+								{#if reservationToReschedule}
+									<div class="font-semibold text-senary">Ringkasan Reschedule</div>
+								{:else}
+									<div class="font-semibold text-senary">Ringkasan Reservasi</div>
+								{/if}
+								<div class="mt-3 space-y-2 text-sm">
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Tanggal</span>
+										<span class="font-medium">{selectedDateDisplay ?? '-'}</span>
+									</div>
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Jam</span>
+										<span class="font-medium">{selectedTimeDisplay ?? '-'}</span>
+									</div>
+									<div class="flex justify-between border-b border-senary/10 pb-2">
+										<span class="text-secondary/70">Barber</span>
+										<span class="font-medium">{selectedBarber?.name ?? '-'}</span>
+									</div>
+									<div class="flex justify-between">
+										<span class="text-secondary/70">Layanan</span>
+										<span class="font-medium">{selectedService?.name ?? '-'}</span>
+									</div>
 								</div>
 							</div>
-						</div>
 
-						<div class="rounded-lg border border-white/10 bg-white/5 p-4">
-							<div class="font-semibold text-secondary">Voucher</div>
-							<p class="mt-2 text-xs text-secondary/60">
-								Pilih voucher yang ingin digunakan (opsional).
-							</p>
+							<div class="rounded-lg border border-white/10 bg-white/5 p-4">
+								<div class="font-semibold text-secondary">Voucher</div>
+								<p class="mt-2 text-xs text-secondary/60">
+									Pilih voucher yang ingin digunakan (opsional).
+								</p>
 
-							<Button
-								variant="outline"
-								class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
-								disabled={reservationToReschedule}
-								onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
-							>
-								<span>
-									{#if redeemCode}
-										Redeem Code Applied
-									{:else}
-										{selectedVoucher
-											? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
-											: 'Pilih / Beli Voucher'}
-									{/if}
-								</span>
-								<ChevronRight class="h-4 w-4 opacity-50" />
-							</Button>
-						</div>
-					</div>
-
-					<Separator class="bg-white/10" />
-
-					<div class="space-y-2 text-sm">
-						<div class="flex justify-between text-secondary/80">
-							<span>{selectedService?.name ?? 'Subtotal'}</span>
-							<span>{currencyFormatter.format(subtotal)}</span>
-						</div>
-						<div class="flex justify-between text-senary">
-							<span>Diskon Voucher</span>
-							<span>-{currencyFormatter.format(voucherDiscount)}</span>
-						</div>
-						{#if redeemCode}
-							<div class="flex justify-between text-senary">
-								<span>Redeem Code ({redeemCode})</span>
-								<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
-							</div>
-						{/if}
-						<div class="flex justify-between text-destructive">
-							<span>Biaya Admin</span>
-							<span>+{currencyFormatter.format(adminFee)}</span>
-						</div>
-						<div class="flex justify-between text-base font-semibold text-secondary">
-							<span>Total</span>
-							<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
-						</div>
-					</div>
-
-					<!-- Terms and Conditions Accordion -->
-					<Accordion.Root type="single" collapsible class="w-full">
-						<Accordion.Item value="tnc" class="border-white/10">
-							<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
-								Syarat & Ketentuan
-							</Accordion.Trigger>
-							<Accordion.Content class="text-sm text-secondary/70">
-								<ul class="list-disc space-y-1 pl-4">
-									<li>
-										Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
-										maksimal 1 kali.
-									</li>
-									<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
-									<li>Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.</li>
-									<li>Biaya admin tidak dapat dikembalikan.</li>
-								</ul>
-							</Accordion.Content>
-						</Accordion.Item>
-					</Accordion.Root>
-
-					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
-							onclick={goBack}>Kembali</Button
-						>
-						<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-							<div class="flex items-center space-x-2">
-								<Checkbox
-									id="tnc"
-									bind:checked={agreeTnc}
-									class="border-white/20 data-[state=checked]:bg-senary data-[state=checked]:text-primary"
-								/>
-								<Label
-									for="tnc"
-									class="text-xs leading-none text-secondary/60 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+								<Button
+									variant="outline"
+									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+									disabled={reservationToReschedule}
+									onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
 								>
-									Saya menyetujui syarat & ketentuan
-								</Label>
-							</div>
-							<Button
-								class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
-								disabled={loadingSubmit}
-								onclick={handleSubmit}
-							>
-								{#if loadingSubmit}
-									<span class="flex items-center gap-2">
-										<Loader2Icon class="size-4 animate-spin" />
-										{#if reservationToReschedule}
-											Memproses Reschedule...
+									<span>
+										{#if redeemCode}
+											Kode Redeem Digunakan
 										{:else}
-											Memproses Pembayaran...
+											{selectedVoucher
+												? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
+												: 'Pilih / Beli Voucher'}
 										{/if}
 									</span>
-								{:else if reservationToReschedule}
-									Konfirmasi Reschedule
-								{:else}
-									Konfirmasi Reservasi
-									<div></div>
-								{/if}
-							</Button>
+									<ChevronRight class="h-4 w-4 opacity-50" />
+								</Button>
+							</div>
 						</div>
+
+						{#if !reservationToReschedule}
+							<div class="space-y-4">
+								<h4 class="font-semibold text-secondary">Metode Pembayaran</h4>
+								<Accordion.Root type="single" class="w-full space-y-2">
+									{#each paymentMethods as group}
+										<Accordion.Item value={group.category} class="border-b-0">
+											<Accordion.Trigger
+												class="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-secondary hover:bg-white/10 hover:no-underline data-[state=open]:bg-white/10"
+											>
+												{group.category}
+											</Accordion.Trigger>
+											<Accordion.Content class="pt-2">
+												<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+													{#each group.items as item}
+														<button
+															type="button"
+															class={cn(
+																'flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-300',
+																selectedPaymentMethod === item.id
+																	? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+																	: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10'
+															)}
+															onclick={() => (selectedPaymentMethod = item.id)}
+														>
+															<!-- Placeholder icons -->
+															<div class="flex size-8 items-center justify-center rounded">
+																<img src="/payment-method/{item.icon}.svg" alt={item.label} />
+															</div>
+															<div class="flex flex-col">
+																<span
+																	class={cn(
+																		'text-sm font-medium',
+																		selectedPaymentMethod === item.id
+																			? 'text-senary'
+																			: 'text-secondary'
+																	)}>{item.label}</span
+																>
+																{#if paymentFees}
+																	{@const feeKey =
+																		item.id === 'qris'
+																			? 'qris'
+																			: ['shopeepay', 'gopay', 'dana'].includes(item.id)
+																				? item.id
+																				: 'bank_transfer'}
+																	{@const feeConfig = paymentFees[feeKey]}
+																	{#if feeConfig}
+																		<span class="text-xs text-secondary/60">
+																			Biaya: {feeConfig.type === 'fixed'
+																				? currencyFormatter.format(feeConfig.value)
+																				: `${(feeConfig.value * 100).toFixed(1)}%`}
+																		</span>
+																	{/if}
+																{/if}
+															</div>
+														</button>
+													{/each}
+												</div>
+											</Accordion.Content>
+										</Accordion.Item>
+									{/each}
+								</Accordion.Root>
+							</div>
+						{/if}
+
+						<Separator class="bg-white/10" />
+
+						<div class="space-y-2 text-sm">
+							<div class="flex justify-between text-secondary/80">
+								<span>{selectedService?.name ?? 'Subtotal'}</span>
+								<span>{currencyFormatter.format(subtotal)}</span>
+							</div>
+							<div class="flex justify-between text-senary">
+								<span>Diskon Voucher</span>
+								<span>-{currencyFormatter.format(voucherDiscount)}</span>
+							</div>
+							{#if redeemCode}
+								<div class="flex justify-between text-senary">
+									<span>Redeem Code ({redeemCode})</span>
+									<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
+								</div>
+							{/if}
+							<div class="flex justify-between text-destructive">
+								<span>Biaya Admin</span>
+								<span>+{currencyFormatter.format(adminFee)}</span>
+							</div>
+							{#if paymentMethodFee > 0}
+								<div class="flex justify-between text-destructive">
+									<span>Biaya Layanan</span>
+									<span>+{currencyFormatter.format(paymentMethodFee)}</span>
+								</div>
+							{/if}
+							<div class="flex justify-between text-base font-semibold text-secondary">
+								<span>Total</span>
+								<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
+							</div>
+							<div class="flex justify-between text-base font-semibold text-secondary">
+								<span>Biaya DP</span>
+								<span class="text-xl text-senary"
+									>{currencyFormatter.format(
+										(total - paymentMethodFee) * 0.5 + paymentMethodFee
+									)}</span
+								>
+							</div>
+						</div>
+
+						<!-- Terms and Conditions Accordion -->
+						<Accordion.Root type="single" collapsible class="w-full">
+							<Accordion.Item value="tnc" class="border-white/10">
+								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+									Syarat & Ketentuan
+								</Accordion.Trigger>
+								<Accordion.Content class="text-sm text-secondary/70">
+									<ul class="list-disc space-y-1 pl-4">
+										<li>
+											Reservasi yang sudah dibayar dapat dibatalkan, namun biaya DP tidak dapat dikemablikan
+											.
+										</li>
+										<li>
+											Reservasi yang sudah dibayar dapat di-reschedule
+											maksimal 1 kali.
+										</li>
+										<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
+										<li>
+											Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.
+										</li>
+										<li>Biaya admin tidak dapat dikembalikan.</li>
+									</ul>
+								</Accordion.Content>
+							</Accordion.Item>
+
+							<Accordion.Item value="calculation-example" class="border-white/10">
+								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+									Cara Perhitungan Pembayaran
+								</Accordion.Trigger>
+								<Accordion.Content class="space-y-4 text-sm text-secondary/70">
+									<div>
+										<h4 class="mb-2 font-semibold text-senary">KOMPONEN BIAYA:</h4>
+										<ul class="list-disc space-y-1 pl-4">
+											<li>
+												<span class="font-medium text-secondary">Harga Service:</span> Biaya layanan
+												barbershop yang Anda pilih ({currencyFormatter.format(subtotal)})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Biaya Admin:</span> Biaya tetap
+												administrasi sistem reservasi ({currencyFormatter.format(adminFee)})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Biaya Layanan:</span> Biaya
+												transaksi dari metode pembayaran ({examplePaymentMethod === 'qris'
+													? 'QRIS'
+													: examplePaymentMethod === 'bank_transfer'
+														? 'Bank Transfer'
+														: examplePaymentMethod}: {exampleFeeConfig?.type === 'fixed'
+													? currencyFormatter.format(exampleFeeConfig.value)
+													: `${((exampleFeeConfig?.value ?? 0) * 100).toFixed(1)}%`})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Diskon Voucher:</span> Potongan
+												harga dari voucher yang Anda gunakan ({currencyFormatter.format(
+													voucherDiscount + redeemCodeDiscount
+												)})
+											</li>
+										</ul>
+									</div>
+
+									<div>
+										<h4 class="mb-2 font-semibold text-senary">RUMUS PERHITUNGAN:</h4>
+										<div class="space-y-3">
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">
+													1. Biaya Layanan ({examplePaymentMethod === 'qris'
+														? 'QRIS'
+														: examplePaymentMethod}):
+												</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													{#if exampleFeeConfig?.type === 'fixed'}
+														<p>
+															Biaya Layanan = {currencyFormatter.format(exampleFeeConfig.value)}
+														</p>
+													{:else}
+														<p>
+															Biaya Layanan = [(Harga Service - Diskon + Biaya Admin) ÷ 2] × {(
+																(exampleFeeConfig?.value ?? 0) * 100
+															).toFixed(1)}%
+														</p>
+														<p>
+															= [({currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+																voucherDiscount + redeemCodeDiscount
+															)} + {currencyFormatter.format(adminFee)}) ÷ 2] × {(
+																(exampleFeeConfig?.value ?? 0) * 100
+															).toFixed(1)}%
+														</p>
+														<p>
+															= {currencyFormatter.format(
+																(subtotal - (voucherDiscount + redeemCodeDiscount) + adminFee) / 2
+															)} × {((exampleFeeConfig?.value ?? 0) * 100).toFixed(1)}%
+														</p>
+														<p class="font-bold text-senary">
+															= {currencyFormatter.format(exampleServiceFee)}
+														</p>
+													{/if}
+												</div>
+											</div>
+
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">2. Total Pembayaran:</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													<p>
+														Total = Harga Service - Diskon Voucher + Biaya Admin + Biaya Layanan
+													</p>
+													<p>
+														= {currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+															voucherDiscount + redeemCodeDiscount
+														)} + {currencyFormatter.format(adminFee)} + {currencyFormatter.format(
+															exampleServiceFee
+														)}
+													</p>
+													<p class="font-bold text-senary">
+														= {currencyFormatter.format(exampleTotal)}
+													</p>
+												</div>
+											</div>
+
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">3. Biaya Uang Muka (DP 50%):</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													<p>
+														Biaya DP = [(Harga Service - Diskon Voucher + Biaya Admin) ÷ 2] + Biaya
+														Layanan
+													</p>
+													<p>
+														= [({currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+															voucherDiscount + redeemCodeDiscount
+														)} + {currencyFormatter.format(adminFee)}) ÷ 2] + {currencyFormatter.format(
+															exampleServiceFee
+														)}
+													</p>
+													<p>
+														= {currencyFormatter.format(
+															(subtotal - (voucherDiscount + redeemCodeDiscount) + adminFee) / 2
+														)} + {currencyFormatter.format(exampleServiceFee)}
+													</p>
+													<p class="font-bold text-senary">
+														= {currencyFormatter.format(exampleDP)}
+													</p>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="rounded-lg border border-senary/20 bg-senary/10 p-3">
+										<h4 class="mb-2 font-semibold text-senary">CATATAN PENTING:</h4>
+										<p class="mb-2">
+											Anda membayar 50% (uang muka) saat reservasi sebesar <span
+												class="font-bold text-senary">{currencyFormatter.format(exampleDP)}</span
+											>, dan sisanya dibayar di tempat setelah layanan selesai.
+										</p>
+										<div class="mt-2 flex justify-between border-t border-senary/20 pt-2 text-xs">
+											<span>Sisa pembayaran di tempat:</span>
+											<span class="font-mono font-bold"
+												>{currencyFormatter.format(exampleSisa)}</span
+											>
+										</div>
+										<div class="flex justify-between pt-1 text-xs">
+											<span>Total keseluruhan:</span>
+											<span class="font-mono font-bold"
+												>{currencyFormatter.format(exampleTotal)}</span
+											>
+										</div>
+									</div>
+								</Accordion.Content>
+							</Accordion.Item>
+						</Accordion.Root>
+					</div>
+				</div>
+
+				<div class="flex flex-col mt-3 gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<Button
+						variant="outline"
+						class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
+						onclick={goBack}>Kembali</Button
+					>
+					<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+						<div class="flex items-center space-x-2">
+							<Checkbox
+								id="tnc"
+								bind:checked={agreeTnc}
+								class="border-white/20 data-[state=checked]:bg-senary data-[state=checked]:text-primary"
+							/>
+							<Label
+								for="tnc"
+								class="text-xs leading-none text-secondary/60 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+							>
+								Saya menyetujui syarat & ketentuan
+							</Label>
+						</div>
+						<Button
+							class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
+							disabled={loadingSubmit}
+							onclick={handleSubmit}
+						>
+							{#if loadingSubmit}
+								<span class="flex items-center gap-2">
+									<Loader2Icon class="size-4 animate-spin" />
+									{#if reservationToReschedule}
+										Memproses Reschedule...
+									{:else}
+										Memproses Pembayaran...
+									{/if}
+								</span>
+							{:else if reservationToReschedule}
+								Konfirmasi Reschedule
+							{:else}
+								Konfirmasi Reservasi
+								<div></div>
+							{/if}
+						</Button>
 					</div>
 				</div>
 			{/if}
@@ -1228,15 +1617,15 @@
 		try {
 			const response = await buyVoucher(voucher.voucherID, token);
 			if (response.success) {
-				toast.success('Voucher purchased successfully!');
+				toast.success('Voucher berhasil dibeli!');
 				// Reload data
 				await loadReservationData();
 			} else {
-				toast.error(response.message || 'Failed to purchase voucher');
+				toast.error(response.message || 'Gagal membeli voucher');
 			}
 		} catch (e) {
 			console.error('Error buying voucher:', e);
-			toast.error('An error occurred while purchasing the voucher');
+			toast.error('Terjadi kesalahan saat membeli voucher');
 		}
 	}}
 />

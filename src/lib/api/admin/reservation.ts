@@ -41,10 +41,10 @@ export const getReservations = async (
 
 	const reservations: Reservation[] = result.data.map((item) => ({
 		id: item.reservationID,
+
 		invoice: item.invoice,
+
 		customer_id: item.user?.id || '', // Not present in log, but maybe not needed for list
-		barber_id: item.barber?.id || '',
-		service_id: item.service?.id || '',
 		date_time_id: '', // Not present
 		status: item.status,
 		notes: '',

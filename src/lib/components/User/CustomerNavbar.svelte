@@ -16,27 +16,55 @@
 		AlertDialogTitle
 	} from '$lib/components/ui/alert-dialog';
 
+	import { getReservations } from '$lib/api/customer/reservation';
+	import { onMount } from 'svelte';
+
 	let showLogoutDialog = $state(false);
 	let isMobileMenuOpen = $state(false);
+	let hasActiveReservations = $state(false);
 
 	function handleLogout() {
 		authStore.clear();
 		showLogoutDialog = false;
 		goto('/');
 	}
+
+	async function checkActiveReservations() {
+		const token = $authStore.session?.access_token;
+		if (!token) return;
+
+		try {
+			const response = await getReservations(token);
+			if (response.success && response.data) {
+				const activeStatuses = ['waiting', 'onGoing', 'waitingForPayment', 'requestToReschedule'];
+				hasActiveReservations = response.data.some((res) => activeStatuses.includes(res.status));
+			}
+		} catch (error) {
+			console.error('Failed to check active reservations:', error);
+		}
+	}
+
+	$effect(() => {
+		if ($authStore.session) {
+			checkActiveReservations();
+		} else {
+			hasActiveReservations = false;
+		}
+	});
 </script>
 
 <nav
 	class="fixed top-0 right-0 left-0 z-50 border-b border-white/5 bg-black/40 shadow-lg backdrop-blur-md transition-all duration-300"
 >
-	<div class="container mx-auto px-4">
-		<div class="flex h-20 items-center justify-between">
+	<div class="mx-auto max-w-6xl px-4 md:px-8">
+		<div class="flex h-16 items-center justify-between md:h-20">
 			<!-- Logo -->
 			<div class="flex items-center gap-2">
 				<img
 					src="/three_lights_barbershop_logo.svg"
+					onclick={() => goto('/')}
 					alt="Three Lights Barbershop Logo"
-					class="h-12 w-auto"
+					class="h-10 w-auto md:h-12"
 				/>
 			</div>
 
@@ -49,19 +77,28 @@
 					href="/catalogue"
 					class="text-sm font-medium text-secondary transition-colors hover:text-senary">Katalog</a
 				>
-				<a
-					href="/profile"
-					class="text-sm font-medium text-secondary transition-colors hover:text-senary">Profil</a
-				>
+				<ReservationSheet
+					triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium"
+					triggerText="Reservasi"
+				/>
 			</div>
 
 			<div class="hidden items-center gap-4 md:flex">
-				<ReservationSheet
-					triggerClass="bg-primary text-senary hover:bg-primary/90 font-medium mr-4"
-					triggerText="Reservasi"
-				/>
 				<!-- Reservation Button & Auth -->
 				{#if $authStore.session}
+					<Button
+						variant="ghost"
+						size="icon"
+						class="relative text-secondary hover:bg-white/0 hover:text-senary"
+						onclick={() => goto('/profile')}
+					>
+						<User class="size-5" />
+						{#if hasActiveReservations}
+							<div
+								class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-black"
+							></div>
+						{/if}
+					</Button>
 					<Button
 						variant="ghost"
 						size="icon"
@@ -69,7 +106,6 @@
 						onclick={() => (showLogoutDialog = true)}
 					>
 						<LogOut class="size-5" />
-						Keluar
 					</Button>
 				{:else}
 					<Button
@@ -121,14 +157,23 @@
 										<BookOpen class="size-5" />
 										<span class="font-medium">Katalog</span>
 									</a>
-									<a
-										href="/profile"
-										class="flex items-center gap-3 rounded-lg px-4 py-3 text-secondary transition-all hover:bg-white/5 hover:text-senary"
-										onclick={() => (isMobileMenuOpen = false)}
-									>
-										<User class="size-5" />
-										<span class="font-medium">Profil</span>
-									</a>
+									{#if $authStore.session}
+										<a
+											href="/profile"
+											class="flex items-center gap-3 rounded-lg px-4 py-3 text-secondary transition-all hover:bg-white/5 hover:text-senary"
+											onclick={() => (isMobileMenuOpen = false)}
+										>
+											<div class="relative">
+												<User class="size-5" />
+												{#if hasActiveReservations}
+													<div
+														class="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-black"
+													></div>
+												{/if}
+											</div>
+											<span class="font-medium">Profil</span>
+										</a>
+									{/if}
 								</div>
 
 								<div class="my-6 h-px w-full bg-white/10"></div>

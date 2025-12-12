@@ -22,9 +22,13 @@
 		const date = new Date(isoString);
 		const now = new Date();
 		const isToday = date.toDateString() === now.toDateString();
-		
+
 		if (isToday) {
-			return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+			return date.toLocaleTimeString('en-US', {
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false
+			});
 		} else {
 			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 		}
@@ -36,7 +40,9 @@
 	<div class="p-4 border-b border-white/10">
 		<h2 class="text-xl font-bold text-secondary mb-4">Messages</h2>
 		<div class="relative">
-			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-secondary/50" />
+			<Search
+				class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-secondary/50"
+			/>
 			<Input
 				placeholder="Search chats..."
 				bind:value={searchQuery}
@@ -51,10 +57,10 @@
 			<button
 				onclick={() => onSelect(session)}
 				class={cn(
-					"w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group relative overflow-hidden",
-					selectedChatId === session.chatID 
-						? "bg-senary/10 border border-senary/20" 
-						: "hover:bg-white/5 border border-transparent"
+					'w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group relative overflow-hidden',
+					selectedChatId === session.chatID
+						? 'bg-senary/10 border border-senary/20'
+						: 'hover:bg-white/5 border border-transparent'
 				)}
 			>
 				{#if selectedChatId === session.chatID}
@@ -62,7 +68,9 @@
 				{/if}
 
 				<div class="relative">
-					<AvatarPrimitive.Root class="h-12 w-12 rounded-full border border-white/10 ring-2 ring-transparent group-hover:ring-white/10 transition-all">
+					<AvatarPrimitive.Root
+						class="h-12 w-12 rounded-full border border-white/10 ring-2 ring-transparent group-hover:ring-white/10 transition-all"
+					>
 						<AvatarPrimitive.Image
 							src={session.customerPhoto}
 							alt={session.customerName}
@@ -85,21 +93,26 @@
 
 				<div class="min-w-0 flex-1">
 					<div class="flex items-center justify-between mb-0.5">
-						<h3 class={cn(
-							"truncate font-medium transition-colors",
-							selectedChatId === session.chatID ? "text-senary" : "text-secondary group-hover:text-white"
-						)}>
+						<h3
+							class={cn(
+								'truncate font-medium transition-colors',
+								selectedChatId === session.chatID
+									? 'text-senary'
+									: 'text-secondary group-hover:text-white'
+							)}
+						>
 							{session.customerName || 'Unknown Customer'}
 						</h3>
-						<span class="text-[10px] text-secondary/50 font-medium">{formatTime(session.lastMessageTime)}</span>
+						<span class="text-[10px] text-secondary/50 font-medium"
+							>{formatTime(session.lastMessageTime)}</span
+						>
 					</div>
-					{#if session.customerPhone}
-						<p class="text-[10px] font-medium text-senary/70 mb-0.5">{session.customerPhone}</p>
-					{/if}
-					<p class={cn(
-						"truncate text-xs",
-						session.unreadCount > 0 ? "text-secondary font-medium" : "text-secondary/60"
-					)}>
+					<p
+						class={cn(
+							'truncate text-xs',
+							session.unreadCount > 0 ? 'text-secondary font-medium' : 'text-secondary/60'
+						)}
+					>
 						{session.lastMessage}
 					</p>
 				</div>
@@ -107,9 +120,7 @@
 		{/each}
 
 		{#if filteredSessions.length === 0}
-			<div class="p-8 text-center text-secondary/40 text-sm">
-				No chats found.
-			</div>
+			<div class="p-8 text-center text-secondary/40 text-sm">No chats found.</div>
 		{/if}
 	</div>
 </div>

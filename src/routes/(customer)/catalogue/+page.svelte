@@ -63,7 +63,7 @@
 	const serviceOptions = [
 		{
 			value: '',
-			label: 'All'
+			label: 'Semua'
 		},
 		{
 			value: 'Short',
@@ -96,7 +96,7 @@
 	let currentPageIndex = $derived(dataCatalogue.getState().pagination.pageIndex + 1);
 
 	// State using Svelte 5 runes
-	let selectedFilter = $state('All');
+	let selectedFilter = $state('Semua');
 	// Fixed: Proper type for selectedService
 	let selectedService = $state<Catalogue | null>(null);
 
@@ -106,34 +106,34 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Katalog | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Hero Section -->
-	<section class="relative h-[60vh] w-full overflow-hidden">
+	<section class="relative h-[50vh] w-full overflow-hidden md:h-[60vh]">
 		<div
 			class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/30 via-transparent to-primary/90"
 		>
-			<img
-				src="https://images.unsplash.com/photo-1608869776252-33ff061fabf2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-				alt=""
-				class="h-full w-full object-cover opacity-25"
-			/>
+			<img src="/Catalogue_Banner.webp" alt="" class="h-full w-full object-cover opacity-25" />
 		</div>
 
 		<div
-			class="relative z-10 mx-auto flex h-full max-w-7xl flex-col content-center justify-center px-6"
+			class="relative z-10 mx-auto flex h-full max-w-7xl flex-col content-center justify-center px-6 pt-20 md:pt-0"
 			in:fade={{ duration: 1000 }}
 		>
 			<div class="mb-4 flex items-center gap-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
 				<div class="h-[1px] w-12 bg-senary"></div>
-				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">The Collection</p>
+				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">Koleksi Kami</p>
 			</div>
 
 			<h1
-				class="max-w-4xl text-left text-6xl leading-[0.9] font-bold tracking-tighter text-secondary drop-shadow-2xl md:text-8xl lg:text-[100px]"
+				class="max-w-4xl text-left text-4xl leading-[0.9] font-bold tracking-tighter text-secondary drop-shadow-2xl md:text-6xl md:text-8xl lg:text-[100px]"
 				in:fly={{ y: 30, duration: 800, delay: 400 }}
 			>
-				Curated <br />
-				<span class="text-gradient-gold">Excellence</span>
+				Terpilih <br />
+				<span class="text-gradient-gold">Keunggulan</span>
 			</h1>
 
 			<div
@@ -149,7 +149,7 @@
 							class="relative flex items-center gap-3 rounded-lg bg-[#F5F5DC] px-8 py-4 font-bold text-[#1B4D3E] ring-1 ring-white/10 transition hover:bg-white"
 						>
 							<Sparkles class="h-5 w-5 text-senary" />
-							<span>AI Catalogue</span>
+							<span>Katalog AI</span>
 						</button>
 					</a>
 					<button
@@ -168,7 +168,7 @@
 						class="group flex items-center gap-3 rounded-lg border border-white/20 bg-white/5 px-8 py-4 font-bold text-secondary backdrop-blur-sm transition hover:border-senary/50 hover:bg-white/10"
 					>
 						<ChevronsDown class="h-5 w-5 text-secondary/70 transition group-hover:text-secondary" />
-						<span>Browse Catalogue</span>
+						<span>Lihat Katalog</span>
 					</button>
 				</div>
 			</div>
@@ -176,12 +176,12 @@
 	</section>
 
 	<!-- Services Catalog -->
-	<section class="relative z-10 container mx-auto px-4 py-20" id="services">
+	<section class="relative z-10 container mx-auto px-4 py-10 md:py-20" id="services">
 		<div class="mb-12">
 			<div class="mb-4 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
 				<div>
-					<h3 class="mb-2 font-serif text-4xl font-bold text-secondary">Catalogue</h3>
-					<p class="font-light text-secondary/70">Explore our premium services and styles</p>
+					<h3 class="mb-2 font-serif text-4xl font-bold text-secondary">Katalog</h3>
+					<p class="font-light text-secondary/70">Jelajahi layanan dan gaya premium kami</p>
 				</div>
 
 				<div class="flex w-full flex-col gap-4 md:w-auto md:items-end">
@@ -190,7 +190,7 @@
 							options={serviceOptions}
 							{selectedFilter}
 							onSelect={(value) => {
-								selectedFilter = value || 'All';
+								selectedFilter = value || 'Semua';
 								selectedFilterValue = value;
 								dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
 							}}
@@ -202,7 +202,7 @@
 							class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 transform text-secondary/50"
 						/>
 						<Input
-							placeholder="Search catalogue..."
+							placeholder="Cari katalog..."
 							value={(dataCatalogue.getColumn('name')?.getFilterValue() as string) ?? ''}
 							oninput={(e) => {
 								dataCatalogue.getColumn('name')?.setFilterValue(e.currentTarget.value);
@@ -244,7 +244,6 @@
 								class="text-secondary/70 hover:bg-white/10 hover:text-secondary"
 							>
 								<ChevronLeftIcon class="size-4" />
-								<span class="hidden sm:block">Previous</span>
 							</Button>
 						</Pagination.Item>
 						{#each pages as page (page.key)}
@@ -278,7 +277,6 @@
 								variant="ghost"
 								class="text-secondary/70 hover:bg-white/10 hover:text-secondary"
 							>
-								<span class="hidden sm:block">Next</span>
 								<ChevronRightIcon class="size-4" />
 							</Button>
 						</Pagination.Item>
