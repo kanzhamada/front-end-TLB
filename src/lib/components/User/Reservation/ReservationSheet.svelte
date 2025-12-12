@@ -440,6 +440,37 @@
 		selectedTimeDisplay = selectedTime?.time ?? null;
 	});
 
+	// Example Calculation Logic
+	let examplePaymentMethod = $derived(selectedPaymentMethod || 'qris');
+	let exampleFeeConfig = $derived.by(() => {
+		if (!paymentFees) return null;
+		const key =
+			examplePaymentMethod === 'qris'
+				? 'qris'
+				: ['shopeepay', 'gopay', 'dana'].includes(examplePaymentMethod)
+					? examplePaymentMethod
+					: 'bank_transfer';
+		return paymentFees[key];
+	});
+
+	let exampleServiceFee = $derived.by(() => {
+		if (!exampleFeeConfig) return 0;
+		if (exampleFeeConfig.type === 'fixed') return exampleFeeConfig.value;
+
+		const baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
+		return Math.ceil((baseAmount + adminFee) * 0.5 * exampleFeeConfig.value);
+	});
+
+	let exampleTotal = $derived(
+		Math.max(subtotal - voucherDiscount - redeemCodeDiscount + adminFee + exampleServiceFee, 0)
+	);
+
+	let exampleDP = $derived.by(() => {
+		return Math.ceil((exampleTotal - exampleServiceFee) * 0.5 + exampleServiceFee);
+	});
+
+	let exampleSisa = $derived(exampleTotal - exampleDP);
+
 	let error = $state<string | null>(null);
 	$effect(() => {
 		if (error) {
@@ -1355,6 +1386,149 @@
 										</li>
 										<li>Biaya admin tidak dapat dikembalikan.</li>
 									</ul>
+								</Accordion.Content>
+							</Accordion.Item>
+
+							<Accordion.Item value="calculation-example" class="border-white/10">
+								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
+									Cara Perhitungan Pembayaran
+								</Accordion.Trigger>
+								<Accordion.Content class="space-y-4 text-sm text-secondary/70">
+									<div>
+										<h4 class="mb-2 font-semibold text-senary">KOMPONEN BIAYA:</h4>
+										<ul class="list-disc space-y-1 pl-4">
+											<li>
+												<span class="font-medium text-secondary">Harga Service:</span> Biaya layanan
+												barbershop yang Anda pilih ({currencyFormatter.format(subtotal)})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Biaya Admin:</span> Biaya tetap
+												administrasi sistem reservasi ({currencyFormatter.format(adminFee)})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Biaya Layanan:</span> Biaya
+												transaksi dari metode pembayaran ({examplePaymentMethod === 'qris'
+													? 'QRIS'
+													: examplePaymentMethod === 'bank_transfer'
+														? 'Bank Transfer'
+														: examplePaymentMethod}: {exampleFeeConfig?.type === 'fixed'
+													? currencyFormatter.format(exampleFeeConfig.value)
+													: `${((exampleFeeConfig?.value ?? 0) * 100).toFixed(1)}%`})
+											</li>
+											<li>
+												<span class="font-medium text-secondary">Diskon Voucher:</span> Potongan
+												harga dari voucher yang Anda gunakan ({currencyFormatter.format(
+													voucherDiscount + redeemCodeDiscount
+												)})
+											</li>
+										</ul>
+									</div>
+
+									<div>
+										<h4 class="mb-2 font-semibold text-senary">RUMUS PERHITUNGAN:</h4>
+										<div class="space-y-3">
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">
+													1. Biaya Layanan ({examplePaymentMethod === 'qris'
+														? 'QRIS'
+														: examplePaymentMethod}):
+												</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													{#if exampleFeeConfig?.type === 'fixed'}
+														<p>
+															Biaya Layanan = {currencyFormatter.format(exampleFeeConfig.value)}
+														</p>
+													{:else}
+														<p>
+															Biaya Layanan = [(Harga Service - Diskon + Biaya Admin) ÷ 2] × {(
+																(exampleFeeConfig?.value ?? 0) * 100
+															).toFixed(1)}%
+														</p>
+														<p>
+															= [({currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+																voucherDiscount + redeemCodeDiscount
+															)} + {currencyFormatter.format(adminFee)}) ÷ 2] × {(
+																(exampleFeeConfig?.value ?? 0) * 100
+															).toFixed(1)}%
+														</p>
+														<p>
+															= {currencyFormatter.format(
+																(subtotal - (voucherDiscount + redeemCodeDiscount) + adminFee) / 2
+															)} × {((exampleFeeConfig?.value ?? 0) * 100).toFixed(1)}%
+														</p>
+														<p class="font-bold text-senary">
+															= {currencyFormatter.format(exampleServiceFee)}
+														</p>
+													{/if}
+												</div>
+											</div>
+
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">2. Total Pembayaran:</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													<p>
+														Total = Harga Service - Diskon Voucher + Biaya Admin + Biaya Layanan
+													</p>
+													<p>
+														= {currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+															voucherDiscount + redeemCodeDiscount
+														)} + {currencyFormatter.format(adminFee)} + {currencyFormatter.format(
+															exampleServiceFee
+														)}
+													</p>
+													<p class="font-bold text-senary">
+														= {currencyFormatter.format(exampleTotal)}
+													</p>
+												</div>
+											</div>
+
+											<div class="rounded-lg border border-white/10 bg-white/5 p-3">
+												<p class="mb-1 font-medium text-secondary">3. Biaya Uang Muka (DP 50%):</p>
+												<div class="space-y-1 font-mono text-xs text-secondary/80">
+													<p>
+														Biaya DP = [(Harga Service - Diskon Voucher + Biaya Admin) ÷ 2] + Biaya
+														Layanan
+													</p>
+													<p>
+														= [({currencyFormatter.format(subtotal)} - {currencyFormatter.format(
+															voucherDiscount + redeemCodeDiscount
+														)} + {currencyFormatter.format(adminFee)}) ÷ 2] + {currencyFormatter.format(
+															exampleServiceFee
+														)}
+													</p>
+													<p>
+														= {currencyFormatter.format(
+															(subtotal - (voucherDiscount + redeemCodeDiscount) + adminFee) / 2
+														)} + {currencyFormatter.format(exampleServiceFee)}
+													</p>
+													<p class="font-bold text-senary">
+														= {currencyFormatter.format(exampleDP)}
+													</p>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="rounded-lg border border-senary/20 bg-senary/10 p-3">
+										<h4 class="mb-2 font-semibold text-senary">CATATAN PENTING:</h4>
+										<p class="mb-2">
+											Anda membayar 50% (uang muka) saat reservasi sebesar <span
+												class="font-bold text-senary">{currencyFormatter.format(exampleDP)}</span
+											>, dan sisanya dibayar di tempat setelah layanan selesai.
+										</p>
+										<div class="mt-2 flex justify-between border-t border-senary/20 pt-2 text-xs">
+											<span>Sisa pembayaran di tempat:</span>
+											<span class="font-mono font-bold"
+												>{currencyFormatter.format(exampleSisa)}</span
+											>
+										</div>
+										<div class="flex justify-between pt-1 text-xs">
+											<span>Total keseluruhan:</span>
+											<span class="font-mono font-bold"
+												>{currencyFormatter.format(exampleTotal)}</span
+											>
+										</div>
+									</div>
 								</Accordion.Content>
 							</Accordion.Item>
 						</Accordion.Root>
