@@ -9,7 +9,6 @@ export type ChatSession = {
 	lastMessageTime: string;
 	unreadCount: number;
 	customerId?: string; // Added for message alignment
-	customerPhone?: string; // Added for display
 };
 
 export type MessageDetail = {
@@ -21,7 +20,6 @@ export type MessageDetail = {
 export type ChatDetail = {
 	chatID: string;
 	reservationID: string;
-	customerPhone?: string;
 	messagesDetail: MessageDetail[];
 };
 
@@ -40,8 +38,7 @@ export const getChatInbox = async (
 			lastMessage: item.lastMessage || item.last_message || '',
 			lastMessageTime: item.lastMessageTime || item.last_message_time || item.created_at || '',
 			unreadCount: item.unreadCount || item.unread_count || 0,
-			customerId: item.customerId || item.customer_id || item.user_id, // Try to capture customer ID
-			customerPhone: item.customerPhone || item.customer_phone || item.phone || item.phoneNumber || item.user?.phone || '' // Map phone number aggressively
+			customerId: item.customerId || item.customer_id || item.user_id // Try to capture customer ID
 		}));
 		return { ...res, data: mappedData };
 	}
@@ -53,22 +50,11 @@ export const getChatMessages = async (
 	reservationId: string,
 	token: string
 ): Promise<ApiResponse<ChatDetail>> => {
-	const res = await getFromApi<any>(
+	return getFromApi<ChatDetail>(
 		fetch,
 		`/shared/view-chat/${reservationId}`,
 		token
 	);
-	
-	if (res.success && res.data) {
-		const mappedData: ChatDetail = {
-			chatID: res.data.chatID || res.data.chat_id,
-			reservationID: res.data.reservationID || res.data.reservation_id,
-			customerPhone: res.data.customerPhone || res.data.customer_phone || res.data.phone || res.data.phoneNumber || res.data.user?.phone || '', // Map phone
-			messagesDetail: res.data.messagesDetail || res.data.messages_detail || []
-		};
-		return { ...res, data: mappedData };
-	}
-	return { ...res, data: { chatID: '', reservationID: '', messagesDetail: [] } };
 };
 
 export const sendMessage = async (

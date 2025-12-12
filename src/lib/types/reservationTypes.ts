@@ -34,6 +34,7 @@ export type ReservationResponse = {
 	downPayment?: number;
 	totalPayment?: number;
 	fulfillmentStatus?: string;
+	payment_method: string;
 };
 
 export type CreateReservationPayload = {
@@ -43,6 +44,7 @@ export type CreateReservationPayload = {
 	notes?: string;
 	voucherId?: string;
 	redeemCode?: string;
+	paymentMethod: string;
 };
 
 export type CreateReservationResponse = {

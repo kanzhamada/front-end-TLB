@@ -161,6 +161,10 @@
 		@apply border-border outline-ring/50;
 	}
 
+	html {
+		scroll-behavior: smooth;
+	}
+
 	body {
 		@apply bg-background text-foreground selection:bg-senary/30 selection:text-foreground;
 		font-feature-settings: "rlig" 1, "calt" 1;
@@ -173,7 +177,7 @@
 	}
 
 	.glass-panel-hover {
-		@apply transition-all duration-300 hover:bg-white/10 hover:border-senary/30 hover:shadow-2xl hover:shadow-senary/5;
+		@apply transition-all duration-300 hover:bg-white/10 hover:border-senary/30 hover:shadow-2xl hover:shadow-senary/5 active:bg-white/10 active:border-senary/30 active:shadow-2xl active:shadow-senary/5 focus:bg-white/10 focus:border-senary/30 focus:shadow-2xl focus:shadow-senary/5;
 	}
 
 	.text-gradient-gold {
@@ -197,6 +201,7 @@
 	.no-scrollbar::-webkit-scrollbar {
 		display: none !important;
 	}
+
 	.no-scrollbar {
 		-ms-overflow-style: none !important;
 		scrollbar-width: none !important;

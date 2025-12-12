@@ -13,14 +13,12 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
-	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
-	import * as Select from '$lib/components/ui/select';
 
 	let { expense = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		expense?: Expense | null;
 		token: string;
 		open: boolean;
-		onClose?: () => void;
+		onClose: () => void;
 		onUpdate: () => void;
 	}>();
 
@@ -33,8 +31,7 @@
 	let formData = $state({
 		date: '',
 		description: '',
-		nominal: 0,
-		category: 'General'
+		nominal: 0
 	});
 
 	// Date handling
@@ -56,8 +53,7 @@
 				formData = {
 					date: expense.date,
 					description: expense.description,
-					nominal: expense.nominal,
-					category: expense.category || 'General' // Default to General if missing
+					nominal: expense.nominal
 				};
 				try {
 					if (expense.date) dateValue = parseDate(expense.date.split('T')[0]);
@@ -74,15 +70,9 @@
 		formData = {
 			date: new Date().toISOString().split('T')[0],
 			description: '',
-			nominal: 0,
-			category: 'General'
+			nominal: 0
 		};
 		dateValue = parseDate(new Date().toISOString().split('T')[0]);
-	}
-
-	function handleClose() {
-		if (onClose) onClose();
-		else open = false;
 	}
 
 	async function handleSubmit(e: Event) {
@@ -103,36 +93,28 @@
 		if (res.success) {
 			toast.success(`Expense ${expense ? 'updated' : 'recorded'} successfully`);
 			onUpdate();
-			handleClose();
+			onClose();
 		} else {
 			toast.error(res.message || `Failed to ${expense ? 'update' : 'record'} expense`);
 		}
 		loading = false;
 	}
 
-	// Delete Confirmation State
-	let confirmOpen = $state(false);
-	let deleteLoading = $state(false);
-
-	function initiateDelete() {
-		confirmOpen = true;
-	}
-
-	async function confirmDelete() {
+	async function handleDelete() {
 		if (!expense) return;
-		
-		deleteLoading = true;
+		if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) return;
+
+		loading = true;
 		const res = await deleteExpense(fetch, expense.id, token);
 		
 		if (res.success) {
 			toast.success('Record deleted successfully');
 			onUpdate();
-			handleClose();
+			onClose();
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
-		deleteLoading = false;
-		confirmOpen = false;
+		loading = false;
 	}
 </script>
 
@@ -140,17 +122,17 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
-		onclick={handleClose}
+		onclick={onClose}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && handleClose()}
+		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
 		<div
 			class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			role="document"
 			tabindex="0"
-			onkeydown={(e) => e.key === 'Escape' && handleClose()}
+			onkeydown={(e) => e.key === 'Escape' && onClose()}
 			in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -168,7 +150,7 @@
 					</p>
 				</div>
 				<button
-					onclick={handleClose}
+					onclick={onClose}
 					class="rounded-full p-2 text-secondary/50 transition-colors hover:bg-white/10 hover:text-white"
 				>
 					<X class="h-5 w-5" />
@@ -202,28 +184,6 @@
 						</Popover.Root>
 					</div>
 
-					<!-- Category -->
-					<div class="space-y-2">
-						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Category</Label>
-						<Select.Root 
-							selected={{ value: formData.category, label: formData.category }}
-							onSelectedChange={(v) => {
-								if (v) formData.category = v.value as string;
-							}}
-						>
-							<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:text-white transition-colors">
-								<Select.Value placeholder="Select category" />
-							</Select.Trigger>
-							<Select.Content class="bg-slate-950 border-white/10 text-secondary">
-								{#each ['Payroll & Staffing', 'Consumables / Supplies', 'Maintenance & Repairs', 'Marketing & Promotion', 'Utilities', 'General', 'Other'] as category}
-									<Select.Item value={category} label={category} class="hover:bg-white/5 cursor-pointer data-[highlighted]:bg-white/5 data-[highlighted]:text-white">
-										{category}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</div>
-
 					<!-- Description -->
 					<div class="space-y-2">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Description</Label>
@@ -250,31 +210,16 @@
 
 					<div class="flex justify-between items-center pt-6 border-t border-white/10">
 						{#if expense}
-							<div class="flex gap-3">
-								<Button 
-									type="button"
-									variant="outline" 
-									onclick={handleClose} 
-									disabled={loading}
-									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
-								>
-									Cancel
-								</Button>
-								<Button 
-									type="button" 
-									variant="destructive" 
-									class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
-									onclick={initiateDelete}
-									disabled={loading}
-								>
-									{#if loading}
-										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-									{:else}
-										<Trash2 class="mr-2 h-4 w-4" />
-									{/if}
-									Delete Record
-								</Button>
-							</div>
+							<Button 
+								type="button"
+								variant="destructive" 
+								onclick={handleDelete}
+								disabled={loading}
+								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+							>
+								<Trash2 class="mr-2 h-4 w-4" />
+								Delete
+							</Button>
 						{:else}
 							<div></div>
 						{/if}
@@ -283,7 +228,7 @@
 							<Button 
 								type="button"
 								variant="outline" 
-								onclick={handleClose} 
+								onclick={onClose} 
 								disabled={loading}
 								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
 							>
@@ -304,14 +249,5 @@
 				</form>
 			</div>
 		</div>
-	<AdminConfirmDialog 
-		bind:open={confirmOpen}
-		title="Delete Expense Record"
-		description="Are you sure you want to delete this expense record? This action cannot be undone."
-		variant="destructive"
-		confirmText="Delete"
-		loading={deleteLoading}
-		onConfirm={confirmDelete}
-	/>
 	</div>
 {/if}

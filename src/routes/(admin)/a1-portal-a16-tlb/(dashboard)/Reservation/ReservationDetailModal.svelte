@@ -1,25 +1,24 @@
 <script lang="ts">
-	import { 
-		getReservationById, 
-		acceptReservation, 
-		declineReservation, 
-		cancelReservation, 
+	import {
+		getReservationById,
+		acceptReservation,
+		declineReservation,
+		cancelReservation,
+		completeReservation,
 		acceptReschedule,
 		declineReschedule,
-		completeReservation
+		type Reservation
 	} from '$lib/api/admin/reservation';
-	import type { Reservation } from '$lib/api/admin/reservation';
+	import { Button } from '$lib/components/ui/button';
+	import { Separator } from '$lib/components/ui/separator';
 	import { toast } from 'svelte-sonner';
+	import { X, Calendar, Clock, User, Scissors, Phone, CreditCard, MapPin } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { X, Calendar, Clock, Scissors, CreditCard, User, Phone, Loader2 } from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
-	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
-	let { reservationId = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
-		reservationId?: string | null;
+	let { reservationId, token, onClose, onUpdate } = $props<{
+		reservationId: string | null;
 		token: string;
-		open: boolean;
 		onClose: () => void;
 		onUpdate: () => void;
 	}>();
@@ -48,91 +47,38 @@
 		}
 		loading = false;
 	}
-	// Confirmation Dialog State
-	let confirmOpen = $state(false);
-	let confirmTitle = $state('');
-	let confirmDescription = $state('');
-	let confirmVariant = $state<'default' | 'destructive' | 'success'>('default');
-	let pendingAction = $state<string | null>(null);
-	let actionLoading = $state(false);
 
-	function initiateAction(action: string) {
-		pendingAction = action;
-		const actionName = action.replace('-', ' ');
-		
+	async function handleAction(action: string) {
+		if (!reservationId || !confirm(`Are you sure you want to ${action.replace('-', ' ')}?`)) return;
+
+		let res;
 		switch (action) {
 			case 'accept':
-			case 'accept-reschedule':
-				confirmTitle = 'Accept Reservation';
-				confirmDescription = 'Are you sure you want to accept this reservation? This will update the status and notify the customer.';
-				confirmVariant = 'success';
+				res = await acceptReservation(fetch, reservationId, token);
 				break;
 			case 'decline':
-			case 'decline-reschedule':
-				confirmTitle = 'Decline Request';
-				confirmDescription = 'Are you sure you want to decline this request? This action cannot be undone.';
-				confirmVariant = 'destructive';
+				res = await declineReservation(fetch, reservationId, token);
 				break;
 			case 'cancel':
-				confirmTitle = 'Cancel Reservation';
-				confirmDescription = 'Are you sure you want to cancel this reservation? The customer will be notified.';
-				confirmVariant = 'destructive';
+				res = await cancelReservation(fetch, reservationId, token);
+				break;
+			case 'accept-reschedule':
+				res = await acceptReschedule(fetch, reservationId, token);
+				break;
+			case 'decline-reschedule':
+				res = await declineReschedule(fetch, reservationId, token);
 				break;
 			case 'complete':
-				confirmTitle = 'Complete Reservation';
-				confirmDescription = 'Are you sure you want to mark this reservation as completed? This implies the service has been delivered.';
-				confirmVariant = 'success';
+				res = await completeReservation(fetch, reservationId, token);
 				break;
-			default:
-				confirmTitle = 'Confirm Action';
-				confirmDescription = `Are you sure you want to ${actionName}?`;
-				confirmVariant = 'default';
 		}
-		confirmOpen = true;
-	}
 
-	async function handleConfirmAction() {
-		if (!reservationId || !pendingAction) return;
-		
-		actionLoading = true;
-		let res;
-		
-		try {
-			switch (pendingAction) {
-				case 'accept':
-					res = await acceptReservation(fetch, reservationId, token);
-					break;
-				case 'decline':
-					res = await declineReservation(fetch, reservationId, token);
-					break;
-				case 'cancel':
-					res = await cancelReservation(fetch, reservationId, token);
-					break;
-				case 'complete':
-					res = await completeReservation(fetch, reservationId, token);
-					break;
-				case 'accept-reschedule':
-					res = await acceptReschedule(fetch, reservationId, token);
-					break;
-				case 'decline-reschedule':
-					res = await declineReschedule(fetch, reservationId, token);
-					break;
-			}
-
-			if (res?.success) {
-				toast.success(`Reservation ${pendingAction.replace('-', ' ')}ed successfully`);
-				onUpdate();
-				onClose();
-			} else {
-				toast.error(res?.message || `Failed to ${pendingAction} reservation`);
-			}
-		} catch (error) {
-			toast.error('An error occurred during the action');
-			console.error(error);
-		} finally {
-			actionLoading = false;
-			confirmOpen = false;
-			pendingAction = null;
+		if (res?.success) {
+			toast.success(`Reservation ${action.replace('-', ' ')}ed successfully`);
+			onUpdate();
+			onClose();
+		} else {
+			toast.error(res?.message || `Failed to ${action} reservation`);
 		}
 	}
 
@@ -184,8 +130,12 @@
 			<!-- Header -->
 			<div class="flex items-center justify-between border-b border-white/10 bg-white/5 px-8 py-6">
 				<div>
-					<h2 class="text-2xl font-bold tracking-tight text-secondary">Reservation <span class="text-senary">Details</span></h2>
-					<p class="text-xs font-light text-secondary/60 uppercase tracking-widest mt-1">Manage Booking Information</p>
+					<h2 class="text-2xl font-bold tracking-tight text-secondary">
+						Reservation <span class="text-senary">Details</span>
+					</h2>
+					<p class="mt-1 text-xs font-light tracking-widest text-secondary/60 uppercase">
+						Manage Booking Information
+					</p>
 				</div>
 				<button
 					onclick={onClose}
@@ -195,70 +145,108 @@
 				</button>
 			</div>
 
-			<div class="max-h-[70vh] overflow-y-auto px-8 py-8 no-scrollbar">
+			<div class="no-scrollbar max-h-[70vh] overflow-y-auto px-8 py-8">
 				{#if loading}
 					<div class="flex h-40 items-center justify-center text-secondary/50">
-						<div class="animate-pulse flex flex-col items-center gap-2">
-							<div class="h-8 w-8 rounded-full border-2 border-senary border-t-transparent animate-spin"></div>
+						<div class="flex animate-pulse flex-col items-center gap-2">
+							<div
+								class="h-8 w-8 animate-spin rounded-full border-2 border-senary border-t-transparent"
+							></div>
 							<span class="text-xs tracking-widest uppercase">Loading details...</span>
 						</div>
 					</div>
 				{:else if reservation}
 					<div class="grid gap-8 md:grid-cols-3">
 						<!-- Main Info -->
-						<div class="md:col-span-2 space-y-8">
+						<div class="space-y-8 md:col-span-2">
 							<div class="flex items-start justify-between">
 								<div>
-									<h3 class="text-3xl font-light text-secondary">#{reservation.invoice || reservation.id}</h3>
-									<p class="text-xs font-bold tracking-widest text-secondary/40 uppercase mt-1">Invoice ID</p>
+									<h3 class="text-3xl font-light text-secondary">
+										#{(reservation.id || '').slice(0, 8)}
+									</h3>
+									<p class="mt-1 text-xs font-bold tracking-widest text-secondary/40 uppercase">
+										Invoice ID
+									</p>
 								</div>
-								<span class={`rounded-full border px-4 py-1.5 text-xs font-bold tracking-wider uppercase ${getStatusColor(reservation.status)}`}>
+								<span
+									class={`rounded-full border px-4 py-1.5 text-xs font-bold tracking-wider uppercase ${getStatusColor(reservation.status)}`}
+								>
 									{reservation.status}
 								</span>
 							</div>
 
 							<div class="grid gap-4 sm:grid-cols-2">
-								<div class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20">
-									<div class="flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2">
+								<div
+									class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20"
+								>
+									<div
+										class="mb-2 flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase"
+									>
 										<Calendar class="mr-2 h-3 w-3" /> Date
 									</div>
 									<p class="text-lg font-medium text-secondary">{reservation.dateTime?.date}</p>
 								</div>
-								<div class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20">
-									<div class="flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2">
+								<div
+									class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20"
+								>
+									<div
+										class="mb-2 flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase"
+									>
 										<Clock class="mr-2 h-3 w-3" /> Time
 									</div>
 									<p class="text-lg font-medium text-secondary">{reservation.dateTime?.hour}</p>
 								</div>
-								<div class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20">
-									<div class="flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2">
+								<div
+									class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20"
+								>
+									<div
+										class="mb-2 flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase"
+									>
 										<Scissors class="mr-2 h-3 w-3" /> Service
 									</div>
 									<p class="text-lg font-medium text-secondary">{reservation.service?.name}</p>
 								</div>
-								<div class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20">
-									<div class="flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase mb-2">
+								<div
+									class="group rounded-2xl border border-white/5 bg-white/5 p-5 transition-colors hover:border-senary/20"
+								>
+									<div
+										class="mb-2 flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase"
+									>
 										<CreditCard class="mr-2 h-3 w-3" /> Price
 									</div>
-									<p class="text-lg font-medium text-senary">{formatCurrency(reservation.service?.price || 0)}</p>
+									<p class="text-lg font-medium text-senary">
+										{formatCurrency(reservation.service?.price || 0)}
+									</p>
 								</div>
 							</div>
 
 							{#if reservation.reschedule}
-								<div class="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 relative overflow-hidden">
+								<div
+									class="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6"
+								>
 									<div class="absolute top-0 right-0 p-4 opacity-10">
 										<Calendar class="h-24 w-24 text-purple-500" />
 									</div>
-									<h4 class="mb-4 flex items-center text-sm font-bold tracking-widest text-purple-400 uppercase">
+									<h4
+										class="mb-4 flex items-center text-sm font-bold tracking-widest text-purple-400 uppercase"
+									>
 										<Clock class="mr-2 h-4 w-4" /> Reschedule Request
 									</h4>
-									<div class="grid gap-6 sm:grid-cols-2 relative z-10">
+									<div class="relative z-10 grid gap-6 sm:grid-cols-2">
 										<div>
-											<p class="text-xs font-bold tracking-widest text-purple-300/50 uppercase mb-1">New Date</p>
+											<p
+												class="mb-1 text-xs font-bold tracking-widest text-purple-300/50 uppercase"
+											>
+												New Date
+											</p>
 											<p class="text-xl text-purple-100">{reservation.reschedule.newDate}</p>
 										</div>
 										<div>
-											<p class="text-xs font-bold tracking-widest text-purple-300/50 uppercase mb-1">New Time</p>
+											<p
+												class="mb-1 text-xs font-bold tracking-widest text-purple-300/50 uppercase"
+											>
+												New Time
+											</p>
 											<p class="text-xl text-purple-100">{reservation.reschedule.newTime}</p>
 										</div>
 									</div>
@@ -267,7 +255,9 @@
 
 							{#if reservation.notes}
 								<div class="rounded-2xl border border-white/5 bg-white/5 p-6">
-									<p class="mb-2 text-xs font-bold tracking-widest text-secondary/50 uppercase">Notes</p>
+									<p class="mb-2 text-xs font-bold tracking-widest text-secondary/50 uppercase">
+										Notes
+									</p>
 									<p class="text-secondary italic">"{reservation.notes}"</p>
 								</div>
 							{/if}
@@ -276,7 +266,9 @@
 						<!-- Sidebar Info -->
 						<div class="space-y-6">
 							<div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-								<h3 class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase">
+								<h3
+									class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase"
+								>
 									<User class="mr-2 h-3 w-3" /> Customer
 								</h3>
 								<div class="space-y-4">
@@ -284,7 +276,7 @@
 										<p class="text-lg font-medium text-secondary">{reservation.customer?.name}</p>
 										<p class="text-xs text-secondary/50">Customer Name</p>
 									</div>
-									<div class="pt-4 border-t border-white/5">
+									<div class="border-t border-white/5 pt-4">
 										<div class="flex items-center text-sm text-secondary">
 											<Phone class="mr-2 h-3 w-3 text-senary" />
 											{reservation.customer?.phoneNumber || 'N/A'}
@@ -294,19 +286,29 @@
 							</div>
 
 							<div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-								<h3 class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase">
+								<h3
+									class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase"
+								>
 									<Scissors class="mr-2 h-3 w-3" /> Barber
 								</h3>
-								<p class="text-lg font-medium text-secondary">{reservation.barber?.name || 'Any Barber'}</p>
+								<p class="text-lg font-medium text-secondary">
+									{reservation.barber?.name || 'Any Barber'}
+								</p>
 								<p class="text-xs text-secondary/50">Assigned Professional</p>
 							</div>
-							
+
 							<div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-								<h3 class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase">
+								<h3
+									class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/80 uppercase"
+								>
 									<Clock class="mr-2 h-3 w-3" /> Created
 								</h3>
-								<p class="text-sm text-secondary">{new Date(reservation.created_at).toLocaleDateString()}</p>
-								<p class="text-xs text-secondary/50">{new Date(reservation.created_at).toLocaleTimeString()}</p>
+								<p class="text-sm text-secondary">
+									{new Date(reservation.created_at).toLocaleDateString()}
+								</p>
+								<p class="text-xs text-secondary/50">
+									{new Date(reservation.created_at).toLocaleTimeString()}
+								</p>
 							</div>
 						</div>
 					</div>
@@ -315,66 +317,56 @@
 
 			{#if reservation && !loading}
 				<div class="border-t border-white/10 bg-white/5 px-8 py-6">
-			{#if reservation.status === 'waiting'}
-				<div class="flex justify-end gap-3">
-					<Button 
-						variant="outline" 
-						class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
-						onclick={() => initiateAction('decline')}
-					>
-						Decline Request
-					</Button>
-					<Button 
-						class="bg-senary text-primary hover:bg-senary/90 font-bold"
-						onclick={() => initiateAction('accept')}
-					>
-						Accept Reservation
-					</Button>
+					<div class="flex flex-wrap justify-end gap-3">
+						{#if reservation.status === 'waiting'}
+							<Button
+								variant="outline"
+								class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+								onclick={() => handleAction('decline')}
+							>
+								Decline Request
+							</Button>
+							<Button
+								class="bg-senary font-bold tracking-wide text-primary hover:bg-senary/90"
+								onclick={() => handleAction('accept')}
+							>
+								Accept Reservation
+							</Button>
+						{:else if reservation.status === 'onGoing'}
+							<Button
+								variant="outline"
+								class="border-green-500/20 text-green-400 hover:bg-green-500/10 hover:text-green-300"
+								onclick={() => handleAction('complete')}
+							>
+								Complete Reservation
+							</Button>
+							<Button variant="destructive" onclick={() => handleAction('cancel')}>
+								Cancel Reservation
+							</Button>
+						{:else if reservation.status === 'requestToReschedule'}
+							<Button
+								variant="outline"
+								class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+								onclick={() => handleAction('decline-reschedule')}
+							>
+								Decline Reschedule
+							</Button>
+							<Button
+								class="bg-purple-500 font-bold tracking-wide text-white hover:bg-purple-600"
+								onclick={() => handleAction('accept-reschedule')}
+							>
+								Accept Reschedule
+							</Button>
+						{:else}
+							<Button
+								variant="outline"
+								class="border-white/10 text-secondary hover:bg-white/10"
+								onclick={onClose}>Close Details</Button
+							>
+						{/if}
+					</div>
 				</div>
-			{:else if reservation.status === 'requestToReschedule'}
-				<div class="flex justify-end gap-3">
-					<Button 
-						variant="outline" 
-						class="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
-						onclick={() => initiateAction('decline-reschedule')}
-					>
-						Decline Reschedule
-					</Button>
-					<Button 
-						class="bg-senary text-primary hover:bg-senary/90 font-bold"
-						onclick={() => initiateAction('accept-reschedule')}
-					>
-						Accept Reschedule
-					</Button>
-				</div>
-			{:else if reservation.status === 'onGoing'}
-				<div class="flex justify-end gap-3">
-					<Button 
-						variant="destructive" 
-						class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20"
-						onclick={() => initiateAction('cancel')}
-					>
-						Cancel Reservation
-					</Button>
-					<Button 
-						class="bg-senary text-primary hover:bg-senary/90 font-bold"
-						onclick={() => initiateAction('complete')}
-					>
-						Complete Reservation
-					</Button>
-				</div>
-			{/if}
-		</div>
 			{/if}
 		</div>
 	</div>
 {/if}
-
-<AdminConfirmDialog 
-	bind:open={confirmOpen}
-	title={confirmTitle}
-	description={confirmDescription}
-	variant={confirmVariant}
-	loading={actionLoading}
-	onConfirm={handleConfirmAction}
-/>

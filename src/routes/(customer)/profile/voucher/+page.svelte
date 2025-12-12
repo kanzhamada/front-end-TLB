@@ -19,7 +19,8 @@
 		Sparkles,
 		ShoppingBag,
 		Coins,
-		Layers
+		Layers,
+		RefreshCw
 	} from 'lucide-svelte';
 	import { fade, fly } from 'svelte/transition';
 	import * as Pagination from '$lib/components/ui/pagination';
@@ -51,6 +52,10 @@
 	// Derived grouped vouchers
 	let groupedOwnedVouchers = $derived(groupVouchers(ownedVouchers));
 	let groupedAvailableVouchers = $derived(groupVouchers(availableVouchers));
+
+	$effect(() => {
+		console.log('availableVouchers 333', availableVouchers);
+	});
 
 	// Derived paginated lists
 	let paginatedOwnedVouchers = $derived(
@@ -88,6 +93,8 @@
 	});
 
 	async function loadData() {
+		
+
 		loading = true;
 		error = null;
 
@@ -181,6 +188,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Profile - Voucher | Three Lights Barbershop</title>
+</svelte:head>
+
 {#if loading}
 	<div class="space-y-10" in:fade>
 		<!-- Owned Vouchers Skeleton -->
@@ -259,8 +270,8 @@
 				<Ticket class="size-8 text-senary" />
 			</div>
 			<div>
-				<h2 class="text-2xl font-bold text-secondary">My Vouchers</h2>
-				<p class="text-secondary/60">Manage your available vouchers</p>
+				<h2 class="text-2xl font-bold text-secondary">Voucher</h2>
+				<p class="text-secondary/60">Kelola voucher yang Anda miliki</p>
 			</div>
 		</div>
 
@@ -270,13 +281,41 @@
 	</div>
 {:else}
 	<div class="space-y-10" in:fade>
+		<!-- Header with Refresh -->
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div class="flex items-center gap-4">
+				<div class="rounded-xl border border-white/10 bg-white/5 p-3">
+					<Ticket class="size-8 text-senary" />
+				</div>
+				<div>
+					<h2 class="text-2xl font-bold text-secondary">Voucher</h2>
+					<p class="text-secondary/60">Kelola voucher yang Anda miliki</p>
+				</div>
+			</div>
+			<div class="flex flex-col items-end gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+					onclick={() => window.location.reload()}
+					disabled={loading}
+				>
+					<RefreshCw class="mr-2 size-4 {loading ? 'animate-spin' : ''}" />
+					Refresh
+				</Button>
+				<p class="text-xs text-secondary/40">
+					Klik refresh jika data belum diperbarui
+				</p>
+			</div>
+		</div>
+
 		<!-- Owned Vouchers Section -->
 		<section>
 			<div class="mb-6 flex items-center gap-3">
 				<div class="rounded-lg bg-senary/10 p-2">
 					<Ticket class="size-8 text-senary" />
 				</div>
-				<h3 class="text-xl font-bold text-secondary">My Vouchers</h3>
+				<h3 class="text-xl font-bold text-secondary">Voucher Saya</h3>
 				<span class="rounded-full bg-white/10 px-2 py-0.5 text-xs text-secondary/60"
 					>{ownedVouchers.length} Total</span
 				>
@@ -289,8 +328,8 @@
 					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
 						<Ticket class="size-8 text-secondary/40" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold text-secondary">No vouchers owned</h3>
-					<p class="text-sm text-secondary/50">You don't have any active vouchers at the moment.</p>
+					<h3 class="mb-2 text-lg font-semibold text-secondary">Tidak ada voucher yang dimiliki</h3>
+					<p class="text-sm text-secondary/50">Anda tidak memiliki voucher aktif saat ini.</p>
 				</div>
 			{:else}
 				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -312,7 +351,7 @@
 											{voucher.title}
 										</h4>
 										<p class="text-xs font-medium text-senary/80">
-											{voucher.serviceName ?? 'All Services'}
+											{voucher.serviceName ?? 'Semua Layanan'}
 										</p>
 
 										<p class="mt-1 text-sm text-secondary/60">{voucher.description}</p>
@@ -332,7 +371,7 @@
 											{:else if voucher.price}
 												{voucher.price}%
 											{:else}
-												OFFER
+												PENAWARAN
 											{/if}
 										</div>
 										{#if voucher.count > 1}
@@ -349,12 +388,38 @@
 								<div class="mt-2 space-y-2 border-t border-white/5 pt-4">
 									<div class="flex items-center gap-2 text-sm text-secondary/50">
 										<Calendar class="size-4 text-senary/50" />
-										<span>Valid until: {formatDate(voucher.expireDate)}</span>
+										<span
+											>Berlaku sampai: {(() => {
+												const date = new Date(voucher.expireDate);
+												date.setHours(date.getHours());
+												return date
+													.toLocaleString('id-ID', {
+														year: 'numeric',
+														month: 'numeric',
+														day: 'numeric',
+														timeZone: 'Asia/Jakarta'
+													})
+													.replace(/\//g, '-');
+											})()}</span
+										>
 									</div>
 									{#if voucher.buy_date}
 										<div class="flex items-center gap-2 text-sm text-secondary/50">
 											<Clock class="size-4 text-senary/50" />
-											<span>Purchased: {formatDate(voucher.buy_date)}</span>
+											<span
+												>Dibeli: {(() => {
+													const date = new Date(voucher.buy_date);
+													date.setHours(date.getHours());
+													return date
+														.toLocaleString('id-ID', {
+															year: 'numeric',
+															month: 'numeric',
+															day: 'numeric',
+															timeZone: 'Asia/Jakarta'
+														})
+														.replace(/\//g, '-');
+												})()}</span
+											>
 										</div>
 									{/if}
 								</div>
@@ -405,7 +470,7 @@
 				<div class="rounded-lg bg-senary/10 p-2">
 					<ShoppingBag class="size-5 text-senary" />
 				</div>
-				<h3 class="text-xl font-bold text-secondary">Available Vouchers</h3>
+				<h3 class="text-xl font-bold text-secondary">Voucher Tersedia</h3>
 			</div>
 
 			{#if groupedAvailableVouchers.length === 0}
@@ -415,8 +480,8 @@
 					<div class="mb-4 rounded-full bg-white/5 p-4 shadow-inner">
 						<Ticket class="size-8 text-secondary/40" />
 					</div>
-					<h3 class="mb-2 text-lg font-semibold text-secondary">No vouchers available</h3>
-					<p class="text-sm text-secondary/50">Check back later for new offers!</p>
+					<h3 class="mb-2 text-lg font-semibold text-secondary">Tidak ada voucher tersedia</h3>
+					<p class="text-sm text-secondary/50">Cek kembali nanti untuk penawaran baru!</p>
 				</div>
 			{:else}
 				<div class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-3">
@@ -463,7 +528,7 @@
 											{:else if voucher.price}
 												{voucher.price}%
 											{:else}
-												OFFER
+												PENAWARAN
 											{/if}
 										</div>
 										{#if voucher.count > 1}
@@ -482,7 +547,20 @@
 								>
 									<div class="flex items-center gap-2 text-sm text-secondary/50">
 										<Calendar class="size-4 text-senary/50" />
-										<span>Valid until: {formatDate(voucher.expireDate)}</span>
+										<span
+											>Berlaku Sampai: {(() => {
+												const date = new Date(voucher.expireDate);
+												date.setHours(date.getHours());
+												return date
+													.toLocaleString('id-ID', {
+														year: 'numeric',
+														month: 'numeric',
+														day: 'numeric',
+														timeZone: 'Asia/Jakarta'
+													})
+													.replace(/\//g, '-');
+											})()}</span
+										>
 									</div>
 									<div class="flex items-center gap-1 font-bold text-senary">
 										<Coins class="h-3 w-3" />

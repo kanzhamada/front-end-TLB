@@ -44,7 +44,7 @@
 			required
 			autocomplete="email"
 			disabled={submitting}
-			class="bg-white/5 border-white/10 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 h-12"
+			class="h-12 border-white/10 bg-white/5 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
 		/>
 	</div>
 
@@ -59,19 +59,27 @@
 			required
 			autocomplete="current-password"
 			disabled={submitting}
-			class="bg-white/5 border-white/10 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 h-12"
+			class="h-12 border-white/10 bg-white/5 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
 		/>
+		<div class="text-right text-sm">
+			<a
+				href="/a1-portal-a16-tlb/login/forget-password"
+				class="font-medium text-senary transition-colors hover:text-senary/80"
+			>
+				Forget password?
+			</a>
+		</div>
 	</div>
 
 	{#if formError}
-		<div class="rounded-lg bg-red-500/10 p-3 text-sm text-red-400 border border-red-500/20">
+		<div class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
 			{formError}
 		</div>
 	{/if}
 
 	<Button
 		type="submit"
-		class="w-full bg-senary text-primary hover:bg-senary/90 h-12 font-bold tracking-wide transition-all shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_-5px_rgba(212,175,55,0.5)]"
+		class="h-12 w-full bg-senary font-bold tracking-wide text-primary shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all hover:bg-senary/90 hover:shadow-[0_0_25px_-5px_rgba(212,175,55,0.5)]"
 		disabled={submitting}
 	>
 		{#if submitting}

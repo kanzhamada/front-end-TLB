@@ -21,7 +21,7 @@
 
 <Card class={finalClasses}>
 	<Clock
-		class="absolute top-1/2 left-[12.5%] z-0 h-35 w-35 -translate-x-1/2 -translate-y-1/2 opacity-10"
+		class="absolute top-1/2 left-[6.5%] z-0 h-44 w-44 -translate-x-1/2 -translate-y-1/2 opacity-10"
 		stroke-width="1"
 	/>
 

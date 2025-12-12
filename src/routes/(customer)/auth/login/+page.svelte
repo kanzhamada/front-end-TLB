@@ -1,76 +1,3 @@
-<!-- <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { login } from '$lib/api/auth';
-	import { authStore } from '$lib/stores/auth';
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardFooter,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
-	import LoginForm from '$lib/components/auth/LoginForm.svelte';
-	import { toast } from 'svelte-sonner';
-	import { browser } from '$app/environment';
-	import type { SubmitFunction } from '@sveltejs/kit';
-
-	let submitting = $state(false);
-	let formError = $state<string | null>(null);
-
-	function handleError(message: string) {
-		formError = message;
-		toast.error(message);
-	}
-
-	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
-		cancel(); // Prevent default form submission
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-
-		performLogin(email, password);
-	};
-
-	async function performLogin(email: string, password: string) {
-		if (submitting) return;
-
-		formError = null;
-		submitting = true;
-
-		try {
-			console.log('Attempting login with:', { email });
-
-			const response = await login({ email, password });
-			console.log('Login response:', response);
-
-			const success = response.success ?? response.sucess ?? false;
-
-			if (!success || !response.data?.session) {
-				const errorMessage = response.message ?? 'Gagal masuk. Coba lagi.';
-				handleError(errorMessage);
-				console.log('Login failed:', response);
-				return;
-			}
-
-			authStore.setSession(response.data.session);
-			toast.success('Berhasil masuk!');
-			await goto('/');
-		} catch (error) {
-			console.error('Login error:', error);
-
-			if (browser) {
-				const customError = error as { response?: { message?: string } };
-				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
-				handleError(message);
-			} else {
-				handleError('Tidak dapat masuk. Coba lagi.');
-			}
-		} finally {
-			submitting = false;
-		}
-	}
-</script> -->
-
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { login } from '$lib/api/auth';
@@ -90,8 +17,16 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
-	import LoginForm from '$lib/components/auth/LoginForm.svelte';
-	import type { SubmitFunction } from '@sveltejs/kit';
+
+	import { onMount } from 'svelte';
+
+	const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+
+	declare global {
+		interface Window {
+			grecaptcha: any;
+		}
+	}
 
 	let email = $state('');
 	let password = $state('');
@@ -104,6 +39,15 @@
 		toast.error(message);
 	}
 
+	async function loginWithGoogle() {
+		const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/google`);
+		const json = await res.json();
+
+		if (json?.data?.url) {
+			window.location.href = json.data.url;
+		}
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		if (submitting) return;
@@ -114,53 +58,16 @@
 		try {
 			console.log('Attempting login with:', { email, password });
 
-			const response = await login({ email, password });
-			console.log('Login response:', response);
-
-			const success = response.success ?? response.sucess ?? false;
-
-			if (!success || !response.data?.session) {
-				const errorMessage = response.message ?? 'Gagal masuk. Coba lagi.';
-				handleError(errorMessage);
-				console.log('Login failed:', response);
-				return;
+			let recaptchaToken = '';
+			try {
+				if (window.grecaptcha) {
+					recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, { action: 'login' });
+				}
+			} catch (e) {
+				console.error('Recaptcha execution failed:', e);
 			}
 
-			authStore.setSession(response.data.session);
-			toast.success('Berhasil masuk!');
-			await goto('/');
-		} catch (error) {
-			console.error('Login error:', error);
-
-			if (browser) {
-				const customError = error as { response?: { message?: string } };
-				const message = customError?.response?.message ?? 'Tidak dapat masuk. Coba lagi.';
-				handleError(message);
-			} else {
-				handleError('Tidak dapat masuk. Coba lagi.');
-			}
-		} finally {
-			submitting = false;
-		}
-	}
-	const handleLogin: SubmitFunction = ({ cancel, formData }) => {
-		cancel(); // Prevent default form submission
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-
-		performLogin(email, password);
-	};
-
-	async function performLogin(email: string, password: string) {
-		if (submitting) return;
-
-		formError = null;
-		submitting = true;
-
-		try {
-			console.log('Attempting login with:', { email });
-
-			const response = await login({ email, password });
+			const response = await login({ email, password, recaptchaToken });
 			console.log('Login response:', response);
 
 			const success = response.success ?? response.sucess ?? false;
@@ -191,6 +98,15 @@
 	}
 </script>
 
+<svelte:head>
+	<script
+		src="https://www.google.com/recaptcha/api.js?render={recaptchaSiteKey}"
+		async
+		defer
+	></script>
+	<title>Login | Three Lights Barbershop</title>
+</svelte:head>
+
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -204,7 +120,7 @@
 	</div>
 
 	<div
-		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12"
+		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-12"
 		in:fade={{ duration: 1000 }}
 	>
 		<!-- Logo/Brand -->
@@ -213,20 +129,22 @@
 			in:fly={{ y: -20, duration: 800, delay: 200 }}
 		>
 			<div class="flex items-center gap-4">
-				<div class="h-[1px] w-12 bg-senary"></div>
-				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
+				<p
+					class="text-sm font-medium tracking-[0.2em] text-senary uppercase md:text-lg md:tracking-[0.3em]"
+				>
 					Three Lights Barbershop
 				</p>
-				<div class="h-[1px] w-12 bg-senary"></div>
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
 			</div>
-			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Welcome <span class="text-gradient-gold">Back</span>
+			<h1 class="text-3xl font-bold tracking-tighter text-secondary md:text-5xl">
+				Selamat Datang <span class="text-gradient-gold">Kembali</span>
 			</h1>
 		</div>
 
 		<!-- Login Card -->
 		<div
-			class="w-full max-w-md transform rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10"
+			class="w-full max-w-md transform rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10 md:p-8"
 			in:fly={{ y: 20, duration: 800, delay: 400 }}
 		>
 			<div class="mb-8 text-center">
@@ -235,7 +153,7 @@
 					alt="three lights barbershop logo"
 					class="mx-auto mb-4"
 				/>
-				<p class="text-lg font-light text-secondary/80">Sign in to manage your reservations</p>
+				<p class="text-lg font-light text-secondary/80">Masuk untuk mengelola reservasi Anda</p>
 			</div>
 
 			<form class="space-y-6" onsubmit={handleSubmit}>
@@ -255,14 +173,13 @@
 
 				<div class="space-y-2">
 					<div class="flex items-center justify-between">
-						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
-						<!-- Optional: Add Forgot Password link here later -->
+						<Label for="password" class="text-sm font-medium text-senary">Kata Sandi</Label>
 					</div>
 					<div class="relative">
 						<Input
 							id="password"
 							type={showPassword ? 'text' : 'password'}
-							placeholder="Enter your password"
+							placeholder="Masukkan kata sandi Anda"
 							bind:value={password}
 							required
 							autocomplete="current-password"
@@ -281,6 +198,11 @@
 							{/if}
 						</button>
 					</div>
+					<div class="flex items-center justify-end">
+						<a href="/auth/forget-password" class="text-senary hover:underline">
+							Lupa Kata Sandi?
+						</a>
+					</div>
 				</div>
 
 				{#if formError}
@@ -291,24 +213,60 @@
 
 				<Button
 					type="submit"
-					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
+					class="w-full bg-senary font-medium tracking-wide text-primary transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Signing In...' : 'Sign In'}
+					{submitting ? 'Sedang Masuk...' : 'Masuk'}
+				</Button>
+
+				<Button
+					type="button"
+					class=" w-full bg-white text-black hover:bg-gray-200"
+					onclick={loginWithGoogle}
+				>
+					Masuk dengan Google <svg
+						xmlns="http://www.w3.org/2000/svg"
+						x="0px"
+						y="0px"
+						width="100"
+						height="100"
+						viewBox="0 0 48 48"
+					>
+						<path
+							fill="#FFC107"
+							d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+						></path><path
+							fill="#FF3D00"
+							d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+						></path><path
+							fill="#4CAF50"
+							d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+						></path><path
+							fill="#1976D2"
+							d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+						></path>
+					</svg>
 				</Button>
 			</form>
 
 			<div class="mt-8 text-center">
 				<p class="text-sm text-secondary/60">
-					Don't have an account?
+					Belum punya akun?
 					<a
 						href="/auth/register"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Register here
+						Daftar di sini
 					</a>
 				</p>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Gunakan !important untuk memastikan aturan ini menang */
+	:global(.grecaptcha-badge) {
+		visibility: hidden;
+	}
+</style>

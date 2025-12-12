@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Calendar } from '$lib/components/ui/calendar';
+	import * as Tabs from "$lib/components/ui/tabs";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { 
@@ -28,11 +29,13 @@
 	import OperationalModal from './OperationalModal.svelte';
 	import { cn } from "$lib/utils";
 	import { fade, slide } from 'svelte/transition';
+	import AdminHeader from '$lib/components/Admin/AdminHeader/AdminHeader.svelte';
 
 	let { data } = $props();
 	let token = $derived(data.session?.access_token || '');
 
 	// State
+	let activeTab = $state('daily');
 	let isLoading = $state(false);
 	let isSavingSchedule = $state(false);
 
@@ -72,7 +75,7 @@
 		const res = await getSchedule(fetch, token);
 		if (res.success && res.data) {
 			// Normalize data: map array response to object structure
-			const rawData = res.data as unknown as any[];
+			const rawData = res.data as any[];
 			const normalized: any = {};
 			
 			// Initialize with empty arrays
@@ -113,11 +116,8 @@
 		})
 	);
 
-	// Simplified isScheduled check
-	const isScheduled = (date: any) => {
-		if (!date) return false;
-		const dateStr = date.toString(); // CalendarDate.toString() gives YYYY-MM-DD
-		return operationalTimes.some((ot) => ot.date === dateStr);
+	const isScheduled = (date: CalendarDate) => {
+		return scheduledDates.some((d) => d.compare(date) === 0);
 	};
 
 	function handleDateSelect(date: DateValue | undefined) {
@@ -173,12 +173,12 @@
 	}
 </script>
 
-<div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30 pb-20">
+<div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30">
 	<!-- Hero Header -->
-	<div class="relative w-full overflow-hidden px-8 pt-6 pb-2">
+	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
 		
-		<div class="relative z-10 mx-auto max-w-[1600px]">
+		<div class="relative z-10 mx-auto max-w-7xl">
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>
@@ -203,166 +203,188 @@
 		</div>
 	</div>
 
-	<div class="px-8">
-		<div class="mx-auto max-w-[1800px]">
-			<!-- Dashboard Grid -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-				
-				<!-- Column 1: Calendar -->
-				<div class="space-y-3">
-					<h2 class="text-base font-bold text-white flex items-center gap-2">
-						<div class="p-1.5 bg-senary/10 rounded-md text-senary">
-							<CalendarDays class="h-3.5 w-3.5" />
-						</div>
-						Calendar
-					</h2>
-					<div class="bg-black/40 rounded-3xl border border-white/5 p-5 backdrop-blur-md h-[400px] flex flex-col">
-						<div class="flex items-center justify-between mb-2 shrink-0">
-							<span class="text-xs text-secondary/70">Select date</span>
-							<div class="flex items-center gap-1.5 text-[10px] text-secondary/50">
-								<div class="h-1.5 w-1.5 rounded-full bg-senary shadow-[0_0_8px_rgba(255,215,0,0.5)]"></div>
-								<span>Override Active</span>
-							</div>
-						</div>
-						<div class="flex-1 flex items-center justify-center w-full min-h-0">
-							<Calendar
-								type="single"
-								bind:value={selectedDate}
-								onValueChange={handleDateSelect}
-								class="text-secondary rounded-xl border border-white/5 bg-black/20 p-3 shadow-xl scale-95 origin-center"
-							>
-								{#snippet day({ day, outsideMonth })}
-									<div class="relative w-8 h-8 flex items-center justify-center">
-										<span class="text-xs font-medium">{day.day}</span>
-										{#if !outsideMonth && isScheduled(day.date)}
-											<div class="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-senary shadow-[0_0_6px_rgba(255,215,0,0.6)]"></div>
-										{/if}
-									</div>
-								{/snippet}
-							</Calendar>
-						</div>
-					</div>
+	<div class="px-6 pb-20 lg:px-8">
+		<div class="mx-auto max-w-7xl space-y-6">
+			
+			<Tabs.Root value="daily" class="w-full" onValueChange={(v) => activeTab = v}>
+				<div class="flex items-center justify-between mb-6">
+					<Tabs.List class="grid w-full max-w-[400px] grid-cols-2 bg-white/5 border border-white/10 p-1 rounded-xl">
+						<Tabs.Trigger 
+							value="daily" 
+							class="rounded-lg data-[state=active]:bg-senary data-[state=active]:text-primary transition-all duration-300"
+						>
+							<CalendarDays class="mr-2 h-4 w-4" />
+							Daily Overrides
+						</Tabs.Trigger>
+						<Tabs.Trigger 
+							value="weekly" 
+							class="rounded-lg data-[state=active]:bg-senary data-[state=active]:text-primary transition-all duration-300"
+						>
+							<Repeat class="mr-2 h-4 w-4" />
+							Weekly Template
+						</Tabs.Trigger>
+					</Tabs.List>
 				</div>
 
-				<!-- Column 2: Daily Actions -->
-				<div class="space-y-3">
-					<h2 class="text-base font-bold text-white flex items-center gap-2">
-						<div class="p-1.5 bg-senary/10 rounded-md text-senary">
-							<Settings2 class="h-3.5 w-3.5" />
-						</div>
-						Daily Actions
-					</h2>
-					<div class="bg-black/40 rounded-3xl border border-white/5 p-5 backdrop-blur-md h-[400px] flex flex-col">
-						<div class="flex-1 flex flex-col justify-center items-center text-center p-4">
-							<div class="relative mb-4">
-								<div class="absolute inset-0 bg-senary/20 blur-xl rounded-full"></div>
-								<div class="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center">
-									<Clock class="h-8 w-8 text-senary" />
+				<!-- Daily Tab -->
+				<Tabs.Content value="daily" class="mt-0 focus-visible:outline-none focus-visible:ring-0">
+					<div class="bg-white/5 rounded-3xl border border-white/10 p-6 backdrop-blur-sm flex flex-col items-center">
+						<div class="w-full max-w-5xl grid md:grid-cols-[1fr_300px] gap-8 items-start">
+							<!-- Calendar Section -->
+							<div class="flex flex-col gap-4 w-full">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-3">
+										<div class="p-2 bg-senary/10 rounded-lg text-senary">
+											<CalendarIcon class="h-5 w-5" />
+										</div>
+										<div>
+											<h3 class="text-lg font-bold text-white">Calendar</h3>
+											<p class="text-xs text-secondary/60">Select a date to manage availability</p>
+										</div>
+									</div>
+									
+									<!-- Legend -->
+									<div class="flex items-center gap-4 text-xs text-secondary/50">
+										<div class="flex items-center gap-2">
+											<div class="h-1.5 w-1.5 rounded-full bg-senary shadow-[0_0_8px_rgba(255,215,0,0.5)]"></div>
+											<span>Has Override</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="bg-black/20 rounded-2xl border border-white/5 p-8 flex justify-center w-full">
+									<Calendar
+										type="single"
+										bind:value={selectedDate}
+										onValueChange={handleDateSelect}
+										class="text-secondary w-full [&_table]:w-full [&_table]:max-w-full"
+									>
+										{#snippet day({ day, outsideMonth })}
+											<div class="relative w-full h-12 flex items-center justify-center">
+												<span class="text-sm font-medium">{day.day}</span>
+												{#if !outsideMonth && isScheduled(day)}
+													<div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-senary shadow-[0_0_6px_rgba(255,215,0,0.6)]"></div>
+												{/if}
+											</div>
+										{/snippet}
+									</Calendar>
 								</div>
 							</div>
-							
-							<div class="space-y-1.5 mb-6">
-								<h3 class="text-xl font-bold text-white tracking-tight">
-									{#if selectedDate}
-										{selectedDate.toString()}
-									{:else}
-										No Date Selected
-									{/if}
-								</h3>
-								<p class="text-xs text-secondary/60 max-w-[220px] mx-auto leading-relaxed h-8">
-									{#if selectedDate}
-										{isScheduled(selectedDate) ? 'Custom hours set.' : 'Using default weekly schedule.'}
-									{:else}
-										Select a date to manage.
-									{/if}
-								</p>
+
+							<!-- Action Panel (Compact) -->
+							<div class="w-full bg-black/20 rounded-2xl border border-white/5 p-6 flex flex-col gap-6 h-full min-h-[400px]">
+								<div class="flex items-center gap-3 text-white border-b border-white/5 pb-4">
+									<Settings2 class="h-5 w-5 text-senary" />
+									<span class="font-medium">Actions</span>
+								</div>
+								
+								<div class="flex-1 flex flex-col justify-center items-center text-center">
+									<div class="h-16 w-16 rounded-full bg-senary/10 flex items-center justify-center mb-4">
+										<Clock class="h-8 w-8 text-senary" />
+									</div>
+									
+									<p class="text-sm text-secondary/70 mb-6 px-2">
+										{#if selectedDate}
+											<span class="block mb-2">
+												Create a custom schedule for specific day<br>
+												
+											</span>
+										{:else}
+											Select a date to begin
+										{/if}
+									</p>
+									
+									<Button 
+										variant="outline" 
+										class="w-full border-senary/50 text-senary hover:bg-senary hover:text-primary transition-all h-12 font-bold tracking-wide"
+										disabled={!selectedDate}
+										onclick={() => selectedDate && handleDateSelect(selectedDate)}
+									>
+										{selectedDate ? 'Create Schedule' : 'Select Date'}
+									</Button>
+								</div>
 							</div>
-							
-							<Button 
-								class="w-full max-w-[180px] bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide h-10 text-sm shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]"
-								disabled={!selectedDate}
-								onclick={() => selectedDate && handleDateSelect(selectedDate)}
-							>
-								{isScheduled(selectedDate) ? 'Edit Override' : 'Add Override'}
-							</Button>
 						</div>
 					</div>
-				</div>
+				</Tabs.Content>
 
-				<!-- Column 3: Weekly Template (Compacted Chips) -->
-				<div class="space-y-3 lg:col-span-2 xl:col-span-1">
-					<div class="flex items-center justify-between">
-						<h2 class="text-base font-bold text-white flex items-center gap-2">
-							<div class="p-1.5 bg-senary/10 rounded-md text-senary">
-								<Repeat class="h-3.5 w-3.5" />
+				<!-- Weekly Tab -->
+				<Tabs.Content value="weekly" class="mt-0 focus-visible:outline-none focus-visible:ring-0">
+					<div class="bg-white/5 rounded-3xl border border-white/10 p-6 backdrop-blur-sm">
+						<div class="flex items-center justify-between mb-6">
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-senary/10 rounded-lg text-senary">
+									<Repeat class="h-5 w-5" />
+								</div>
+								<div>
+									<h3 class="text-lg font-bold text-white">Weekly Schedule Template</h3>
+									<p class="text-xs text-secondary/60">Set default operating hours</p>
+								</div>
 							</div>
-							Weekly Template
-						</h2>
-						<Button 
-							onclick={saveWeeklySchedule} 
-							disabled={isSavingSchedule}
-							size="sm"
-							class="bg-white/5 text-secondary hover:bg-white/10 border border-white/10 h-7 text-[10px] font-medium px-3"
-						>
-							{#if isSavingSchedule}
-								<Loader2 class="mr-1.5 h-2.5 w-2.5 animate-spin" />
-								Saving...
-							{:else}
-								<Save class="mr-1.5 h-2.5 w-2.5" />
-								Save
-							{/if}
-						</Button>
-					</div>
+							<Button 
+								onclick={saveWeeklySchedule} 
+								disabled={isSavingSchedule}
+								class="bg-senary text-primary hover:bg-senary/90 font-bold min-w-[140px]"
+							>
+								{#if isSavingSchedule}
+									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+									Saving...
+								{:else}
+									<Save class="mr-2 h-4 w-4" />
+									Save Template
+								{/if}
+							</Button>
+						</div>
 
-					<div class="bg-black/40 rounded-3xl border border-white/5 p-5 backdrop-blur-md h-[400px] flex flex-col">
-						<div class="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 							{#each days as day}
-								<div class="flex items-center gap-4 p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group/row">
-									<!-- Day Name -->
-									<div class="w-10 shrink-0">
-										<p class="font-bold text-xs text-white/90 capitalize">{day.substring(0, 3)}</p>
-									</div>
-
-									<!-- Time Slots (Premium Chips) -->
-									<div class="flex-1 flex flex-wrap gap-2 items-center">
-										{#each (weeklySchedule[day] || []) as time, i}
-											<div class="relative group/chip flex items-center bg-senary/5 hover:bg-senary/10 border border-senary/20 rounded-md px-2 py-1 transition-all" transition:fade>
-												<Input 
-													type="time" 
-													value={time} 
-													oninput={(e) => updateWeeklySlot(day, i, e.currentTarget.value)}
-													class="time-input h-auto p-0 text-xs font-mono text-senary border-none bg-transparent focus-visible:ring-0 text-center w-[85px]"
-												/>
-												<!-- Delete Action (Hover-only corner badge) -->
-												<button 
-													onclick={() => removeWeeklySlot(day, i)}
-													class="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 bg-red-500/90 text-white rounded-full opacity-0 group-hover/chip:opacity-100 shadow-sm flex items-center justify-center hover:bg-red-600 transition-all scale-90 hover:scale-100"
-												>
-													<Trash2 class="h-2 w-2" />
-												</button>
-											</div>
-										{/each}
-										
-										<!-- Add Button (Ghost Pill) -->
-										<button 
+								<div class="bg-black/20 rounded-xl border border-white/5 p-4 flex flex-col gap-3 group hover:border-white/10 transition-colors">
+									<div class="flex items-center justify-between pb-2 border-b border-white/5">
+										<span class="font-bold text-white capitalize tracking-wide text-sm">{day}</span>
+										<Button 
+											variant="ghost" 
+											size="icon" 
+											class="h-6 w-6 text-senary hover:bg-senary/10 rounded-full"
 											onclick={() => addWeeklySlot(day)}
-											class="h-6 px-2 rounded-md border border-dashed border-white/20 hover:border-senary/50 hover:bg-senary/5 text-[10px] text-secondary/50 hover:text-senary flex items-center gap-1 transition-all opacity-60 group-hover/row:opacity-100"
-											title="Add slot"
 										>
 											<Plus class="h-3 w-3" />
-											<span class="sr-only sm:not-sr-only">Add</span>
-										</button>
-										
+										</Button>
+									</div>
+									
+									<div class="space-y-2 flex-1 min-h-[80px]">
+										{#each (weeklySchedule[day] || []) as time, i}
+											<div class="flex items-center gap-2" transition:fade>
+												<div class="relative flex-1">
+													<Clock class="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-secondary/50" />
+													<Input 
+														type="time" 
+														value={time} 
+														oninput={(e) => updateWeeklySlot(day, i, e.currentTarget.value)}
+														class="pl-8 h-8 text-xs rounded-lg border-white/10 bg-white/5 text-secondary focus:border-senary/50"
+													/>
+												</div>
+												<Button 
+													variant="ghost" 
+													size="icon"
+													onclick={() => removeWeeklySlot(day, i)}
+													class="h-8 w-8 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg"
+												>
+													<Trash2 class="h-3 w-3" />
+												</Button>
+											</div>
+										{/each}
 										{#if (weeklySchedule[day] || []).length === 0}
-											<span class="text-[10px] text-secondary/20 italic ml-1">Closed</span>
+											<div class="flex flex-col items-center justify-center h-full py-2 text-secondary/30 text-[10px] italic">
+												<span>Closed</span>
+											</div>
 										{/if}
 									</div>
 								</div>
 							{/each}
 						</div>
 					</div>
-				</div>
-			</div>
+				</Tabs.Content>
+			</Tabs.Root>
 		</div>
 	</div>
 
@@ -378,29 +400,3 @@
 		}}
 	/>
 </div>
-
-<style>
-	/* Custom Scrollbar for Weekly List */
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 4px;
-	}
-	
-	.custom-scrollbar::-webkit-scrollbar-track {
-		background: rgba(255, 255, 255, 0.02);
-		border-radius: 4px;
-	}
-	
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
-	}
-	
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.2);
-	}
-
-	/* Hide default time picker icon for cleaner look */
-	:global(.time-input::-webkit-calendar-picker-indicator) {
-		display: none;
-	}
-</style>

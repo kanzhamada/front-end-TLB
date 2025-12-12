@@ -58,6 +58,8 @@ export const getMessagesByReservation = async (
 			}
 		});
 
+		console.log(`[API] getMessagesByReservation response status: ${response.status}`);
+
 		const json = await response.json();
 		const successFlag = Boolean(json.success ?? json.sucess);
 
@@ -107,6 +109,8 @@ export const sendMessage = async (
 			},
 			body: JSON.stringify(payload)
 		});
+
+		console.log(`[API] sendMessage response status: ${response.status}`);
 
 		const json = await response.json();
 		const successFlag = Boolean(json.success ?? json.sucess);

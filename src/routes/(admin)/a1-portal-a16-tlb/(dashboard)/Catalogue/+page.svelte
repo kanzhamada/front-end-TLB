@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { cn, optimizeImage } from '$lib/utils';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
@@ -20,7 +19,6 @@
 	import { toast } from 'svelte-sonner';
 	import CatalogueForm from './CatalogueForm.svelte';
 	import { fade, fly, scale } from 'svelte/transition';
-	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { data } = $props();
 	let catalogues = $state<Catalogue[]>([]);
@@ -77,34 +75,18 @@
 		currentPage = 1;
 	});
 
-	// Delete Confirmation State
-	let confirmOpen = $state(false);
-	let deleteId = $state<string | null>(null);
-	let deleteLoading = $state(false);
-
-	function initiateDelete(id: string) {
-		deleteId = id;
-		confirmOpen = true;
-	}
-
-	async function confirmDelete() {
-		if (!deleteId) return;
-		
-		deleteLoading = true;
-		const token = data.session?.access_token || '';
-		const success = await deleteCatalogue(fetch, deleteId, token);
-		
-		if (success.success) {
-			catalogues = catalogues.filter((c) => c.id !== deleteId);
-			toast.success('Catalogue deleted successfully');
-		} else {
-			toast.error(success.message || 'Failed to delete catalogue');
+	const handleDelete = async (id: string) => {
+		if (confirm('Are you sure you want to delete this catalogue?')) {
+			const token = data.session?.access_token || '';
+			const success = await deleteCatalogue(fetch, id, token);
+			if (success.success) {
+				catalogues = catalogues.filter((c) => c.id !== id);
+				toast.success('Catalogue deleted successfully');
+			} else {
+				toast.error(success.message || 'Failed to delete catalogue');
+			}
 		}
-		
-		deleteLoading = false;
-		confirmOpen = false;
-		deleteId = null;
-	}
+	};
 
 	function openModal(mode: 'add' | 'edit' | 'view', catalogue: Catalogue | null = null) {
 		modalMode = mode;
@@ -168,11 +150,11 @@
 									</Button>
 								{/snippet}
 							</DropdownMenu.Trigger>
-							<DropdownMenu.Content class="bg-black/90 border-white/10">
+							<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary">
 								{#each serviceOptions as option}
 									<DropdownMenu.Item
-										onclick={() => selectedType = option.value}
-										class="text-secondary hover:text-senary hover:bg-white/10"
+										onclick={() => (selectedType = option.value)}
+										class="focus:bg-white/10 focus:text-senary"
 									>
 										{option.label}
 									</DropdownMenu.Item>
@@ -180,6 +162,7 @@
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
 
+						<!-- Add Button -->
 						<Button
 							onclick={() => openModal('add')}
 							class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide"
@@ -215,7 +198,7 @@
 					>
 						<div class="relative aspect-[3/4] overflow-hidden">
 							<img
-								src={optimizeImage(catalogue.image, 400)}
+								src={`${catalogue.image}?width=400&resize=cover&format=webp`}
 								alt={catalogue.name}
 								class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
 								loading="lazy"
@@ -243,7 +226,7 @@
 									EDIT
 								</button>
 								<button
-									onclick={() => initiateDelete(catalogue.id)}
+									onclick={() => handleDelete(catalogue.id)}
 									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 py-2.5 text-[10px] font-bold tracking-widest text-red-400 uppercase backdrop-blur-md transition hover:bg-red-500 hover:text-white"
 								>
 									<TrashIcon class="h-3 w-3" />
@@ -314,7 +297,7 @@
 	</div>
 
 	{#if isModalOpen}
-		<CatalogueForm 
+		<CatalogueForm
 			mode={modalMode}
 			catalogue={selectedCatalogue}
 			token={data.session?.access_token || ''}
@@ -322,14 +305,4 @@
 			onUpdate={loadCatalogues}
 		/>
 	{/if}
-
-	<AdminConfirmDialog 
-		bind:open={confirmOpen}
-		title="Delete Catalogue"
-		description="Are you sure you want to delete this catalogue item? This action cannot be undone."
-		variant="destructive"
-		confirmText="Delete"
-		loading={deleteLoading}
-		onConfirm={confirmDelete}
-	/>
 </div>

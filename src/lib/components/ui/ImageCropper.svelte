@@ -5,7 +5,12 @@
 	import { Loader2, Check, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
-	let { imageFile, aspect = 16 / 9, onCrop, onCancel } = $props<{
+	let {
+		imageFile,
+		aspect = 16 / 9,
+		onCrop,
+		onCancel
+	} = $props<{
 		imageFile: File;
 		aspect?: number;
 		onCrop: (blob: Blob) => void;
@@ -28,18 +33,17 @@
 
 	function onCropComplete(e: any) {
 		console.log('onCropComplete fired. Event object:', e);
-		
+
 		// Check if e is the custom event with detail
 		if (e && e.detail && e.detail.pixels) {
 			console.log('Found pixels in e.detail');
 			croppedAreaPixels = e.detail.pixels;
-		} 
+		}
 		// Check if e is the detail object directly (Svelte 5 compat?)
 		else if (e && e.pixels) {
 			console.log('Found pixels in e directly');
 			croppedAreaPixels = e.pixels;
-		}
-		else {
+		} else {
 			console.warn('Could not find pixels in event object', e);
 		}
 	}
@@ -52,13 +56,13 @@
 			console.error('Cannot save: Missing imageSrc or croppedAreaPixels');
 			return;
 		}
-		
+
 		loading = true;
 		try {
 			console.log('Calling getCroppedImg...');
 			const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
 			console.log('getCroppedImg result:', croppedBlob);
-			
+
 			if (croppedBlob) {
 				console.log('Calling onCrop callback...');
 				onCrop(croppedBlob);
@@ -105,15 +109,21 @@
 		);
 
 		return new Promise((resolve) => {
-			canvas.toBlob((blob) => {
-				resolve(blob);
-			}, 'image/webp', 0.85);
+			canvas.toBlob(
+				(blob) => {
+					resolve(blob);
+				},
+				'image/jpeg',
+				0.9
+			);
 		});
 	}
 </script>
 
 <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
-	<div class="relative flex h-full max-h-[600px] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
+	<div
+		class="relative flex h-full max-h-[600px] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
+	>
 		<div class="flex items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
 			<h2 class="text-lg font-medium text-secondary">Crop Image</h2>
 			<button
@@ -163,7 +173,11 @@
 
 			<div class="flex justify-end gap-3 pt-2">
 				<Button variant="outline" onclick={onCancel}>Cancel</Button>
-				<Button class="bg-senary text-primary hover:bg-senary/90" onclick={handleSave} disabled={loading}>
+				<Button
+					class="bg-senary text-primary hover:bg-senary/90"
+					onclick={handleSave}
+					disabled={loading}
+				>
 					{#if loading}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}

@@ -8,8 +8,15 @@
 		Sparkles,
 		Gem,
 		Camera,
-		Aperture
+		Aperture,
+		User,
+		Palette,
+		Fingerprint,
+		ScanFace,
+		Scissors,
+		Sun
 	} from 'lucide-svelte';
+
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -38,7 +45,23 @@
 	let fileInput;
 	let accordionValue = $state(['contoh-foto']); // Auto open on load
 	let scanning = $state(false);
-	let result = $state<string | null>(null);
+	let result = $state<any>(null);
+	let showResults = $state(false);
+
+	const ANALYSIS_OPTIONS = {
+		faceShape: ['Oval', 'Bulat', 'Kotak'],
+		hairType: ['Lurus', 'Bergelombang', 'Keriting'],
+		skinTone: ['Putih', 'Sawo Matang', 'Coklat Tua']
+	};
+
+	let analysisData = $state({
+		faceShape: '-',
+		hairType: '-',
+		skinTone: '-',
+		faceAccuracy: '-',
+		hairAccuracy: '-',
+		skinAccuracy: '-'
+	});
 
 	// Camera State
 	let showCamera = $state(false);
@@ -61,6 +84,8 @@
 			avatar = event.target?.result;
 			// Close accordion when photo is uploaded
 			accordionValue = [];
+			showResults = false;
+			result = null;
 		};
 		reader.readAsDataURL(file);
 	};
@@ -129,6 +154,8 @@
 
 		stopCamera();
 		accordionValue = []; // Close accordion
+		showResults = false;
+		result = null;
 	}
 
 	onDestroy(() => {
@@ -136,6 +163,7 @@
 	});
 
 	// Get catalogue data
+	let allCatalogues = $state<Catalogue[]>([]);
 	let catalogues = $state<Catalogue[]>([]);
 	let showReservationSheet = $state(false);
 	let selectedCatalogueNote = $state('');
@@ -143,6 +171,7 @@
 	onMount(async () => {
 		const response = await getCatalogue(fetch);
 		if (response.success && response.data) {
+			allCatalogues = response.data;
 			catalogues = response.data;
 		}
 	});
@@ -179,7 +208,7 @@
 	const serviceOptions = [
 		{
 			value: '',
-			label: 'All'
+			label: 'Semua'
 		},
 		{
 			value: 'Short',
@@ -205,13 +234,65 @@
 		});
 	}
 
-	function handleScan() {
+	async function handleScan() {
+		if (!avatar) return;
 		scanning = true;
+		showResults = false;
 		result = null;
-		setTimeout(() => {
+
+		try {
+			// Convert base64/data URL to Blob
+			const res = await fetch(avatar);
+			const blob = await res.blob();
+
+			const formData = new FormData();
+			formData.append('image', blob);
+
+			const response = await fetch('/api/ai/analyze', {
+				method: 'POST',
+				body: formData
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				result = data.data; // Array of { label: string, score: number }
+				showResults = true;
+
+				// Use the specific Result from the AI Model (Custom JSON)
+				if (result) {
+					analysisData = {
+						faceShape: result.wajah || 'Unknown',
+						hairType: result.rambut || 'Unknown',
+						skinTone: result.skin || 'Unknown',
+						faceAccuracy: result.c_wajah || '-',
+						hairAccuracy: result.c_rambut || '-',
+						skinAccuracy: result.c_skin || '-'
+					};
+
+					// Map specific 'katalog' recommendations if present
+					if (result.katalog && Array.isArray(result.katalog)) {
+						catalogues = result.katalog.map((item: any, index: number) => ({
+							catalogueID: `ai-rec-${index}`,
+							name: item.nama_gaya,
+							type: item.tipe,
+							description: item.deskripsi,
+							catalogueImages: [{ imageUrl: item.gambar_url }]
+						}));
+					} else {
+						// Fallback if no catalogue in response
+						catalogues = allCatalogues.slice(0, 3);
+					}
+				}
+			} else {
+				alert('Failed to analyze image: ' + (data.error || 'Unknown error'));
+			}
+		} catch (e) {
+			console.error(e);
+			alert('An error occurred during analysis.');
+		} finally {
 			scanning = false;
-			result = "The 'Modern Pompadour' with a high fade.";
-		}, 3000);
+		}
 	}
 
 	const itemsPerPage = $derived(8);
@@ -220,7 +301,7 @@
 	let currentPageIndex = $derived(dataCatalogue.getState().pagination.pageIndex + 1);
 
 	// State
-	let selectedFilter = $state('All');
+	let selectedFilter = $state('Semua');
 	let selectedService = $state<Catalogue | null>(null);
 
 	function handleBook(catalogue: Catalogue) {
@@ -228,6 +309,10 @@
 		showReservationSheet = true;
 	}
 </script>
+
+<svelte:head>
+	<title>Katalog - AI | Three Lights Barbershop</title>
+</svelte:head>
 
 <!-- Luxury Theme Wrapper -->
 <div class="min-h-screen w-full text-secondary selection:bg-senary/30">
@@ -244,17 +329,17 @@
 			>
 				<Gem class="h-3.5 w-3.5 text-senary" />
 				<span class="text-[10px] font-bold tracking-[0.2em] text-senary uppercase"
-					>Premium AI Analysis</span
+					>Analisis AI Premium</span
 				>
 			</div>
 			<h2
 				class="mb-4 font-serif text-5xl leading-tight font-medium tracking-tight text-secondary drop-shadow-xl md:text-7xl"
 			>
-				AI Style <span class="text-gradient-gold">Consultant</span>
+				<span class="text-gradient-gold">Konsultan</span> Gaya AI
 			</h2>
 			<p class="mx-auto max-w-xl text-lg font-light text-secondary/80">
-				Experience the future of style. Upload your photo or use your camera, and let our advanced
-				AI curate a personalized selection of premium hairstyles just for you.
+				Rasakan masa depan gaya. Unggah foto Anda atau gunakan kamera, dan biarkan AI canggih kami
+				mengkurasi pilihan gaya rambut premium yang dipersonalisasi khusus untuk Anda.
 			</p>
 		</div>
 
@@ -272,7 +357,7 @@
 							>
 								<Sparkles class="h-4 w-4 text-senary" />
 							</div>
-							Upload Portrait
+							Unggah Potret
 						</h3>
 
 						{#if showCamera}
@@ -280,19 +365,20 @@
 							<div
 								class="relative mb-8 flex h-[28rem] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-senary/30 bg-black/40"
 							>
-								<video bind:this={videoEl} autoplay playsinline class="h-full w-full object-cover"
-								></video>
+								<video bind:this={videoEl} autoplay playsinline class="h-full w-full object-cover">
+									<track kind="captions" />
+								</video>
 
 								<!-- Camera Controls -->
 								<div class="absolute bottom-6 flex gap-4">
 									<button
-										on:click={takePhoto}
+										onclick={takePhoto}
 										class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg transition-transform hover:scale-110 active:scale-95"
 									>
 										<Aperture class="h-6 w-6 text-white" />
 									</button>
 									<button
-										on:click={stopCamera}
+										onclick={stopCamera}
 										class="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/60 backdrop-blur-md transition-colors hover:bg-white/20"
 									>
 										<X class="h-6 w-6 text-white" />
@@ -301,14 +387,14 @@
 							</div>
 						{:else}
 							<!-- Drag & Drop View -->
-							<div
+							<button
 								class="relative mb-6 flex h-[24rem] w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all duration-500 hover:border-senary/40 hover:bg-senary/5"
 								class:border-senary={isDragging}
 								class:bg-senary_5={isDragging}
-								on:dragover={handleDragOver}
-								on:dragleave={handleDragLeave}
-								on:drop={handleDrop}
-								on:click={() => fileInput?.click()}
+								ondragover={handleDragOver}
+								ondragleave={handleDragLeave}
+								ondrop={handleDrop}
+								onclick={() => fileInput?.click()}
 							>
 								{#if avatar}
 									<img
@@ -326,7 +412,7 @@
 												<Upload class="h-5 w-5 text-white" />
 											</div>
 											<span class="text-sm font-medium tracking-wide text-white uppercase"
-												>Change Photo</span
+												>Ganti Foto</span
 											>
 										</div>
 									</div>
@@ -338,22 +424,22 @@
 											<ImageIcon class="h-10 w-10 text-senary/80" />
 										</div>
 										<div>
-											<p class="mb-2 text-lg font-medium text-secondary">Drag & drop portrait</p>
+											<p class="mb-2 text-lg font-medium text-secondary">Seret & lepas potret</p>
 											<p class="text-xs tracking-wider text-secondary/60 uppercase">
-												or click to browse
+												atau klik untuk menelusuri
 											</p>
 										</div>
 									</div>
 								{/if}
-							</div>
+							</button>
 
 							<!-- Camera Button -->
 							<button
-								on:click={startCamera}
+								onclick={startCamera}
 								class="mb-8 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold tracking-widest text-secondary uppercase transition-all hover:bg-white/10 hover:text-senary"
 							>
 								<Camera class="h-4 w-4" />
-								<span>Use Camera</span>
+								<span>Gunakan Kamera</span>
 							</button>
 						{/if}
 
@@ -363,7 +449,7 @@
 							accept="image/jpeg,image/png,image/jpg"
 							style="display: none;"
 							bind:this={fileInput}
-							on:change={(e) => onFileSelected(e)}
+							onchange={(e) => onFileSelected(e)}
 						/>
 
 						<!-- Hidden Canvas -->
@@ -375,13 +461,13 @@
 								<div
 									class="mt-1.5 h-1 w-1 rounded-full bg-senary shadow-[0_0_8px_rgba(212,175,55,0.8)]"
 								></div>
-								<span class="leading-relaxed">High resolution (JPG, PNG) up to 6MB</span>
+								<span class="leading-relaxed">Resolusi tinggi (JPG, PNG) hingga 6MB</span>
 							</div>
 							<div class="flex items-start gap-3 text-xs text-secondary/80">
 								<div
 									class="mt-1.5 h-1 w-1 rounded-full bg-senary shadow-[0_0_8px_rgba(212,175,55,0.8)]"
 								></div>
-								<span class="leading-relaxed">Ensure face is clearly visible and well-lit</span>
+								<span class="leading-relaxed">Pastikan wajah terlihat jelas dan cukup cahaya</span>
 							</div>
 						</div>
 
@@ -389,7 +475,7 @@
 						<button
 							class="group relative flex w-full cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl bg-secondary px-6 py-4 text-sm font-bold tracking-widest text-primary uppercase shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] transition-all duration-500 hover:bg-white hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-secondary disabled:hover:shadow-none"
 							disabled={!avatar}
-							on:click={() => {
+							onclick={() => {
 								// Submit logic here
 								console.log('Submitting photo...');
 								handleScan();
@@ -398,7 +484,7 @@
 							<Upload
 								class="relative h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5"
 							/>
-							<span class="relative">Analyze Style</span>
+							<span class="relative">Analisis Gaya</span>
 						</button>
 					</div>
 				</div>
@@ -408,7 +494,7 @@
 			<div class="lg:col-span-8" in:fly={{ x: 50, duration: 1000, delay: 400, easing: quintOut }}>
 				<div class="h-full rounded-[2rem] border border-white/5 bg-white/5 p-8 backdrop-blur-xl">
 					<div class="mb-8 flex items-center justify-between">
-						<h3 class="font-serif text-2xl text-secondary">Style Recommendations</h3>
+						<h3 class="font-serif text-2xl text-secondary">Rekomendasi Gaya</h3>
 						<div class="ml-6 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
 					</div>
 
@@ -421,7 +507,7 @@
 							<Accordion.Trigger
 								class="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-secondary/80 transition-all hover:bg-white/5 hover:text-secondary hover:no-underline data-[state=open]:bg-white/5 data-[state=open]:text-secondary"
 							>
-								<span class="text-sm font-medium tracking-wide uppercase">View Guidelines</span>
+								<span class="text-sm font-medium tracking-wide uppercase">Lihat Panduan</span>
 							</Accordion.Trigger>
 							<Accordion.Content class="w-full border-t border-white/5 bg-white/5 px-6 py-8">
 								<div
@@ -429,8 +515,8 @@
 								>
 									<AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0 text-senary" />
 									<p class="text-sm leading-relaxed text-secondary/80">
-										Our AI analyzes facial structure and features. High-quality photos ensure
-										90-100% accuracy in recommendations.
+										AI kami menganalisis struktur dan fitur wajah. Foto berkualitas tinggi
+										memastikan akurasi 90-100% dalam rekomendasi.
 									</p>
 								</div>
 								<div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -444,7 +530,7 @@
 										<div
 											class="absolute right-0 bottom-0 left-0 bg-senary/90 py-1.5 text-center text-[10px] font-bold tracking-widest text-primary uppercase"
 										>
-											Good
+											Bagus
 										</div>
 									</div>
 									<!-- Good Example 2 -->
@@ -457,7 +543,7 @@
 										<div
 											class="absolute right-0 bottom-0 left-0 bg-senary/90 py-1.5 text-center text-[10px] font-bold tracking-widest text-primary uppercase"
 										>
-											Good
+											Bagus
 										</div>
 									</div>
 									<!-- Bad Example 1 -->
@@ -472,7 +558,7 @@
 										<div
 											class="absolute right-0 bottom-0 left-0 bg-red-900/90 py-1.5 text-center text-[10px] font-bold tracking-widest text-white uppercase"
 										>
-											Bad
+											Buruk
 										</div>
 									</div>
 									<!-- Bad Example 2 -->
@@ -487,7 +573,7 @@
 										<div
 											class="absolute right-0 bottom-0 left-0 bg-red-900/90 py-1.5 text-center text-[10px] font-bold tracking-widest text-white uppercase"
 										>
-											Bad
+											Buruk
 										</div>
 									</div>
 								</div>
@@ -508,10 +594,10 @@
 									<Star class="h-12 w-12 text-senary" />
 								</div>
 							</div>
-							<h4 class="mb-3 font-serif text-2xl text-secondary">Ready to Transform?</h4>
+							<h4 class="mb-3 font-serif text-2xl text-secondary">Siap untuk Berubah?</h4>
 							<p class="max-w-xs text-sm leading-relaxed text-secondary/70">
-								Upload your photo to unlock a curated collection of hairstyles tailored to your
-								unique features.
+								Unggah foto Anda untuk membuka koleksi gaya rambut yang dikurasi sesuai dengan fitur
+								unik Anda.
 							</p>
 						</div>
 					{:else if scanning}
@@ -524,17 +610,82 @@
 									<Sparkles class="h-10 w-10 animate-pulse text-senary" />
 								</div>
 							</div>
-							<h4 class="mb-2 font-serif text-2xl text-secondary">Analyzing Features</h4>
-							<p class="text-sm text-secondary/60">Identifying face shape and hair texture...</p>
+							<h4 class="mb-2 font-serif text-2xl text-secondary">Menganalisis Fitur</h4>
+							<p class="text-sm text-secondary/60">
+								Mengidentifikasi bentuk wajah dan tekstur rambut...
+							</p>
 						</div>
-					{:else}
+					{:else if showResults}
+						<!-- Analysis Results -->
+						<div class="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+							<!-- Face Shape -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<ScanFace class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Bentuk Wajah
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.faceShape}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Akurasi: {analysisData.faceAccuracy}
+								</p>
+							</div>
+
+							<!-- Hair Type -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<Scissors class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Tipe Rambut
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.hairType}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Akurasi: {analysisData.hairAccuracy}
+								</p>
+							</div>
+
+							<!-- Skin Tone -->
+							<div
+								class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+							>
+								<div class="mb-4 flex items-center gap-3">
+									<div
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-senary/10 text-senary"
+									>
+										<Sun class="h-6 w-6" />
+									</div>
+									<h4 class="text-sm font-medium tracking-wide text-secondary/60 uppercase">
+										Warna Kulit
+									</h4>
+								</div>
+								<p class="font-serif text-2xl text-secondary">{analysisData.skinTone}</p>
+								<p class="mt-1 font-mono text-xs text-senary/80">
+									Akurasi: {analysisData.skinAccuracy}
+								</p>
+							</div>
+						</div>
+
 						<!-- Filter Section -->
 						<div class="mb-10">
 							<FilterGroup
 								options={serviceOptions}
 								{selectedFilter}
 								onSelect={(value) => {
-									selectedFilter = value || 'All';
+									selectedFilter = value || 'Semua';
 									selectedFilterValue = value;
 									dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
 									dataCatalogue.setPageIndex(0);
@@ -574,7 +725,6 @@
 											class="cursor-pointer text-secondary/80 hover:bg-white/10 hover:text-white"
 										>
 											<ChevronLeftIcon class="size-4" />
-											<span class="hidden sm:block">Previous</span>
 										</Button>
 									</Pagination.Item>
 									{#each pages as page (page.key)}
@@ -609,13 +759,30 @@
 											variant="ghost"
 											class="cursor-pointer text-secondary/80 hover:bg-white/10 hover:text-white"
 										>
-											<span class="hidden sm:block">Next</span>
 											<ChevronRightIcon class="size-4" />
 										</Button>
 									</Pagination.Item>
 								</Pagination.Content>
 							{/snippet}
 						</Pagination.Root>
+					{:else}
+						<!-- Photo Ready State (Uploaded but not analyzed) -->
+						<div class="flex flex-col items-center justify-center py-24 text-center">
+							<div class="relative mb-8">
+								<div class="absolute inset-0 animate-pulse rounded-full bg-senary/10 blur-xl"></div>
+								<div
+									class="relative rounded-full border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+								>
+									<Camera class="h-10 w-10 text-senary/80" />
+								</div>
+							</div>
+							<h4 class="mb-3 font-serif text-2xl text-secondary">Foto Siap</h4>
+							<p class="max-w-xs text-sm leading-relaxed text-secondary/70">
+								Foto Anda telah dipilih. Klik <span class="font-bold text-senary"
+									>ANALISIS GAYA</span
+								> untuk memulai transformasi.
+							</p>
+						</div>
 					{/if}
 				</div>
 			</div>

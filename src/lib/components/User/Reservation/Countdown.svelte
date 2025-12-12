@@ -3,9 +3,11 @@
 	import { Clock, AlertCircle } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 
+	import { getCompanySettings } from '$lib/api/shared/api';
+
 	let {
 		date,
-		durationHours = 12,
+		durationHours = $bindable(12 + 7), // Default fallback
 		onExpire
 	} = $props<{
 		date: string;
@@ -40,7 +42,17 @@
 		timeLeft = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 	}
 
-	onMount(() => {
+	onMount(async () => {
+		try {
+			const response = await getCompanySettings(fetch);
+			if (response.success && response.data) {
+				// Update durationHours with fetched value + 7
+				durationHours = (response.data.countdown_payment || 12) + 7;
+			}
+		} catch (error) {
+			console.error('Failed to fetch settings for countdown:', error);
+		}
+
 		calculateTimeLeft();
 		if (!isExpired) {
 			interval = setInterval(calculateTimeLeft, 1000);
@@ -53,37 +65,35 @@
 </script>
 
 {#if !isExpired}
-	<div class="rounded-xl border border-orange-500/20 bg-orange-500/10 p-4" transition:fade>
+	<div class="rounded-xl border border-orange-500/20 bg-orange-500/10 p-3 md:p-4" transition:fade>
 		<div class="flex items-start gap-3">
-			<div class="rounded-full bg-orange-500/20 p-2 text-orange-400">
-				<Clock class="size-5" />
+			<div class="rounded-full bg-orange-500/20 p-1.5 text-orange-400 md:p-2">
+				<Clock class="size-4 md:size-5" />
 			</div>
 			<div class="flex-1 space-y-1">
-				<div class="flex items-center justify-between">
-					<p class="font-medium text-orange-300">Payment Deadline</p>
-					<p class="font-mono text-lg font-bold text-orange-400">{timeLeft}</p>
+				<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+					<p class="text-sm font-medium text-orange-300 md:text-base">Batas Pembayaran</p>
+					<p class="font-mono text-base font-bold text-orange-400 md:text-lg">{timeLeft}</p>
 				</div>
-				<p class="text-xs leading-relaxed text-orange-300/70">
-					According to our reservation policy, payments must be completed within {durationHours} hours
-					or the reservation will be automatically cancelled.
+				<p class="text-[10px] leading-relaxed text-orange-300/70 md:text-xs">
+					Silakan selesaikan pembayaran sebelum waktu habis untuk menghindari pembatalan otomatis.
 				</p>
 			</div>
 		</div>
 	</div>
 {:else}
-	<div class="rounded-xl border border-orange-500/20 bg-orange-500/10 p-4" transition:fade>
+	<div class="rounded-xl border border-orange-500/20 bg-orange-500/10 p-3 md:p-4" transition:fade>
 		<div class="flex items-start gap-3">
-			<div class="rounded-full bg-orange-500/20 p-2 text-orange-400">
-				<AlertCircle class="size-5" />
+			<div class="rounded-full bg-orange-500/20 p-1.5 text-orange-400 md:p-2">
+				<AlertCircle class="size-4 md:size-5" />
 			</div>
 			<div class="flex-1 space-y-1">
-				<div class="flex items-center justify-between">
-					<p class="font-medium text-orange-300">Payment Deadline</p>
-					<p class="font-mono text-lg font-bold text-orange-400">Expired</p>
+				<div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+					<p class="text-sm font-medium text-orange-300 md:text-base">Batas Pembayaran</p>
+					<p class="font-mono text-base font-bold text-orange-400 md:text-lg">Expired</p>
 				</div>
-				<p class="text-xs leading-relaxed text-orange-300/70">
-					According to our reservation policy, payments must be completed within {durationHours} hours
-					or the reservation will be automatically cancelled.
+				<p class="text-[10px] leading-relaxed text-orange-300/70 md:text-xs">
+					Silakan selesaikan pembayaran sebelum waktu habis untuk menghindari pembatalan otomatis.
 				</p>
 			</div>
 		</div>

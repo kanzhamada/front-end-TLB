@@ -20,10 +20,11 @@
 	import { getMessagesByReservation, sendMessage } from '$lib/api/shared/chat';
 	import { cn } from '$lib/utils';
 
-	let { reservation, open, onClose } = $props<{
+	let { reservation, open, onClose, userId } = $props<{
 		reservation: any;
 		open: boolean;
 		onClose: () => void;
+		userId: string;
 	}>();
 
 	let messages: Message[] = $state([]);
@@ -37,8 +38,9 @@
 	let unreadCount = $state(0);
 
 	// Get user profile for display
-	const userProfile = $derived(() => get(authStore).session?.user);
-	const currentUserId = $derived(get(authStore).session?.user?.id);
+	const userProfile = $derived($authStore.session?.user);
+	// Use the passed userId prop instead of derived store
+	const currentUserId = $derived(userId);
 
 	onMount(async () => {
 		if (open && reservation?.reservationID) {
@@ -89,7 +91,7 @@
 		error = null;
 
 		try {
-			const token = get(authStore).session?.access_token;
+			const token = $authStore.session?.access_token;
 			if (!token) {
 				throw new Error('User not authenticated');
 			}
@@ -125,13 +127,16 @@
 	}
 
 	async function fetchUnreadCount(chatId: string) {
+		const userId = currentUserId;
+		if (!userId) return;
+
 		try {
 			const { count, error } = await supabase
 				.from('messages')
 				.select('*', { count: 'exact', head: true })
 				.eq('chatID', chatId)
 				.eq('read', false)
-				.neq('sender', currentUserId);
+				.neq('sender', userId);
 
 			if (error) throw error;
 			unreadCount = count || 0;
@@ -141,11 +146,17 @@
 	}
 
 	async function markMessagesAsRead(chatId: string) {
+		const userId = currentUserId;
+		if (!userId) {
+			console.error('Cannot mark messages as read: User ID is undefined');
+			return;
+		}
+
 		try {
 			// Use Supabase RPC to mark messages as read
 			const { data, error } = await supabase.rpc('shared_chat_mark_as_read', {
 				chat_id: chatId,
-				viewer_user_id: get(authStore).session?.user?.id
+				viewer_user_id: userId
 			});
 
 			if (error) {
@@ -242,7 +253,7 @@
 		}
 
 		try {
-			const token = get(authStore).session?.access_token;
+			const token = $authStore.session?.access_token;
 			if (!token) {
 				throw new Error('User not authenticated');
 			}
@@ -274,16 +285,64 @@
 		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	}
 
-	// Determine if message is from current user
-	function isCurrentUserMessage(senderId: string) {
-		return senderId === get(authStore).session?.user?.id;
-	}
-
 	function handleOpenChange(isOpen: boolean) {
 		if (!isOpen) {
 			onClose();
 		}
 	}
+
+	function isSameDay(date1: string, date2: string) {
+		const d1 = new Date(date1);
+		const d2 = new Date(date2);
+		return (
+			d1.getFullYear() === d2.getFullYear() &&
+			d1.getMonth() === d2.getMonth() &&
+			d1.getDate() === d2.getDate()
+		);
+	}
+
+	function formatDateSeparator(dateString: string) {
+		const date = new Date(dateString);
+		const today = new Date();
+		const yesterday = new Date(today);
+		yesterday.setDate(yesterday.getDate() - 1);
+
+		if (isSameDay(dateString, today.toISOString())) {
+			return 'Hari Ini';
+		} else if (isSameDay(dateString, yesterday.toISOString())) {
+			return 'Kemarin';
+		} else {
+			return date.toLocaleDateString('id-ID', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			});
+		}
+	}
+
+	// Group messages by date
+	let groupedMessages = $derived.by(() => {
+		const groups: { date: string; msgs: Message[] }[] = [];
+		let currentDate = '';
+		let currentGroup: Message[] = [];
+
+		messages.forEach((msg) => {
+			const msgDate = formatDateSeparator(msg.created_at);
+			if (msgDate !== currentDate) {
+				if (currentGroup.length > 0) {
+					groups.push({ date: currentDate, msgs: currentGroup });
+				}
+				currentDate = msgDate;
+				currentGroup = [msg];
+			} else {
+				currentGroup.push(msg);
+			}
+		});
+		if (currentGroup.length > 0) {
+			groups.push({ date: currentDate, msgs: currentGroup });
+		}
+		return groups;
+	});
 </script>
 
 <Sheet {open} onOpenChange={handleOpenChange}>
@@ -348,55 +407,54 @@
 					{:else}
 						<div bind:this={messagesContainer} class="h-full overflow-y-auto pr-2">
 							<div class="space-y-6 pb-4">
-								{#each messages as message (message.created_at + message.sender)}
-									<div
-										class="flex {isCurrentUserMessage(message.sender)
-											? 'justify-end'
-											: 'justify-start'}"
-									>
-										<div class="flex max-w-[85%] flex-col gap-1">
-											<div
-												class="flex items-end gap-2 {isCurrentUserMessage(message.sender)
-													? 'flex-row-reverse'
-													: 'flex-row'}"
-											>
-												{#if !isCurrentUserMessage(message.sender)}
-													<Avatar class="size-8 flex-shrink-0 border border-white/10">
-														<AvatarFallback class="bg-senary/10 text-xs font-bold text-senary">
-															A
-														</AvatarFallback>
-													</Avatar>
-												{/if}
+								{#each groupedMessages as group}
+									<div class="my-4 flex justify-center">
+										<span class="rounded-full bg-white/5 px-3 py-1 text-[10px] text-secondary/50">
+											{group.date}
+										</span>
+									</div>
+
+									{#each group.msgs as message (message.created_at + message.sender)}
+										{@const isMe = message.sender === currentUserId}
+										<div class="flex {isMe ? 'justify-end' : 'justify-start'}">
+											<div class="flex max-w-[85%] flex-col gap-1">
+												<div class="flex items-end gap-2 {isMe ? 'flex-row-reverse' : 'flex-row'}">
+													{#if !isMe}
+														<Avatar class="size-8 flex-shrink-0 border border-white/10">
+															<AvatarFallback class="bg-senary/10 text-xs font-bold text-senary">
+																A
+															</AvatarFallback>
+														</Avatar>
+													{/if}
+
+													<div
+														class={cn(
+															'rounded-2xl px-4 py-3 break-words shadow-sm',
+															isMe
+																? 'rounded-br-sm bg-senary text-primary'
+																: 'rounded-bl-sm bg-white/10 text-secondary backdrop-blur-sm'
+														)}
+													>
+														<p class="text-sm leading-relaxed break-words whitespace-pre-wrap">
+															{message.content}
+														</p>
+													</div>
+												</div>
 
 												<div
 													class={cn(
-														'rounded-2xl px-4 py-3 break-words shadow-sm',
-														isCurrentUserMessage(message.sender)
-															? 'rounded-br-sm bg-senary text-primary'
-															: 'rounded-bl-sm bg-white/10 text-secondary backdrop-blur-sm'
+														'flex text-[10px] text-secondary/40',
+														isMe ? 'justify-end pr-1' : 'justify-start pl-11'
 													)}
 												>
-													<p class="text-sm leading-relaxed break-all whitespace-pre-wrap">
-														{message.content}
-													</p>
+													<span>{formatDate(message.created_at)}</span>
+													{#if !message.read && !isMe}
+														<span class="ml-1">• belum dibaca</span>
+													{/if}
 												</div>
 											</div>
-
-											<div
-												class={cn(
-													'flex text-[10px] text-secondary/40',
-													isCurrentUserMessage(message.sender)
-														? 'justify-end pr-1'
-														: 'justify-start pl-11'
-												)}
-											>
-												<span>{formatDate(message.created_at)}</span>
-												{#if !message.read && !isCurrentUserMessage(message.sender)}
-													<span class="ml-1">• belum dibaca</span>
-												{/if}
-											</div>
 										</div>
-									</div>
+									{/each}
 								{/each}
 								<div bind:this={scrollBottomRef}></div>
 							</div>

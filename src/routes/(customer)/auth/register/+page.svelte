@@ -72,6 +72,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { register } from '$lib/api/auth';
+	import { phoneSchema } from '$lib/zod/schema';
 	import { authStore } from '$lib/stores/auth';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -96,13 +97,31 @@
 		toast.error(message);
 	}
 
+	async function loginWithGoogle() {
+		const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/google`);
+		const json = await res.json();
+
+		if (json?.data?.url) {
+			window.location.href = json.data.url;
+		}
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		if (submitting) return;
 
 		if (password !== confirmPassword) {
-			handleError('Passwords do not match.');
+			console.log('Passwords do not match.');
+			handleError('Kata sandi tidak cocok.');
 			return;
+		}
+
+		if (phone) {
+			const phoneValidation = phoneSchema.safeParse(phone);
+			if (!phoneValidation.success) {
+				handleError(phoneValidation.error.errors[0].message);
+				return;
+			}
 		}
 
 		formError = null;
@@ -118,17 +137,18 @@
 
 			const success = response.success ?? response.sucess ?? false;
 
-			if (!success || !response.data?.session) {
-				handleError(response.message ?? 'Registration failed. Please try again.');
+			if (!success) {
+				console.log('Registration failed 1:', response);
+				handleError(response.message ?? 'Pendaftaran gagal. Silakan coba lagi.');
 				return;
 			}
 
-			authStore.setSession(response.data.session);
-			toast.success('Registration successful!');
-			await goto('/');
+			toast.success('Pendaftaran berhasil! Periksa email Anda untuk konfirmasi.');
+			await goto('/auth/login');
 		} catch (error: unknown) {
+			console.log('Registration failed:', error);
 			const customError = error as { response?: { message?: string } };
-			const message = customError?.response?.message ?? 'Unable to register. Please try again.';
+			const message = customError?.response?.message ?? 'Tidak dapat mendaftar. Silakan coba lagi.';
 			handleError(message);
 		} finally {
 			submitting = false;
@@ -136,6 +156,9 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Register | Three Lights Barbershop</title>
+</svelte:head>
 <div class="relative min-h-screen overflow-hidden text-secondary selection:bg-senary/30">
 	<!-- Background -->
 	<div
@@ -143,7 +166,7 @@
 	></div>
 
 	<div
-		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12"
+		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-12"
 		in:fade={{ duration: 1000 }}
 	>
 		<!-- Logo/Brand -->
@@ -152,20 +175,22 @@
 			in:fly={{ y: -20, duration: 800, delay: 200 }}
 		>
 			<div class="flex items-center gap-4">
-				<div class="h-[1px] w-12 bg-senary"></div>
-				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
+				<p
+					class="text-sm font-medium tracking-[0.2em] text-senary uppercase md:text-lg md:tracking-[0.3em]"
+				>
 					Three Lights Barbershop
 				</p>
-				<div class="h-[1px] w-12 bg-senary"></div>
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
 			</div>
-			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
-				Join the <span class="text-gradient-gold">Elite</span>
+			<h1 class="text-3xl font-bold tracking-tighter text-secondary md:text-5xl">
+				Bergabunglah <span class="text-gradient-gold">Bersama Kami</span>
 			</h1>
 		</div>
 
 		<!-- Register Card -->
 		<div
-			class="w-full max-w-lg transform rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10"
+			class="w-full max-w-lg transform rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10 md:p-8"
 			in:fly={{ y: 20, duration: 800, delay: 400 }}
 		>
 			<div class="mb-8 text-center">
@@ -174,15 +199,15 @@
 					alt="three lights barbershop logo"
 					class="mx-auto mb-4"
 				/>
-				<p class="text-lg font-light text-secondary/80">Create your account to book appointments</p>
+				<p class="text-lg font-light text-secondary/80">Buat akun untuk memesan janji temu</p>
 			</div>
 
 			<form class="space-y-6" onsubmit={handleSubmit}>
 				<div class="space-y-2">
-					<Label for="displayName" class="text-sm font-medium text-senary">Full Name</Label>
+					<Label for="displayName" class="text-sm font-medium text-senary">Nama Lengkap</Label>
 					<Input
 						id="displayName"
-						placeholder="Your Name"
+						placeholder="Nama Anda"
 						bind:value={displayName}
 						required
 						autocomplete="name"
@@ -206,12 +231,13 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for="phone" class="text-sm font-medium text-senary">Phone Number (Optional)</Label>
+					<Label for="phone" class="text-sm font-medium text-senary">Nomor Telepon</Label>
 					<Input
 						id="phone"
 						type="tel"
 						placeholder="08xxxxxxxxxx"
 						bind:value={phone}
+						required
 						autocomplete="tel"
 						disabled={submitting}
 						class="border-white/10 bg-black/20 text-secondary placeholder:text-white/20 focus:border-senary/50 focus:ring-senary/20"
@@ -220,12 +246,12 @@
 
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div class="space-y-2">
-						<Label for="password" class="text-sm font-medium text-senary">Password</Label>
+						<Label for="password" class="text-sm font-medium text-senary">Kata Sandi</Label>
 						<div class="relative">
 							<Input
 								id="password"
 								type={showPassword ? 'text' : 'password'}
-								placeholder="Min 8 chars"
+								placeholder="Min 8 karakter"
 								bind:value={password}
 								required
 								autocomplete="new-password"
@@ -249,13 +275,13 @@
 
 					<div class="space-y-2">
 						<Label for="confirmPassword" class="text-sm font-medium text-senary"
-							>Confirm Password</Label
+							>Konfirmasi Kata Sandi</Label
 						>
 						<div class="relative">
 							<Input
 								id="confirmPassword"
 								type={showConfirmPassword ? 'text' : 'password'}
-								placeholder="Repeat password"
+								placeholder="Ulangi kata sandi"
 								bind:value={confirmPassword}
 								required
 								minlength={8}
@@ -286,21 +312,49 @@
 
 				<Button
 					type="submit"
-					class="w-full bg-senary font-medium tracking-wide text-primary uppercase transition-all duration-300 hover:bg-senary/90 hover:text-primary"
+					class="w-full bg-senary font-medium tracking-wide text-primary transition-all duration-300 hover:bg-senary/90 hover:text-primary"
 					disabled={submitting}
 				>
-					{submitting ? 'Creating Account...' : 'Create Account'}
+					{submitting ? 'Sedang Membuat Akun...' : 'Buat Akun'}
+				</Button>
+				<Button
+					type="button"
+					class=" w-full bg-white text-black hover:bg-gray-200"
+					onclick={loginWithGoogle}
+				>
+					Daftar dengan Google <svg
+						xmlns="http://www.w3.org/2000/svg"
+						x="0px"
+						y="0px"
+						width="100"
+						height="100"
+						viewBox="0 0 48 48"
+					>
+						<path
+							fill="#FFC107"
+							d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
+						></path><path
+							fill="#FF3D00"
+							d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
+						></path><path
+							fill="#4CAF50"
+							d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
+						></path><path
+							fill="#1976D2"
+							d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
+						></path>
+					</svg>
 				</Button>
 			</form>
 
 			<div class="mt-8 text-center">
 				<p class="text-sm text-secondary/60">
-					Already have an account?
+					Sudah punya akun?
 					<a
 						href="/auth/login"
 						class="font-medium text-senary underline-offset-4 transition-colors hover:text-senary/80 hover:underline"
 					>
-						Sign in here
+						Masuk di sini
 					</a>
 				</p>
 			</div>

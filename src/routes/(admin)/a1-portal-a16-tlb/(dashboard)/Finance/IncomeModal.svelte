@@ -14,13 +14,12 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
-	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { income = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		income?: OfflineIncome | null;
 		token: string;
 		open: boolean;
-		onClose?: () => void;
+		onClose: () => void;
 		onUpdate: () => void;
 	}>();
 
@@ -82,11 +81,6 @@
 		}
 	}
 
-	function handleClose() {
-		if (onClose) onClose();
-		else open = false;
-	}
-
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!formData.date || !formData.type || !formData.serviceId) {
@@ -105,36 +99,28 @@
 		if (res.success) {
 			toast.success(`Income ${income ? 'updated' : 'recorded'} successfully`);
 			onUpdate();
-			handleClose();
+			onClose();
 		} else {
 			toast.error(res.message || `Failed to ${income ? 'update' : 'record'} income`);
 		}
 		loading = false;
 	}
 
-	// Delete Confirmation State
-	let confirmOpen = $state(false);
-	let deleteLoading = $state(false);
-
-	function initiateDelete() {
-		confirmOpen = true;
-	}
-
-	async function confirmDelete() {
+	async function handleDelete() {
 		if (!income) return;
-		
-		deleteLoading = true;
+		if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) return;
+
+		loading = true;
 		const res = await deleteOfflineIncome(fetch, income.id, token);
 		
 		if (res.success) {
 			toast.success('Record deleted successfully');
 			onUpdate();
-			handleClose();
+			onClose();
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
-		deleteLoading = false;
-		confirmOpen = false;
+		loading = false;
 	}
 </script>
 
@@ -142,17 +128,17 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
-		onclick={handleClose}
+		onclick={onClose}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && handleClose()}
+		onkeydown={(e) => e.key === 'Escape' && onClose()}
 	>
 		<div
 			class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			role="document"
 			tabindex="0"
-			onkeydown={(e) => e.key === 'Escape' && handleClose()}
+			onkeydown={(e) => e.key === 'Escape' && onClose()}
 			in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -170,7 +156,7 @@
 					</p>
 				</div>
 				<button
-					onclick={handleClose}
+					onclick={onClose}
 					class="rounded-full p-2 text-secondary/50 transition-colors hover:bg-white/10 hover:text-white"
 				>
 					<X class="h-5 w-5" />
@@ -263,7 +249,7 @@
 							<Button 
 								type="button"
 								variant="destructive" 
-								onclick={initiateDelete}
+								onclick={handleDelete}
 								disabled={loading}
 								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
 							>
@@ -278,7 +264,7 @@
 							<Button 
 								type="button"
 								variant="outline" 
-								onclick={handleClose} 
+								onclick={onClose} 
 								disabled={loading}
 								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
 							>
@@ -299,24 +285,5 @@
 				</form>
 			</div>
 		</div>
-
-	<AdminConfirmDialog 
-		bind:open={confirmOpen}
-		title="Delete Income Record"
-		description="Are you sure you want to delete this income record? This action cannot be undone."
-		variant="destructive"
-		confirmText="Delete"
-		loading={deleteLoading}
-		onConfirm={confirmDelete}
-	/>
-</div>
+	</div>
 {/if}
-
-<style>
-	:global(.bg-black\/80) {
-		background-color: rgba(9, 9, 11, 0.8);
-	}
-	:global(.backdrop-blur-md) {
-		backdrop-filter: blur(12px);
-	}
-</style>

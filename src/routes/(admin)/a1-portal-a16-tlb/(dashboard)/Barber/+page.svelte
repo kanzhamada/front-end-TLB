@@ -14,6 +14,7 @@
 	let barbers = $state<Barber[]>([]);
 	let loading = $state(true);
 	let searchQuery = $state('');
+	let selectedStatus = $state('All');
 
 	// Modal State
 	let showModal = $state(false);
@@ -27,7 +28,7 @@
 	async function loadBarbers() {
 		loading = true;
 		const token = data.session?.access_token || '';
-		const res = await getBarbers(fetch);
+		const res = await getBarbers(fetch, token);
 		if (res.success && res.data) {
 			barbers = res.data;
 		} else {
@@ -52,7 +53,13 @@
 			const matchesSearch =
 				barber.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				(barber.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-			return matchesSearch;
+			const matchesStatus =
+				selectedStatus === 'All'
+					? true
+					: selectedStatus === 'Active'
+						? barber.active
+						: !barber.active;
+			return matchesSearch && matchesStatus;
 		})
 	);
 
@@ -62,6 +69,12 @@
 	let paginatedBarbers = $derived(
 		filteredBarbers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 	);
+
+	const statusOptions = [
+		{ value: 'All', label: 'All Status' },
+		{ value: 'Active', label: 'Active' },
+		{ value: 'Inactive', label: 'Inactive' }
+	];
 </script>
 
 {#if showModal}
@@ -78,7 +91,7 @@
 	<!-- Hero Header -->
 	<div class="relative w-full overflow-hidden px-8 pt-8 pb-8">
 		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent"></div>
-		<div class="relative z-10 mx-auto max-w-[1600px]">
+		<div class="relative z-10 mx-auto max-w-7xl">
 			<div class="mb-4 flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<div class="h-[1px] w-12 bg-senary"></div>
@@ -115,6 +128,31 @@
 							class="h-10 rounded-xl border-white/10 bg-white/5 pl-10 text-secondary placeholder:text-secondary/50 focus:border-senary focus:ring-senary"
 						/>
 					</div>
+
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="outline"
+									class="h-10 rounded-xl border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-senary"
+								>
+									<Filter class="mr-2 h-4 w-4" />
+									{selectedStatus === 'All' ? 'All Status' : selectedStatus}
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content class="border-white/10 bg-slate-900 text-secondary">
+							{#each statusOptions as option}
+								<DropdownMenu.Item
+									onclick={() => (selectedStatus = option.value)}
+									class="focus:bg-white/10 focus:text-senary cursor-pointer"
+								>
+									{option.label}
+								</DropdownMenu.Item>
+							{/each}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 
 				<Button 
@@ -134,8 +172,8 @@
 							<tr>
 								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Barber</th>
 								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Contact</th>
-								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Skills</th>
 								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Experience</th>
+								<th class="p-6 font-bold tracking-wider text-secondary/50 uppercase text-xs">Status</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-white/5">
@@ -179,15 +217,21 @@
 											</div>
 										</td>
 										<td class="p-6">
-											<div class="text-secondary">
-												{barber.skills || 'N/A'}
-											</div>
-										</td>
-										<td class="p-6">
 											<div class="flex items-center gap-2 text-secondary">
 												<Briefcase class="h-3 w-3 text-senary" />
 												{barber.experience || 'N/A'}
 											</div>
+										</td>
+										<td class="p-6">
+											<span
+												class={`rounded-full border px-3 py-1 text-[10px] font-bold tracking-wider uppercase ${
+													barber.active
+														? 'bg-green-400/10 text-green-400 border-green-400/20'
+														: 'bg-red-400/10 text-red-400 border-red-400/20'
+												}`}
+											>
+												{barber.active ? 'Active' : 'Inactive'}
+											</span>
 										</td>
 									</tr>
 								{/each}
