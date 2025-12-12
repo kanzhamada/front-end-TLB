@@ -91,10 +91,6 @@ export const catalogueSchema = z.object({
 	description: z.string().trim().max(255, 'Description must be at most 255 characters'),
 
 	image: z.string().optional(),
-<<<<<<< HEAD
-=======
-
->>>>>>> d9e9829 (add forget password for admin/user and google oauth)
 	file: z.any().optional()
 });
 

@@ -44,7 +44,10 @@
 		// Import with alias
 		getOperational as getOperationalApi, // Import with alias
 		getOwnedVouchers as getOwnedVouchersApi, // Import with alias
-		getServices as getServicesApi // Import with alias
+		getServices as getServicesApi, // Import with alias
+		getPaymentFees,
+		getCompanySettings,
+		type PaymentFees
 	} from '$lib/api/shared/api';
 	import { createReservation } from '$lib/api/customer/reservation';
 	import {
@@ -113,6 +116,36 @@
 	let showVoucherModal = $state(false);
 	let showReservationModal = $state(false);
 	let agreeTnc = $state(false);
+	let selectedPaymentMethod = $state<string | null>(null);
+	let paymentFees = $state<PaymentFees | null>(null);
+	let adminFee = $state(0);
+	let paymentMethodFee = $state(0);
+
+	const paymentMethods = [
+		{
+			category: 'E-Wallet',
+			items: [
+				{ id: 'shopeepay', label: 'ShopeePay', icon: 'shopeepay' },
+				{ id: 'gopay', label: 'GoPay', icon: 'gopay' },
+				{ id: 'dana', label: 'Dana', icon: 'dana' }
+			]
+		},
+		{
+			category: 'QRIS',
+			items: [{ id: 'qris', label: 'QRIS', icon: 'qris' }]
+		},
+		{
+			category: 'Bank Transfer',
+			items: [
+				{ id: 'permata_va', label: 'Permata Virtual Account', icon: 'permata' },
+				{ id: 'bca_va', label: 'BCA Virtual Account', icon: 'bca' },
+				{ id: 'mandiri_bill', label: 'Mandiri Bill Payment', icon: 'mandiri' },
+				{ id: 'bni_va', label: 'BNI Virtual Account', icon: 'bni' },
+				{ id: 'bri_va', label: 'BRI Virtual Account', icon: 'bri' },
+				{ id: 'danamon_va', label: 'Danamon Virtual Account', icon: 'danamon' }
+			]
+		}
+	];
 
 	let loadAttempted = $state(false);
 	let showLoginAlert = $state(false);
@@ -127,7 +160,6 @@
 		showReservationModal = true;
 	}
 
-	const adminFee = 4000;
 	const currencyFormatter = new Intl.NumberFormat('id-ID', {
 		style: 'currency',
 		currency: 'IDR',
@@ -186,7 +218,7 @@
 	let selectedVoucher = $state<OwnedVoucher | null>(null);
 	let subtotal = $state(0);
 	let voucherDiscount = $state(0);
-	let total = $state(adminFee);
+	let total = $state(0);
 	let selectedDateDisplay = $state<string | null>(null);
 	let selectedTimeDisplay = $state<string | null>(null);
 
@@ -207,7 +239,10 @@
 			voucherSelection,
 			redeemCode,
 			redeemCodeDiscount,
-			agreeTnc
+			redeemCode,
+			redeemCodeDiscount,
+			agreeTnc,
+			selectedPaymentMethod
 		};
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	}
@@ -230,6 +265,7 @@
 				redeemCode = state.redeemCode || null;
 				redeemCodeDiscount = state.redeemCodeDiscount || 0;
 				agreeTnc = state.agreeTnc || false;
+				selectedPaymentMethod = state.selectedPaymentMethod || null;
 
 				// If we have saved state, we should open the modal automatically if it was closed during flow
 				// But user requirement says "This behavior also applies when the user closes the modal"
@@ -352,7 +388,43 @@
 	});
 
 	$effect(() => {
-		total = Math.max(subtotal - voucherDiscount - redeemCodeDiscount + adminFee, 0);
+		if (selectedPaymentMethod && paymentFees) {
+			let feeConfig;
+			if (['shopeepay', 'gopay', 'dana', 'qris'].includes(selectedPaymentMethod)) {
+				// Map qris to qris key in paymentFees
+				const key = selectedPaymentMethod === 'qris' ? 'qris' : selectedPaymentMethod;
+				feeConfig = paymentFees[key];
+			} else {
+				// Bank transfers
+				feeConfig = paymentFees['bank_transfer'];
+			}
+
+			if (feeConfig) {
+				if (feeConfig.type === 'fixed') {
+					paymentMethodFee = feeConfig.value;
+				} else if (feeConfig.type === 'percentage') {
+					// Percentage of subtotal? Or subtotal - discount? Usually gross amount.
+					// Let's assume subtotal for now, or subtotal - voucher?
+					// Usually payment fee is based on the amount to be paid.
+					// Amount to be paid = subtotal - voucher - redeem + admin
+					// But admin fee is added to total.
+					// Let's calculate base amount first.
+					const baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
+					paymentMethodFee = Math.ceil((baseAmount + adminFee) * 0.5 * feeConfig.value);
+				}
+			} else {
+				paymentMethodFee = 0;
+			}
+		} else {
+			paymentMethodFee = 0;
+		}
+	});
+
+	$effect(() => {
+		total = Math.max(
+			subtotal - voucherDiscount - redeemCodeDiscount + adminFee + paymentMethodFee,
+			0
+		);
 	});
 
 	$effect(() => {
@@ -388,6 +460,7 @@
 		redeemCodeDiscount = 0;
 		specialRequest = '';
 		agreeTnc = false;
+		selectedPaymentMethod = null;
 		clearState();
 	}
 
@@ -419,10 +492,12 @@
 		dataError = null;
 
 		try {
-			const [operationalRes, barbersRes, servicesRes] = await Promise.all([
+			const [operationalRes, barbersRes, servicesRes, feesRes, settingsRes] = await Promise.all([
 				getOperationalApi(fetch),
 				getBarbersApi(fetch),
-				getServicesApi(fetch)
+				getServicesApi(fetch),
+				getPaymentFees(fetch),
+				getCompanySettings(fetch)
 			]);
 
 			if (!operationalRes.success) {
@@ -450,6 +525,14 @@
 			} else {
 				services = [];
 				if (servicesRes.message) toast.warning(servicesRes.message);
+			}
+
+			if (feesRes.success && feesRes.data) {
+				paymentFees = feesRes.data;
+			}
+
+			if (settingsRes.success && settingsRes.data) {
+				adminFee = settingsRes.data.admin_fee;
 			}
 
 			const token = get(authStore).session?.access_token;
@@ -574,6 +657,11 @@
 			return;
 		}
 
+		if (!selectedPaymentMethod && !reservationToReschedule) {
+			error = 'Silakan pilih metode pembayaran terlebih dahulu.';
+			return;
+		}
+
 		const token = get(authStore).session?.access_token;
 		if (!token) {
 			showLoginAlert = true;
@@ -612,6 +700,17 @@
 				});
 				dispatch('reservationCompleted', { success: true, type: 'reschedule' });
 			} else {
+				const isBankTransfer = [
+					'permata_va',
+					'bca_va',
+					'mandiri_bill',
+					'bni_va',
+					'bri_va',
+					'danamon_va'
+				].includes(selectedPaymentMethod!);
+
+				const payloadPaymentMethod = isBankTransfer ? 'bank_transfer' : selectedPaymentMethod!;
+
 				const response = await createReservation(
 					{
 						barberId: selectedBarberId,
@@ -619,7 +718,8 @@
 						dateTimeId: selectedTimeId,
 						notes: specialRequest ? specialRequest.trim() : undefined,
 						voucherId: voucherSelection !== 'none' ? voucherSelection : undefined,
-						redeemCode: redeemCode ?? undefined
+						redeemCode: redeemCode ?? undefined,
+						paymentMethod: payloadPaymentMethod
 					},
 					token
 				);
@@ -1132,6 +1232,70 @@
 							</div>
 						</div>
 
+						{#if !reservationToReschedule}
+							<div class="space-y-4">
+								<h4 class="font-semibold text-secondary">Metode Pembayaran</h4>
+								<Accordion.Root type="single" class="w-full space-y-2">
+									{#each paymentMethods as group}
+										<Accordion.Item value={group.category} class="border-b-0">
+											<Accordion.Trigger
+												class="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-secondary hover:bg-white/10 hover:no-underline data-[state=open]:bg-white/10"
+											>
+												{group.category}
+											</Accordion.Trigger>
+											<Accordion.Content class="pt-2">
+												<div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+													{#each group.items as item}
+														<button
+															type="button"
+															class={cn(
+																'flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-300',
+																selectedPaymentMethod === item.id
+																	? 'border-senary bg-senary/10 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+																	: 'border-white/10 bg-white/5 hover:border-senary/50 hover:bg-white/10'
+															)}
+															onclick={() => (selectedPaymentMethod = item.id)}
+														>
+															<!-- Placeholder icons -->
+															<div class="flex size-8 items-center justify-center rounded">
+																<img src="/payment-method/{item.icon}.svg" alt={item.label} />
+															</div>
+															<div class="flex flex-col">
+																<span
+																	class={cn(
+																		'text-sm font-medium',
+																		selectedPaymentMethod === item.id
+																			? 'text-senary'
+																			: 'text-secondary'
+																	)}>{item.label}</span
+																>
+																{#if paymentFees}
+																	{@const feeKey =
+																		item.id === 'qris'
+																			? 'qris'
+																			: ['shopeepay', 'gopay', 'dana'].includes(item.id)
+																				? item.id
+																				: 'bank_transfer'}
+																	{@const feeConfig = paymentFees[feeKey]}
+																	{#if feeConfig}
+																		<span class="text-xs text-secondary/60">
+																			Biaya: {feeConfig.type === 'fixed'
+																				? currencyFormatter.format(feeConfig.value)
+																				: `${(feeConfig.value * 100).toFixed(1)}%`}
+																		</span>
+																	{/if}
+																{/if}
+															</div>
+														</button>
+													{/each}
+												</div>
+											</Accordion.Content>
+										</Accordion.Item>
+									{/each}
+								</Accordion.Root>
+							</div>
+						{/if}
+
 						<Separator class="bg-white/10" />
 
 						<div class="space-y-2 text-sm">
@@ -1153,9 +1317,23 @@
 								<span>Biaya Admin</span>
 								<span>+{currencyFormatter.format(adminFee)}</span>
 							</div>
+							{#if paymentMethodFee > 0}
+								<div class="flex justify-between text-destructive">
+									<span>Biaya Layanan</span>
+									<span>+{currencyFormatter.format(paymentMethodFee)}</span>
+								</div>
+							{/if}
 							<div class="flex justify-between text-base font-semibold text-secondary">
 								<span>Total</span>
 								<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
+							</div>
+							<div class="flex justify-between text-base font-semibold text-secondary">
+								<span>Biaya DP</span>
+								<span class="text-xl text-senary"
+									>{currencyFormatter.format(
+										(total - paymentMethodFee) * 0.5 + paymentMethodFee
+									)}</span
+								>
 							</div>
 						</div>
 
@@ -1181,125 +1359,49 @@
 							</Accordion.Item>
 						</Accordion.Root>
 					</div>
+				</div>
 
-							<div class="rounded-lg border border-white/10 bg-white/5 p-4">
-								<div class="font-semibold text-secondary">Voucher</div>
-								<p class="mt-2 text-xs text-secondary/60">
-									Pilih voucher yang ingin digunakan (opsional).
-								</p>
-
-								<Button
-									variant="outline"
-									class="mt-3 w-full justify-between border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
-									disabled={reservationToReschedule}
-									onclick={() => ((showVoucherModal = true), (showReservationModal = false))}
-								>
-									<span>
-										{#if redeemCode}
-											Redeem Code Applied
-										{:else}
-											{selectedVoucher
-												? (selectedVoucher.title ?? selectedVoucher.name ?? 'Voucher')
-												: 'Pilih / Beli Voucher'}
-										{/if}
-									</span>
-									<ChevronRight class="h-4 w-4 opacity-50" />
-								</Button>
-							</div>
-						</div>
-
-						<Separator class="bg-white/10" />
-
-						<div class="space-y-2 text-sm">
-							<div class="flex justify-between text-secondary/80">
-								<span>{selectedService?.name ?? 'Subtotal'}</span>
-								<span>{currencyFormatter.format(subtotal)}</span>
-							</div>
-							<div class="flex justify-between text-senary">
-								<span>Diskon Voucher</span>
-								<span>-{currencyFormatter.format(voucherDiscount)}</span>
-							</div>
-							{#if redeemCode}
-								<div class="flex justify-between text-senary">
-									<span>Redeem Code ({redeemCode})</span>
-									<span>-{currencyFormatter.format(redeemCodeDiscount)}</span>
-								</div>
-							{/if}
-							<div class="flex justify-between text-destructive">
-								<span>Biaya Admin</span>
-								<span>+{currencyFormatter.format(adminFee)}</span>
-							</div>
-							<div class="flex justify-between text-base font-semibold text-secondary">
-								<span>Total</span>
-								<span class="text-xl text-senary">{currencyFormatter.format(total)}</span>
-							</div>
-						</div>
-
-						<!-- Terms and Conditions Accordion -->
-						<Accordion.Root type="single" collapsible class="w-full">
-							<Accordion.Item value="tnc" class="border-white/10">
-								<Accordion.Trigger class="text-sm text-secondary hover:text-senary">
-									Syarat & Ketentuan
-								</Accordion.Trigger>
-								<Accordion.Content class="text-sm text-secondary/70">
-									<ul class="list-disc space-y-1 pl-4">
-										<li>
-											Reservasi yang sudah dibayar tidak dapat dibatalkan, namun dapat di-reschedule
-											maksimal 1 kali.
-										</li>
-										<li>Harap datang 10 menit sebelum jadwal reservasi.</li>
-										<li>
-											Keterlambatan lebih dari 15 menit dapat menyebabkan pembatalan reservasi.
-										</li>
-										<li>Biaya admin tidak dapat dikembalikan.</li>
-									</ul>
-								</Accordion.Content>
-							</Accordion.Item>
-						</Accordion.Root>
-					</div>
-
-					<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-						<Button
-							variant="outline"
-							class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
-							onclick={goBack}>Kembali</Button
-						>
-						<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-							<div class="flex items-center space-x-2">
-								<Checkbox
-									id="tnc"
-									bind:checked={agreeTnc}
-									class="border-white/20 data-[state=checked]:bg-senary data-[state=checked]:text-primary"
-								/>
-								<Label
-									for="tnc"
-									class="text-xs leading-none text-secondary/60 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-								>
-									Saya menyetujui syarat & ketentuan
-								</Label>
-							</div>
-							<Button
-								class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
-								disabled={loadingSubmit}
-								onclick={handleSubmit}
+				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<Button
+						variant="outline"
+						class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
+						onclick={goBack}>Kembali</Button
+					>
+					<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+						<div class="flex items-center space-x-2">
+							<Checkbox
+								id="tnc"
+								bind:checked={agreeTnc}
+								class="border-white/20 data-[state=checked]:bg-senary data-[state=checked]:text-primary"
+							/>
+							<Label
+								for="tnc"
+								class="text-xs leading-none text-secondary/60 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 							>
-								{#if loadingSubmit}
-									<span class="flex items-center gap-2">
-										<Loader2Icon class="size-4 animate-spin" />
-										{#if reservationToReschedule}
-											Memproses Reschedule...
-										{:else}
-											Memproses Pembayaran...
-										{/if}
-									</span>
-								{:else if reservationToReschedule}
-									Konfirmasi Reschedule
-								{:else}
-									Konfirmasi Reservasi
-									<div></div>
-								{/if}
-							</Button>
+								Saya menyetujui syarat & ketentuan
+							</Label>
 						</div>
+						<Button
+							class="bg-senary text-primary hover:bg-senary/90 sm:w-auto"
+							disabled={loadingSubmit}
+							onclick={handleSubmit}
+						>
+							{#if loadingSubmit}
+								<span class="flex items-center gap-2">
+									<Loader2Icon class="size-4 animate-spin" />
+									{#if reservationToReschedule}
+										Memproses Reschedule...
+									{:else}
+										Memproses Pembayaran...
+									{/if}
+								</span>
+							{:else if reservationToReschedule}
+								Konfirmasi Reschedule
+							{:else}
+								Konfirmasi Reservasi
+								<div></div>
+							{/if}
+						</Button>
 					</div>
 				</div>
 			{/if}

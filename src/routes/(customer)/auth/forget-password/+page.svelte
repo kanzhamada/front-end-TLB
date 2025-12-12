@@ -87,7 +87,7 @@
 	</div>
 
 	<div
-		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12"
+		class="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-24 pb-12"
 		in:fade={{ duration: 1000 }}
 	>
 		<!-- Logo/Brand -->
@@ -96,20 +96,22 @@
 			in:fly={{ y: -20, duration: 800, delay: 200 }}
 		>
 			<div class="flex items-center gap-4">
-				<div class="h-[1px] w-12 bg-senary"></div>
-				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
+				<p
+					class="text-sm font-medium tracking-[0.2em] text-senary uppercase md:text-lg md:tracking-[0.3em]"
+				>
 					Three Lights Barbershop
 				</p>
-				<div class="h-[1px] w-12 bg-senary"></div>
+				<div class="h-[1px] w-8 bg-senary md:w-12"></div>
 			</div>
-			<h1 class="text-4xl font-bold tracking-tighter text-secondary md:text-5xl">
+			<h1 class="text-3xl font-bold tracking-tighter text-secondary md:text-5xl">
 				Lupa <span class="text-gradient-gold">Kata Sandi?</span>
 			</h1>
 		</div>
 
 		<!-- Login Card -->
 		<div
-			class="w-full max-w-md transform rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10"
+			class="w-full max-w-md transform rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl transition-all hover:border-senary/20 hover:bg-white/10 md:p-8"
 			in:fly={{ y: 20, duration: 800, delay: 400 }}
 		>
 			<div class="mb-8 text-center">

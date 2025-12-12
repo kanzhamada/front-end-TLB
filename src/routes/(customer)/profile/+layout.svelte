@@ -30,6 +30,7 @@
 	let showEditModal = $state(false);
 	let showChangePasswordModal = $state(false);
 	let profileData = $state<ProfileData | null>(null);
+
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let isUpdating = $state(false);
@@ -77,6 +78,7 @@
 
 			console.debug('Setting profileData to response.data:', response.data);
 			profileData = response.data;
+			console.log('photo profile', profileData?.photoProfile);
 		} catch (err) {
 			console.error('Error loading profile for edit:', err);
 			error = err instanceof Error ? err.message : 'An error occurred while loading profile';
@@ -244,12 +246,6 @@
 							<p class="truncate text-sm text-secondary/60">{profileData?.email}</p>
 
 							<div class="mt-4 space-y-2 rounded-xl bg-black/20 p-3 text-sm">
-								{#if profileData?.phone}
-									<p class="flex items-center justify-between text-secondary/80">
-										<span class="text-xs tracking-wider text-secondary/50 uppercase">Telepon</span>
-										<span>{profileData?.phone}</span>
-									</p>
-								{/if}
 								<p class="flex items-center justify-between">
 									<span class="text-xs tracking-wider text-secondary/50 uppercase">Saldo</span>
 									<span class="flex items-center gap-1 font-bold text-senary">

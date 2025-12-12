@@ -85,6 +85,16 @@ export type CompanySettings = {
 	maps_link: string;
 	updated_at: string;
 };
+
+export type PaymentFee = {
+	type: 'fixed' | 'percentage';
+	value: number;
+	label: string;
+};
+
+export type PaymentFees = {
+	[key: string]: PaymentFee;
+};
 // --- End Type Definitions ---
 
 // --- Helper Functions ---
@@ -557,6 +567,25 @@ export const getCompanySettings = async (
 			...result,
 			data: undefined
 		} as ApiResponse<CompanySettings>;
+	}
+
+	return {
+		success: true,
+		message: result.message,
+		data: result.data
+	};
+};
+
+export const getPaymentFees = async (
+	fetch: typeof window.fetch
+): Promise<ApiResponse<PaymentFees>> => {
+	const result = await getFromApi<PaymentFees>(fetch, '/shared/payment-fees');
+
+	if (!result.success || !result.data) {
+		return {
+			...result,
+			data: undefined
+		} as ApiResponse<PaymentFees>;
 	}
 
 	return {

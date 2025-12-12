@@ -4,6 +4,13 @@
 	import { authStore } from '$lib/stores/auth';
 	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
 	import {
+		Sheet,
+		SheetContent,
+		SheetHeader,
+		SheetTitle,
+		SheetDescription
+	} from '$lib/components/ui/sheet';
+	import {
 		getReservations,
 		type ReservationResponse,
 		cancelReservation,
@@ -81,6 +88,11 @@
 	let showDownPaymentWarning = $state(false);
 	let processingReservationId = $state<string | null>(null);
 
+	// Payment Sheet State
+	let showPaymentSheet = $state(false);
+	let paymentToken = $state<string | null>(null);
+	let currentReservationForPayment = $state<ReservationResponse | null>(null);
+
 	// Check if user is authenticated before allowing access to this page
 	onMount(async () => {
 		const token = get(authStore).session?.access_token;
@@ -130,8 +142,12 @@
 	}
 
 	async function fetchUnreadCounts(reservations: ReservationResponse[], token: string) {
-		const currentUserId = get(authStore).session?.user?.id;
-		if (!currentUserId) return;
+		const currentUserId = await get(authStore).session?.user?.id;
+		console.log('currentUserId', currentUserId);
+		if (!currentUserId) {
+			console.error('Cannot fetch unread counts: User ID is undefined');
+			return;
+		}
 
 		for (const reservation of reservations) {
 			try {
@@ -281,34 +297,56 @@
 		}
 	}
 
-	async function handlePayNow(reservation: ReservationResponse) {
-		const token = get(authStore).session?.access_token;
-		console.log('Token:', token);
-		if (!token) {
-			error = 'User not authenticated';
-			return;
-		}
+	// async function handlePayNow(reservation: ReservationResponse) {
+	// 	const token = get(authStore).session?.access_token;
+	// 	console.log('Token:', token);
+	// 	if (!token) {
+	// 		error = 'User not authenticated';
+	// 		return;
+	// 	}
 
-		processingReservationId = reservation.reservationID;
+	// 	processingReservationId = reservation.reservationID;
 
-		try {
-			const response = await createTransaction(reservation.reservationID, token);
-			if (!response.success) {
-				throw new Error(response.message || 'Failed to create transaction');
-			}
+	// 	try {
+	// 		const response = await createTransaction(reservation.reservationID, token);
+	// 		if (!response.success) {
+	// 			throw new Error(response.message || 'Failed to create transaction');
+	// 		}
 
-			// Redirect to payment page using the redirect_url from the response
-			if (response.data?.redirect_url) {
-				// Open the payment page in the same tab (redirect user)
-				window.location.href = response.data.redirect_url;
-			}
-		} catch (err) {
-			console.error('Error creating transaction:', err);
-			error = err instanceof Error ? err.message : 'An error occurred while creating transaction';
-		} finally {
-			processingReservationId = null;
-		}
-	}
+	// 		// Use Midtrans Snap
+	// 		if (response.data?.token) {
+	// 			// @ts-ignore
+	// 			window.snap.pay(response.data.token, {
+	// 				onSuccess: function (result: any) {
+	// 					console.log('Payment success:', result);
+	// 					toast.success('Pembayaran berhasil!');
+	// 					loadReservations();
+	// 				},
+	// 				onPending: function (result: any) {
+	// 					console.log('Payment pending:', result);
+	// 					toast.info('Menunggu pembayaran...');
+	// 					loadReservations();
+	// 				},
+	// 				onError: function (result: any) {
+	// 					console.error('Payment error:', result);
+	// 					toast.error('Pembayaran gagal!');
+	// 				},
+	// 				onClose: function () {
+	// 					console.log('Customer closed the popup without finishing the payment');
+	// 					toast.info('Pembayaran belum diselesaikan.');
+	// 				}
+	// 			});
+	// 		} else if (response.data?.redirect_url) {
+	// 			// Fallback to redirect if no token (should not happen with new backend)
+	// 			window.location.href = response.data.redirect_url;
+	// 		}
+	// 	} catch (err) {
+	// 		console.error('Error creating transaction:', err);
+	// 		error = err instanceof Error ? err.message : 'An error occurred while creating transaction';
+	// 	} finally {
+	// 		processingReservationId = null;
+	// 	}
+	// }
 
 	// Function to open chat modal
 	function openChatModal(reservation: any) {
@@ -319,10 +357,112 @@
 			unreadCounts[reservation.reservationID] = 0;
 		}
 	}
+
+	// Watch for sheet close to hide snap
+	$effect(() => {
+		if (!showPaymentSheet && typeof window !== 'undefined' && (window as any).snap) {
+			try {
+				(window as any).snap.hide();
+			} catch (e) {
+				console.error('Error hiding snap:', e);
+			}
+		}
+	});
+
+	async function handlePayNow(reservation: ReservationResponse) {
+		const token = get(authStore).session?.access_token;
+		if (!token) {
+			error = 'User not authenticated';
+			return;
+		}
+
+		processingReservationId = reservation.reservationID;
+		currentReservationForPayment = reservation;
+
+		try {
+			// Check for existing token in localStorage
+			const localStorageKey = `midtrans_token_${reservation.reservationID}`;
+			const cachedToken = localStorage.getItem(localStorageKey);
+
+			if (cachedToken) {
+				console.log('Using cached token:', cachedToken);
+				paymentToken = cachedToken;
+			} else {
+				// If no cached token, create new transaction
+				const response = await createTransaction(reservation.reservationID, token);
+				if (!response.success) {
+					throw new Error(response.message || 'Failed to create transaction');
+				}
+
+				if (response.data?.token) {
+					paymentToken = response.data.token;
+					// Save token to localStorage
+					localStorage.setItem(localStorageKey, paymentToken!);
+				} else if (response.data?.redirect_url) {
+					window.location.href = response.data.redirect_url;
+					return;
+				}
+			}
+
+			if (paymentToken) {
+				showPaymentSheet = true;
+
+				// Wait for Sheet to open and container to exist
+				setTimeout(() => {
+					// @ts-ignore
+					if (window.snap) {
+						// Ensure clean state by hiding first
+						try {
+							// @ts-ignore
+							window.snap.hide();
+						} catch (e) {
+							console.log('Snap already hidden or not initialized');
+						}
+
+						// @ts-ignore
+						window.snap.embed(paymentToken, {
+							embedId: 'snap-container',
+							onSuccess: function (result: any) {
+								console.log('Payment success:', result);
+								toast.success('Pembayaran berhasil!');
+								showPaymentSheet = false;
+								// Remove token from localStorage on success
+								localStorage.removeItem(localStorageKey);
+								loadReservations();
+							},
+							onPending: function (result: any) {
+								console.log('Payment pending:', result);
+								toast.info('Menunggu pembayaran...');
+								showPaymentSheet = false;
+								loadReservations();
+							},
+							onError: function (result: any) {
+								console.error('Payment error:', result);
+								toast.error('Pembayaran gagal!');
+							},
+							onClose: function () {
+								console.log('Customer closed the popup without finishing the payment');
+								toast.info('Pembayaran belum diselesaikan. Anda dapat melanjutkannya nanti.');
+							}
+						});
+					}
+				}, 100);
+			}
+		} catch (err) {
+			console.error('Error creating transaction:', err);
+			toast.error(err instanceof Error ? err.message : 'Gagal memproses pembayaran');
+		} finally {
+			processingReservationId = null;
+		}
+	}
 </script>
 
 <svelte:head>
 	<title>Profile - Reservation | Three Lights Barbershop</title>
+	<script
+		src="https://app.sandbox.midtrans.com/snap/snap.js"
+		data-client-key={import.meta.env.PUBLIC_MIDTRANS_CLIENT_KEY}
+	></script>
 </svelte:head>
 
 {#if loading}
@@ -516,31 +656,20 @@
 											<span>Layanan: {reservation.service.name}</span>
 										</div>
 									</div>
-
-									{#if reservation.status === 'waitingForPayment'}
-										<div
-											class="mt-4 mb-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-4"
-										>
-											<div class="mb-2 flex items-center gap-2 text-orange-300">
-												<Clock class="size-4 animate-pulse" />
-												<span class="text-sm font-medium">Batas Pembayaran</span>
-											</div>
-											<Countdown
-												date={reservation.updated_at ||
-													reservation.created_at ||
-													new Date().toISOString()}
-												onExpire={() => {
-													reservation.status = 'expired';
-												}}
-											/>
-											<p class="mt-2 text-xs text-orange-300/70">
-												Silakan selesaikan pembayaran sebelum waktu habis untuk menghindari
-												pembatalan otomatis.
-											</p>
-										</div>
-									{/if}
 								</div>
 							</div>
+							{#if reservation.status === 'waitingForPayment'}
+								<div class="mt-4 mb-4">
+									<Countdown
+										date={reservation.updated_at ||
+											reservation.created_at ||
+											new Date().toISOString()}
+										onExpire={() => {
+											reservation.status = 'expired';
+										}}
+									/>
+								</div>
+							{/if}
 
 							<div class="mt-4 flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
 								{#if reservation.status === 'waiting'}
@@ -832,7 +961,23 @@
 		reservation={selectedReservation}
 		open={showChatModal}
 		onClose={() => (showChatModal = false)}
+		userId={get(authStore).session?.user?.id || ''}
 	/>
+
+	<Sheet bind:open={showPaymentSheet}>
+		<SheetContent side="right" class="w-full border-l border-white/10 bg-black/95 p-0 sm:max-w-md">
+			<SheetHeader class="px-6 py-4">
+				<SheetTitle class="text-senary">Pembayaran</SheetTitle>
+				<SheetDescription class="text-secondary/60">
+					Selesaikan pembayaran Anda untuk reservasi #{currentReservationForPayment?.invoice ||
+						currentReservationForPayment?.reservationID}
+				</SheetDescription>
+			</SheetHeader>
+			<div class="h-full w-full overflow-y-auto px-6 pb-6">
+				<div id="snap-container" class="w-full"></div>
+			</div>
+		</SheetContent>
+	</Sheet>
 {/if}
 <!-- Customer Chat Modal -->
 
