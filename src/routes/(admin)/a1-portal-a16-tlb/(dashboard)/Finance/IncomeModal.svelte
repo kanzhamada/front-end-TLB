@@ -178,9 +178,9 @@
 			</div>
 
 			<div class="p-8">
-				<form onsubmit={handleSubmit} class="space-y-6">
+				<form onsubmit={handleSubmit} class="space-y-8">
 					<!-- Type Selection -->
-					<div class="space-y-2">
+					<div class="space-y-4">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Payment Type</Label>
 						<div class="grid grid-cols-2 gap-4">
 							<button
@@ -258,14 +258,15 @@
 						</Select.Root>
 					</div>
 
-					<div class="flex justify-between items-center pt-6 border-t border-white/10">
+					<!-- Actions -->
+					<div class="flex justify-between items-center pt-2">
 						{#if income}
 							<Button 
 								type="button"
 								variant="destructive" 
 								onclick={initiateDelete}
 								disabled={loading}
-								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 h-11 px-6"
 							>
 								<Trash2 class="mr-2 h-4 w-4" />
 								Delete
@@ -280,13 +281,13 @@
 								variant="outline" 
 								onclick={handleClose} 
 								disabled={loading}
-								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white h-11 px-6 rounded-xl"
 							>
 								Cancel
 							</Button>
 							<Button 
 								type="submit" 
-								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
+								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[140px] h-11 rounded-xl shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]" 
 								disabled={loading}
 							>
 								{#if loading}
@@ -311,12 +312,3 @@
 	/>
 </div>
 {/if}
-
-<style>
-	:global(.bg-black\/80) {
-		background-color: rgba(9, 9, 11, 0.8);
-	}
-	:global(.backdrop-blur-md) {
-		backdrop-filter: blur(12px);
-	}
-</style>

@@ -21,6 +21,7 @@
 	import type { ComponentProps } from 'svelte';
 	import { unreadChatCount } from '$lib/stores/chat';
 	import { logout } from '$lib/api/auth';
+    import { authStore } from '$lib/stores/auth';
 	import { toast } from 'svelte-sonner';
 
 	let {
@@ -38,12 +39,24 @@
 			if (token) {
 				await logout(token);
 			}
+            
+            // Delete the auth session cookie
+            document.cookie = "tlb.auth.session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+            
+            // Clear LocalStorage and Auth Store
+            localStorage.removeItem('tlb.auth.session');
+            authStore.clear();
+
 			toast.success('Logged out successfully');
 			// Force hard redirect to login to clear any state
 			window.location.href = '/login';
 		} catch (error) {
 			console.error('Logout failed:', error);
-			// Even if API fails, we should probably redirect user out
+            // Ensure cleanup happens even if API fails
+            document.cookie = "tlb.auth.session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+            localStorage.removeItem('tlb.auth.session');
+            authStore.clear();
+            
 			window.location.href = '/login'; 
 		}
 	}

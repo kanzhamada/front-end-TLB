@@ -5,7 +5,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { Loader2, Calendar as CalendarIcon, DollarSign, Trash2, X } from 'lucide-svelte';
+	import { Loader2, Calendar as CalendarIcon, Trash2, X } from 'lucide-svelte';
 	import { DateFormatter, type DateValue, getLocalTimeZone, parseDate } from '@internationalized/date';
 	import { Calendar } from '$lib/components/ui/calendar';
 	import * as Popover from '$lib/components/ui/popover';
@@ -30,12 +30,41 @@
 
 	let loading = $state(false);
 	
-	let formData = $state({
+	let formData = $state<{
+		date: string;
+		description: string;
+		nominal: number | null;
+		category: string;
+	}>({
 		date: '',
 		description: '',
-		nominal: 0,
+		nominal: null,
 		category: 'General'
 	});
+
+	// ...
+
+	function resetForm() {
+		formData = {
+			date: new Date().toISOString().split('T')[0],
+			description: '',
+			nominal: null,
+			category: 'General'
+		};
+		dateValue = parseDate(new Date().toISOString().split('T')[0]);
+	}
+
+    // ... Note: The actual replacement needs to cover the definition and resetForm.
+    // However, replace_file_content works on contiguous blocks.
+    // I will split this into two edits if needed, but here I effectively need to change the state definition first.
+    // Wait, the tool requires contiguous block. `resetForm` is lines 73-81. State is 33-38. They are far apart.
+    // I will use multi_replace.
+    // Wait, I only have replace_file_content available in this turn? No, I have multi_replace_file_content.
+    // Let me check my tools. I see `multi_replace_file_content` in the definitions.
+    // I will use `replace_file_content` for the state definition first, then `resetForm`, then the input.
+    // Actually, I can just do three sequential `replace_file_content` calls or one `multi_replace_file_content`.
+    // I'll try `multi_replace_file_content` for efficiency.
+
 
 	// Date handling
 	const df = new DateFormatter('en-US', {
@@ -70,15 +99,7 @@
 		}
 	});
 
-	function resetForm() {
-		formData = {
-			date: new Date().toISOString().split('T')[0],
-			description: '',
-			nominal: 0,
-			category: 'General'
-		};
-		dateValue = parseDate(new Date().toISOString().split('T')[0]);
-	}
+
 
 	function handleClose() {
 		if (onClose) onClose();
@@ -176,7 +197,7 @@
 			</div>
 
 			<div class="p-8">
-				<form onsubmit={handleSubmit} class="space-y-6">
+				<form onsubmit={handleSubmit} class="space-y-8">
 					<!-- Date -->
 					<div class="space-y-2">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Date</Label>
@@ -205,18 +226,13 @@
 					<!-- Category -->
 					<div class="space-y-2">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Category</Label>
-						<Select.Root 
-							selected={{ value: formData.category, label: formData.category }}
-							onSelectedChange={(v) => {
-								if (v) formData.category = v.value as string;
-							}}
-						>
-							<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:text-white transition-colors">
-								<Select.Value placeholder="Select category" />
+						<Select.Root type="single" bind:value={formData.category}>
+							<Select.Trigger class="w-full h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:text-white transition-colors flex items-center justify-between">
+								{formData.category}
 							</Select.Trigger>
-							<Select.Content class="bg-slate-950 border-white/10 text-secondary">
+							<Select.Content class="bg-slate-950 border-white/10 text-secondary shadow-2xl">
 								{#each ['Payroll & Staffing', 'Consumables / Supplies', 'Maintenance & Repairs', 'Marketing & Promotion', 'Utilities', 'General', 'Other'] as category}
-									<Select.Item value={category} label={category} class="hover:bg-white/5 cursor-pointer data-[highlighted]:bg-white/5 data-[highlighted]:text-white">
+									<Select.Item value={category} label={category} class="hover:bg-white/5 cursor-pointer data-[highlighted]:bg-white/5 data-[highlighted]:text-white my-1 rounded-lg">
 										{category}
 									</Select.Item>
 								{/each}
@@ -238,43 +254,32 @@
 					<div class="space-y-2">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Nominal (IDR)</Label>
 						<div class="relative group">
-							<DollarSign class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/50 group-hover:text-senary transition-colors duration-300" />
 							<Input 
 								type="number"
 								bind:value={formData.nominal} 
 								placeholder="e.g. 500000"
-								class="pl-11 h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+								class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
 							/>
 						</div>
 					</div>
 
-					<div class="flex justify-between items-center pt-6 border-t border-white/10">
+					<!-- Actions -->
+					<div class="flex justify-between items-center pt-2">
 						{#if expense}
-							<div class="flex gap-3">
-								<Button 
-									type="button"
-									variant="outline" 
-									onclick={handleClose} 
-									disabled={loading}
-									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
-								>
-									Cancel
-								</Button>
-								<Button 
-									type="button" 
-									variant="destructive" 
-									class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
-									onclick={initiateDelete}
-									disabled={loading}
-								>
-									{#if loading}
-										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-									{:else}
-										<Trash2 class="mr-2 h-4 w-4" />
-									{/if}
-									Delete Record
-								</Button>
-							</div>
+							<Button 
+								type="button" 
+								variant="destructive" 
+								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 h-11 px-6"
+								onclick={initiateDelete}
+								disabled={loading}
+							>
+								{#if loading}
+									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+								{:else}
+									<Trash2 class="mr-2 h-4 w-4" />
+								{/if}
+								Delete
+							</Button>
 						{:else}
 							<div></div>
 						{/if}
@@ -285,13 +290,13 @@
 								variant="outline" 
 								onclick={handleClose} 
 								disabled={loading}
-								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white h-11 px-6 rounded-xl"
 							>
 								Cancel
 							</Button>
 							<Button 
 								type="submit" 
-								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
+								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[140px] h-11 rounded-xl shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]" 
 								disabled={loading}
 							>
 								{#if loading}
@@ -315,3 +320,11 @@
 	/>
 	</div>
 {/if}
+<style>
+	:global(.bg-black\/80) {
+		background-color: rgba(2, 6, 23, 0.8); /* Slate-950 */
+	}
+	:global(.backdrop-blur-md) {
+		backdrop-filter: blur(12px);
+	}
+</style>

@@ -100,7 +100,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 													outsideMonth: !isEqualMonth(date, month.value)
 												})}
 											{:else}
-												<Calendar.Day />
+												<Calendar.Day {date} />
 											{/if}
 										</Calendar.Cell>
 									{/each}

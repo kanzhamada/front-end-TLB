@@ -2,19 +2,24 @@
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import { cn } from '$lib/utils.js';
 	import { Calendar as CalendarPrimitive } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 
 	let {
 		ref = $bindable(null),
 		class: className,
+		children,
+		date,
 		...restProps
-	}: CalendarPrimitive.DayProps = $props();
+	}: CalendarPrimitive.DayProps & { children?: Snippet } = $props();
 </script>
 
 <CalendarPrimitive.Day
 	bind:ref
+	{date}
+	style="color: white !important;"
 	class={cn(
 		buttonVariants({ variant: 'ghost' }),
-		'flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none',
+		'flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none text-white',
 		'[&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground [&[data-today][data-disabled]]:text-muted-foreground',
 		'data-[selected]:bg-primary data-[selected]:text-primary-foreground dark:data-[selected]:hover:bg-accent/50',
 		// Outside months
@@ -24,7 +29,7 @@
 		// Unavailable
 		'data-[unavailable]:text-muted-foreground data-[unavailable]:line-through',
 		// hover
-		'dark:hover:text-accent-foreground',
+		'dark:hover:text-accent-foreground hover:bg-white/10',
 		// focus
 		'focus:relative focus:border-ring focus:ring-ring/50',
 		// inner spans
@@ -32,4 +37,10 @@
 		className
 	)}
 	{...restProps}
-/>
+>
+	{#if children}
+		{@render children()}
+	{:else}
+		{date.day}
+	{/if}
+</CalendarPrimitive.Day>

@@ -152,19 +152,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="group rounded-3xl border border-white/5 bg-black/40 p-6 backdrop-blur-md transition-all hover:border-senary/30 hover:shadow-[0_0_30px_-10px_rgba(212,175,55,0.1)]">
-					<div class="flex items-center justify-between">
-						<div>
-							<p class="text-xs font-bold tracking-widest text-secondary/50 uppercase">Total Value</p>
-							<p class="mt-2 text-xl font-light text-secondary group-hover:text-senary transition-colors truncate">
-								{formatCurrency(vouchers.reduce((acc, v) => acc + v.value, 0))}
-							</p>
-						</div>
-						<div class="rounded-full bg-senary/10 p-3 text-senary">
-							<DollarSign class="h-6 w-6" />
-						</div>
-					</div>
-				</div>
+
 			</div>
 
 			<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

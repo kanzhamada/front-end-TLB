@@ -12,9 +12,10 @@
 
 <RangeCalendarPrimitive.Day
 	bind:ref
+	style="color: white !important;"
 	class={cn(
 		buttonVariants({ variant: 'ghost' }),
-		'flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none',
+		'flex size-(--cell-size) flex-col items-center justify-center gap-1 p-0 leading-none font-normal whitespace-nowrap select-none text-white',
 		'data-[range-middle]:rounded-none [&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground [&[data-today][data-disabled]]:text-muted-foreground',
 		// range Start
 		'data-[range-start]:bg-primary data-[range-start]:text-primary-foreground dark:data-[range-start]:hover:bg-accent',

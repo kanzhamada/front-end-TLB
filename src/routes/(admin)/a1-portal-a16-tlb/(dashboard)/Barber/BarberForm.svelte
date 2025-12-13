@@ -8,7 +8,6 @@
 	import { X, Loader2, User, Pencil, Trash2 } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import * as Select from '$lib/components/ui/select';
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { mode = $bindable(), barber, token, onClose, onUpdate } = $props<{
@@ -100,10 +99,7 @@
 		confirmOpen = false;
 	}
 
-	const statusOptions = [
-		{ value: 'true', label: 'Active' },
-		{ value: 'false', label: 'Inactive' }
-	];
+
 </script>
 
 <div
@@ -237,34 +233,14 @@
 							/>
 						</div>
 						<div class="space-y-2">
-							<Label for="status" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Status</Label>
-							<Select.Root type="single" bind:value={active}>
-								<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20">
-									{statusOptions.find(o => o.value === active)?.label || 'Select Status'}
-								</Select.Trigger>
-								<Select.Content class="border-white/10 bg-slate-900 text-secondary">
-									{#each statusOptions as option}
-										<Select.Item 
-											value={option.value} 
-											label={option.label}
-											class="focus:bg-white/10 focus:text-senary cursor-pointer"
-										>
-											{option.label}
-										</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
+							<Label for="skills" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Skills</Label>
+							<Input 
+								id="skills" 
+								bind:value={skills} 
+								placeholder="e.g. Fade, Scissor Cut" 
+								class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20" 
+							/>
 						</div>
-					</div>
-
-					<div class="space-y-2">
-						<Label for="skills" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Skills</Label>
-						<Input 
-							id="skills" 
-							bind:value={skills} 
-							placeholder="e.g. Fade, Scissor Cut" 
-							class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20" 
-						/>
 					</div>
 
 					<div class="space-y-2">
