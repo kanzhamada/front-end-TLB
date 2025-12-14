@@ -97,6 +97,17 @@
 
 	let expenseModalOpen = $state(false);
 	let selectedExpense: Expense | null = $state(null);
+    
+    // Chart Responsiveness
+    let chartContainerWidth = $state(0);
+    let isMobileChart = $derived(chartContainerWidth < 600);
+
+    function formatXAxis(value: any) {
+        if (!isMobileChart || !value) return value;
+        const str = String(value);
+        if (str.startsWith('Week')) return 'W' + str.split(' ')[1];
+        return str.slice(0, 3);
+    }
 
 	// Pagination State
 	const ITEMS_PER_PAGE = 5;
@@ -378,7 +389,7 @@
 						{/each}
 					</div>
 				</div>
-				<div class="h-[350px] w-full">
+				<div class="h-[350px] w-full" bind:clientWidth={chartContainerWidth}>
 					<Chart
 						data={chartData}
 						x="x"
@@ -391,7 +402,7 @@
 							<!-- Context fixed: layerchart v2 snippet provides { context } wrapper -->
 							<Svg>
 								<Axis placement="left" grid rule class="stroke-white/5 fill-white text-[10px] font-mono opacity-60" format={(v) => formatCurrency(v).replace('Rp', '')} />
-								<Axis placement="bottom" rule class="stroke-white/10 fill-white text-xs font-medium" />
+								<Axis placement="bottom" rule class="stroke-white/10 fill-white text-xs font-medium" format={formatXAxis} />
 								
                                 <!-- Profit Goal Reference Lines -->
                                 <Rule y={chartGoal.min} class="stroke-senary/40 stroke-[1px] [stroke-dasharray:4,4]" />
