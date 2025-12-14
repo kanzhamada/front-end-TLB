@@ -329,7 +329,7 @@
 			>
 				<Gem class="h-3.5 w-3.5 text-senary" />
 				<span class="text-[10px] font-bold tracking-[0.2em] text-senary uppercase"
-					>Analisis AI Premium</span
+					>TLB AI Consultant</span
 				>
 			</div>
 			<h2
@@ -338,8 +338,8 @@
 				<span class="text-gradient-gold">Konsultan</span> Gaya AI
 			</h2>
 			<p class="mx-auto max-w-xl text-lg font-light text-secondary/80">
-				Rasakan masa depan gaya. Unggah foto Anda atau gunakan kamera, dan biarkan AI canggih kami
-				mengkurasi pilihan gaya rambut premium yang dipersonalisasi khusus untuk Anda.
+				Yuk, upload fotomu atau pakai kamera, biar AI canggih
+				kami pilihin gaya rambut premium yang pas banget buat kamu!
 			</p>
 		</div>
 
@@ -519,7 +519,7 @@
 										memastikan akurasi 90-100% dalam rekomendasi.
 									</p>
 								</div>
-								<div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+								<div class="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-6">
 									<!-- Good Example 1 -->
 									<div class="group relative overflow-hidden rounded-lg border border-senary/30">
 										<img

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getVouchers } from '$lib/api/admin/voucher';
 	import AdminHeader from '$lib/components/Admin/AdminHeader/AdminHeader.svelte';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { onMount } from 'svelte';
 
 	let { data, children } = $props();
@@ -21,7 +20,6 @@
 	<AdminHeader pageName="Voucher" total={totalVouchers} description="Total Vouchers" />
 	<div class="px-6 py-6">
 		<div class="mx-auto max-w-7xl">
-			<Toaster position="top-center" richColors />
 			{@render children?.()}
 		</div>
 	</div>

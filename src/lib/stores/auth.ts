@@ -115,6 +115,11 @@ const createAuthStore = () => {
 		},
 		clear() {
 			console.log('clear called');
+			localStorage.removeItem(STORAGE_KEY);
+			if (browser) {
+				document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+				document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+			}
 			persist(null);
 			set({ session: null, loading: false });
 			console.log('Store cleared: session null, loading false');

@@ -14,12 +14,13 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { income = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		income?: OfflineIncome | null;
 		token: string;
 		open: boolean;
-		onClose: () => void;
+		onClose?: () => void;
 		onUpdate: () => void;
 	}>();
 
@@ -81,6 +82,11 @@
 		}
 	}
 
+	function handleClose() {
+		if (onClose) onClose();
+		else open = false;
+	}
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!formData.date || !formData.type || !formData.serviceId) {
@@ -99,28 +105,36 @@
 		if (res.success) {
 			toast.success(`Income ${income ? 'updated' : 'recorded'} successfully`);
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || `Failed to ${income ? 'update' : 'record'} income`);
 		}
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!income) return;
-		if (!confirm('Are you sure you want to delete this record? This action cannot be undone.')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!income) return;
+		
+		deleteLoading = true;
 		const res = await deleteOfflineIncome(fetch, income.id, token);
 		
 		if (res.success) {
 			toast.success('Record deleted successfully');
 			onUpdate();
-			onClose();
+			handleClose();
 		} else {
 			toast.error(res.message || 'Failed to delete record');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 </script>
 
@@ -128,17 +142,17 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
-		onclick={onClose}
+		onclick={handleClose}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && onClose()}
+		onkeydown={(e) => e.key === 'Escape' && handleClose()}
 	>
 		<div
 			class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-black/90 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			role="document"
 			tabindex="0"
-			onkeydown={(e) => e.key === 'Escape' && onClose()}
+			onkeydown={(e) => e.key === 'Escape' && handleClose()}
 			in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
 		>
 			<!-- Header -->
@@ -156,7 +170,7 @@
 					</p>
 				</div>
 				<button
-					onclick={onClose}
+					onclick={handleClose}
 					class="rounded-full p-2 text-secondary/50 transition-colors hover:bg-white/10 hover:text-white"
 				>
 					<X class="h-5 w-5" />
@@ -164,9 +178,9 @@
 			</div>
 
 			<div class="p-8">
-				<form onsubmit={handleSubmit} class="space-y-6">
+				<form onsubmit={handleSubmit} class="space-y-8">
 					<!-- Type Selection -->
-					<div class="space-y-2">
+					<div class="space-y-4">
 						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Payment Type</Label>
 						<div class="grid grid-cols-2 gap-4">
 							<button
@@ -244,14 +258,15 @@
 						</Select.Root>
 					</div>
 
-					<div class="flex justify-between items-center pt-6 border-t border-white/10">
+					<!-- Actions -->
+					<div class="flex justify-between items-center pt-2">
 						{#if income}
 							<Button 
 								type="button"
 								variant="destructive" 
-								onclick={handleDelete}
+								onclick={initiateDelete}
 								disabled={loading}
-								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 h-11 px-6"
 							>
 								<Trash2 class="mr-2 h-4 w-4" />
 								Delete
@@ -264,15 +279,15 @@
 							<Button 
 								type="button"
 								variant="outline" 
-								onclick={onClose} 
+								onclick={handleClose} 
 								disabled={loading}
-								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white h-11 px-6 rounded-xl"
 							>
 								Cancel
 							</Button>
 							<Button 
 								type="submit" 
-								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
+								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[140px] h-11 rounded-xl shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]" 
 								disabled={loading}
 							>
 								{#if loading}
@@ -285,5 +300,15 @@
 				</form>
 			</div>
 		</div>
-	</div>
+
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Delete Income Record"
+		description="Are you sure you want to delete this income record? This action cannot be undone."
+		variant="destructive"
+		confirmText="Delete"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
+</div>
 {/if}

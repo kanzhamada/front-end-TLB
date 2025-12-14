@@ -86,6 +86,8 @@ export const register = (payload: RegisterPayload) =>
 export const forgotPassword = (payload: { email: string, isAdmin?: boolean }) =>
 	request<AuthResponse>('/auth/forgot-password', payload);
 
+export const logout = (token: string) => request<AuthResponse>('/auth/logout', null, token);
+
 export const updatePassword = (payload: {
 	access_token: string;
 	refresh_token: string;

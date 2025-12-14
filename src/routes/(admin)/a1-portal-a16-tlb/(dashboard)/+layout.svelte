@@ -3,6 +3,7 @@
 	import AdminSidebar from '$lib/components/Admin/AdminSidebar.svelte';
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import { onMount } from 'svelte';
+	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 
@@ -51,24 +52,40 @@
 
 <Sidebar.Provider>
 	<AdminSidebar />
-	<Sidebar.Inset class="relative bg-slate-950">
+	<Sidebar.Inset class="relative bg-background min-h-screen overflow-hidden selection:bg-senary/30">
+		<!-- Global Background Effects -->
+		<div class="fixed inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-senary/5 via-background to-background pointer-events-none z-0"></div>
+		<div class="fixed top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-20 pointer-events-none mix-blend-overlay z-0"></div>
+		
+		<!-- Decorative Orbs -->
+		<div class="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-senary/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
+		<div class="fixed bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+
 		<header
 			bind:this={headerElement}
-			class="sticky z-40 flex h-16 w-full shrink-0 items-center gap-2 border-b border-white/10 bg-primary shadow-lg backdrop-blur-md transition-transform duration-300 ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+			class="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between gap-2 border-b border-border/20 bg-background/50 px-6 backdrop-blur-xl transition-all duration-300 ease-in-out group-has-data-[collapsible=icon]/sidebar-wrapper:h-16"
 			class:header-hidden={!isHeaderVisible}
 			style="transform: translateY({isHeaderVisible ? '0' : '-100%'})"
 		>
-			<div class="flex items-center gap-2 px-4">
-				<Sidebar.Trigger class="-ml-1 rounded-md p-2 text-senary hover:bg-white/10" />
-				<Separator orientation="vertical" class="mr-2 h-4 bg-senary/30" />
-				<span class="text-lg font-light tracking-wide text-secondary"
-					>Three Lights Barbershop</span
-				>
+			<div class="flex items-center gap-4">
+				<Sidebar.Trigger class="rounded-xl p-2 text-muted-foreground hover:bg-white/5 hover:text-senary transition-colors duration-300" />
+				<Separator orientation="vertical" class="h-6 bg-border/20" />
+				<div class="flex items-center gap-3">
+					<div class="hidden md:block">
+						<h1 class="text-sm font-bold tracking-[0.2em] text-foreground uppercase leading-none">Three Lights</h1>
+						<p class="text-[9px] font-medium tracking-[0.3em] text-senary/80 uppercase leading-none mt-1">Barbershop</p>
+					</div>
+				</div>
 			</div>
+
+            <!-- Header Actions / Status could go here -->
+            <div class="flex items-center gap-4">
+                 <!-- Add any header-right actions here if needed -->
+            </div>
 		</header>
 
-		<!-- Content wrapper with proper top padding to account for fixed header -->
-		<div class="flex-1 bg-slate-950">
+		<!-- Content wrapper -->
+		<div class="relative flex-1 z-10">
 			{@render children?.()}
 		</div>
 	</Sidebar.Inset>
@@ -93,13 +110,7 @@
 	.header-hidden {
 		transform: translateY(-100%) !important;
 	}
-
-	/* Ensure header is always on top */
-	header {
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-	}
-
+	
 	/* Smooth transitions for header visibility */
 	header {
 		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);

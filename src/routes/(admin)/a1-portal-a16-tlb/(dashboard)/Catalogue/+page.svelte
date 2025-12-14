@@ -20,6 +20,8 @@
 	import CatalogueForm from './CatalogueForm.svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 
+	import { cn } from '$lib/utils';
+
 	let { data } = $props();
 	let catalogues = $state<Catalogue[]>([]);
 	let searchQuery = $state('');
@@ -29,6 +31,13 @@
 	let isModalOpen = $state(false);
 	let modalMode = $state<'add' | 'edit' | 'view'>('add');
 	let selectedCatalogue = $state<Catalogue | null>(null);
+
+	// Active State for Mobile/Click interaction
+	let activeStates = $state<Record<string, boolean>>({});
+
+	function toggleActive(id: string) {
+		activeStates[id] = !activeStates[id];
+	}
 
 	async function loadCatalogues() {
 		const token = data.session?.access_token || '';
@@ -192,9 +201,19 @@
 		<div class="mx-auto max-w-7xl">
 			<div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 				{#each paginatedCatalogues as catalogue, i (catalogue.id || i)}
+					{@const isActive = activeStates[catalogue.id] || false}
 					<div
 						in:scale={{ duration: 600, delay: i * 50, start: 0.9 }}
-						class="group relative overflow-hidden rounded-xl border border-white/5 bg-black/40 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:border-senary/30 hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)]"
+						class={cn(
+							"group relative overflow-hidden rounded-xl border border-white/5 bg-black/40 shadow-lg transition-all duration-500 hover:-translate-y-2 hover:border-senary/30 hover:shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)]",
+							isActive && "border-senary/30 shadow-[0_10px_40px_-10px_rgba(212,175,55,0.1)] -translate-y-2"
+						)}
+						onclick={() => toggleActive(catalogue.id)}
+						role="button"
+						tabindex="0"
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') toggleActive(catalogue.id);
+						}}
 					>
 						<div class="relative aspect-[3/4] overflow-hidden">
 							<img
@@ -209,24 +228,36 @@
 
 							<!-- Hover Overlay Actions -->
 							<div
-								class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all duration-500 group-hover:opacity-100"
+								class={cn(
+									"absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 backdrop-blur-[2px] transition-all duration-500",
+									isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+								)}
 							>
 								<button
-									onclick={() => openModal('view', catalogue)}
+									onclick={(e) => {
+										e.stopPropagation();
+										openModal('view', catalogue);
+									}}
 									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 py-2.5 text-[10px] font-bold tracking-widest text-white uppercase backdrop-blur-md transition hover:bg-white hover:text-black"
 								>
 									<EyeIcon class="h-3 w-3" />
 									VIEW
 								</button>
 								<button
-									onclick={() => openModal('edit', catalogue)}
+									onclick={(e) => {
+										e.stopPropagation();
+										openModal('edit', catalogue);
+									}}
 									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full bg-senary py-2.5 text-[10px] font-bold tracking-widest text-primary uppercase shadow-lg transition hover:bg-white hover:text-black"
 								>
 									<SquarePenIcon class="h-3 w-3" />
 									EDIT
 								</button>
 								<button
-									onclick={() => handleDelete(catalogue.id)}
+									onclick={(e) => {
+										e.stopPropagation();
+										handleDelete(catalogue.id);
+									}}
 									class="flex w-32 cursor-pointer items-center justify-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 py-2.5 text-[10px] font-bold tracking-widest text-red-400 uppercase backdrop-blur-md transition hover:bg-red-500 hover:text-white"
 								>
 									<TrashIcon class="h-3 w-3" />
@@ -242,7 +273,12 @@
 							</div>
 
 							<div
-								class="absolute bottom-0 left-0 w-full p-5 transition-transform duration-500 group-hover:translate-y-4 group-hover:opacity-0"
+								class={cn(
+									"absolute bottom-0 left-0 w-full p-5 transition-transform duration-500",
+									isActive 
+										? "translate-y-4 opacity-0" 
+										: "translate-y-0 opacity-100 group-hover:translate-y-4 group-hover:opacity-0"
+								)}
 							>
 								<h4 class="truncate font-serif text-lg text-white">{catalogue.name}</h4>
 								<p class="mt-1 line-clamp-2 text-xs font-light text-secondary/70">

@@ -11,6 +11,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as Carousel from '$lib/components/ui/carousel';
 	import ImageCropper from '$lib/components/ui/ImageCropper.svelte';
+	import { cn } from '$lib/utils';
 
 	let { mode, catalogue, token, onClose, onUpdate } = $props<{
 		mode: 'add' | 'edit' | 'view';
@@ -38,6 +39,13 @@
 		isExisting?: boolean; // For edit mode
 	};
 	let images = $state<ImageItem[]>([]);
+
+	// Active State for Mobile/Click interaction
+	let activeStates = $state<Record<string, boolean>>({});
+
+	function toggleActive(id: string) {
+		activeStates[id] = !activeStates[id];
+	}
 
 	// Cropper State
 	let showCropper = $state(false);
@@ -498,8 +506,18 @@
 						<!-- Image List -->
 						<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
 							{#each images as img (img.id)}
+								{@const isActive = activeStates[img.id] || false}
 								<div
-									class="group relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-lg transition-all hover:border-senary/30"
+									class={cn(
+										"group relative aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-lg transition-all hover:border-senary/30",
+										isActive && "border-senary/30 shadow-[0_0_15px_-5px_rgba(212,175,55,0.1)]"
+									)}
+									onclick={() => toggleActive(img.id)}
+									role="button"
+									tabindex="0"
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') toggleActive(img.id);
+									}}
 								>
 									<img
 										src={img.preview}
@@ -507,12 +525,21 @@
 										class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
 									/>
 									<div
-										class="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+										class={cn(
+											"absolute inset-0 bg-black/40 transition-opacity",
+											isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+										)}
 									></div>
 									<button
 										type="button"
-										onclick={() => removeImage(img.id)}
-										class="absolute top-2 right-2 rounded-full bg-red-500/20 p-2 text-red-400 opacity-0 backdrop-blur-md transition-all group-hover:opacity-100 hover:bg-red-500 hover:text-white"
+										onclick={(e) => {
+											e.stopPropagation();
+											removeImage(img.id);
+										}}
+										class={cn(
+											"absolute top-2 right-2 rounded-full bg-red-500/20 p-2 text-red-400 backdrop-blur-md transition-all hover:bg-red-500 hover:text-white",
+											isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+										)}
 									>
 										<Trash2 class="h-4 w-4" />
 									</button>

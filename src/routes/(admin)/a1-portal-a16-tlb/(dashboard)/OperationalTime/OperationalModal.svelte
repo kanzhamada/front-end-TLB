@@ -11,6 +11,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { Input } from "$lib/components/ui/input";
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { operational = null, token, open = $bindable(false), onClose, onUpdate, initialDate = undefined } = $props<{
 		operational?: OperationalTime | null;
@@ -36,13 +37,14 @@
 			if (operational) {
 				try {
 					if (operational.date) dateValue = parseDate(operational.date.split('T')[0]);
-					hours = [...operational.hour];
+					// Normalize hours to HH:MM (remove seconds if present)
+					hours = operational.hour ? operational.hour.map((h: string) => h.substring(0, 5)) : [];
 				} catch (e) {
 					console.error('Parsing error', e);
 				}
 			} else {
 				// If creating new, use initialDate if provided, otherwise today
-				if (!dateValue && initialDate) {
+				if (initialDate) {
 					dateValue = initialDate;
 				} else if (!dateValue) {
 					dateValue = parseDate(new Date().toISOString().split('T')[0]);
@@ -78,8 +80,9 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!dateValue || hours.length === 0) {
-			toast.error('Please select a date and at least one time slot');
+		// Date required, but hours can be empty (meaning closed/no slots)
+		if (!dateValue) {
+			toast.error('Please select a date');
 			return;
 		}
 
@@ -114,12 +117,19 @@
 		}
 		loading = false;
 	}
+	
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-	async function handleDelete() {
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
 		if (!operational) return;
-		if (!confirm('Are you sure you want to delete this schedule? This action cannot be undone.')) return;
-
-		loading = true;
+		
+		deleteLoading = true;
 		const res = await deleteOperationalTime(fetch, operational.id, token);
 		
 		if (res.success) {
@@ -129,11 +139,13 @@
 		} else {
 			toast.error(res.message || 'Failed to delete schedule');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 </script>
 
 {#if open}
+
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
 		transition:fade={{ duration: 200 }}
@@ -155,13 +167,13 @@
 				<div>
 					<h2 class="text-2xl font-bold tracking-tight text-secondary">
 						{#if operational}
-							Edit <span class="text-senary">Operational</span>
+							Edit <span class="text-senary">Schedule</span>
 						{:else}
-							Set <span class="text-senary">Operational</span>
+							Set <span class="text-senary">Override</span>
 						{/if}
 					</h2>
 					<p class="text-xs font-light text-secondary/60 uppercase tracking-widest mt-1">
-						{operational ? 'Update daily availability' : 'Set availability for a specific date'}
+						{operational ? 'Modify existing daily hours' : 'Define hours for this specific date'}
 					</p>
 				</div>
 				<button
@@ -173,90 +185,76 @@
 			</div>
 
 			<div class="p-8">
-				<form onsubmit={handleSubmit} class="space-y-6">
-					<!-- Date -->
-					<div class="space-y-2">
-						<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Date</Label>
-						<Popover.Root>
-							<Popover.Trigger asChild>
-								{#snippet child({ props })}
-									<Button
-										variant="outline"
-										class={cn(
-											"w-full justify-start text-left font-normal h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:text-senary hover:border-senary/50",
-											!dateValue && "text-muted-foreground"
-										)}
-										{...props}
-									>
-										<CalendarIcon class="mr-2 h-4 w-4" />
-										{dateValue ? df.format(dateValue.toDate(getLocalTimeZone())) : "Pick a date"}
-									</Button>
-								{/snippet}
-							</Popover.Trigger>
-							<Popover.Content class="w-auto p-0 bg-slate-950 border-white/10 shadow-[0_0_30px_-10px_rgba(0,0,0,0.5)]">
-								<Calendar bind:value={dateValue} type="single" initialFocus class="text-secondary p-3" />
-							</Popover.Content>
-						</Popover.Root>
+				<form onsubmit={handleSubmit} class="space-y-8">
+					<!-- Date Display (Active Date) -->
+					<div class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+						<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-senary/10 text-senary border border-senary/20">
+							<CalendarIcon class="h-6 w-6" />
+						</div>
+						<div>
+							<Label class="text-[10px] font-bold tracking-widest text-secondary/50 uppercase block mb-0.5">Selected Date</Label>
+							<p class="text-lg font-bold text-white tracking-tight">
+								{dateValue ? df.format(dateValue.toDate(getLocalTimeZone())) : "No Date Selected"}
+							</p>
+						</div>
 					</div>
 
-					<!-- Hours -->
-					<div class="space-y-2">
+					<!-- Time Slots (Chip Layout) -->
+					<div class="space-y-4">
 						<div class="flex items-center justify-between">
-							<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Available Hours</Label>
-							<Button 
-								type="button" 
-								variant="ghost" 
-								size="sm" 
-								onclick={addHour}
-								class="h-6 text-[10px] text-senary hover:text-senary hover:bg-senary/10"
-							>
-								<Plus class="mr-1 h-3 w-3" />
-								Add Slot
-							</Button>
+							<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Available Time Slots</Label>
+							<span class="text-[10px] text-secondary/40">{hours.length} Active Slots</span>
 						</div>
 						
-						<div class="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+						<div class="min-h-[120px] p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-wrap gap-2 content-start">
 							{#each hours as hour, i}
-								<div class="flex items-center gap-2 group" transition:fade>
-									<div class="relative flex-1">
-										<Clock class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/50" />
-										<Input 
-											type="time" 
-											value={hour} 
-											oninput={(e) => updateHour(i, e.currentTarget.value)}
-											class="pl-9 h-10 rounded-lg border-white/10 bg-white/5 text-secondary focus:border-senary/50"
-										/>
-									</div>
-									<Button 
-										type="button" 
-										variant="ghost" 
-										size="icon"
+								<div class="relative group/chip flex items-center bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg pr-1 pl-1 py-1 transition-all" transition:scale>
+									<Input 
+										type="time" 
+										value={hour} 
+										oninput={(e) => updateHour(i, e.currentTarget.value)}
+										class="time-input h-7 p-1 text-sm font-bold font-mono text-white border-none bg-transparent focus-visible:ring-0 text-center w-24 cursor-pointer"
+									/>
+									<button 
+										type="button"
 										onclick={() => removeHour(i)}
-										class="h-10 w-10 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+										class="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white rounded-full opacity-0 group-hover/chip:opacity-100 shadow-lg flex items-center justify-center hover:bg-red-600 transition-all scale-75 hover:scale-100 z-10 ring-2 ring-black"
 									>
-										<Trash2 class="h-4 w-4" />
-									</Button>
+										<X class="h-3 w-3" />
+									</button>
 								</div>
 							{/each}
+							
+							<button 
+								type="button"
+								onclick={addHour}
+								class="h-[36px] px-3 rounded-lg border border-dashed border-white/20 hover:border-senary/50 hover:bg-senary/10 text-xs text-secondary/50 hover:text-senary flex items-center gap-2 transition-all"
+							>
+								<Plus class="h-4 w-4" />
+								<span>Add Slot</span>
+							</button>
+
 							{#if hours.length === 0}
-								<div class="text-center py-4 text-xs text-secondary/40 border border-dashed border-white/10 rounded-lg">
-									No time slots added
+								<div class="w-full flex flex-col items-center justify-center py-6 text-secondary/30">
+									<Clock class="h-8 w-8 mb-2 opacity-20" />
+									<span class="text-xs italic">No time slots added. Business is closed.</span>
 								</div>
 							{/if}
 						</div>
 					</div>
 
-					<div class="flex justify-between items-center pt-6 border-t border-white/10">
+					<!-- Actions -->
+					<div class="flex justify-between items-center pt-2">
 						{#if operational}
 							<Button 
 								type="button"
 								variant="destructive" 
-								onclick={handleDelete}
+								onclick={initiateDelete}
 								disabled={loading}
-								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+								class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 h-11 px-6"
 							>
 								<Trash2 class="mr-2 h-4 w-4" />
-								Delete
+								Delete Override
 							</Button>
 						{:else}
 							<div></div>
@@ -268,19 +266,19 @@
 								variant="outline" 
 								onclick={onClose} 
 								disabled={loading}
-								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
+								class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white h-11 px-6 rounded-xl"
 							>
 								Cancel
 							</Button>
 							<Button 
 								type="submit" 
-								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
+								class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[140px] h-11 rounded-xl shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)]" 
 								disabled={loading}
 							>
 								{#if loading}
 									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 								{/if}
-								{operational ? 'Save Changes' : 'Create Schedule'}
+								{operational ? 'Save Changes' : 'Set Override'}
 							</Button>
 						</div>
 					</div>
@@ -288,21 +286,15 @@
 			</div>
 		</div>
 	</div>
+
+	<AdminConfirmDialog 
+		bind:open={confirmOpen}
+		title="Remove Override"
+		description="Are you sure you want to remove this date override? The schedule will revert to the standard weekly template."
+		variant="destructive"
+		confirmText="Remove Override"
+		loading={deleteLoading}
+		onConfirm={confirmDelete}
+	/>
 {/if}
 
-<style>
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 4px;
-	}
-	.custom-scrollbar::-webkit-scrollbar-track {
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 2px;
-	}
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 2px;
-	}
-	.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.2);
-	}
-</style>

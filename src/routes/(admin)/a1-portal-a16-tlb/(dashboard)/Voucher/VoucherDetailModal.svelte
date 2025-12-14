@@ -12,6 +12,7 @@
 	import { cn } from '$lib/utils';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { voucherId = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		voucherId?: string | null;
@@ -138,11 +139,18 @@
 		loading = false;
 	}
 
-	async function handleDelete() {
-		if (!voucherId) return;
-		if (!confirm('Are you sure you want to delete this voucher? This action cannot be undone.')) return;
+	// Delete Confirmation State
+	let confirmOpen = $state(false);
+	let deleteLoading = $state(false);
 
-		loading = true;
+	function initiateDelete() {
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!voucherId) return;
+		
+		deleteLoading = true;
 		const res = await deleteVoucher(fetch, voucherId, token);
 		
 		if (res.success) {
@@ -152,7 +160,8 @@
 		} else {
 			toast.error(res.message || 'Failed to delete voucher');
 		}
-		loading = false;
+		deleteLoading = false;
+		confirmOpen = false;
 	}
 </script>
 
@@ -261,11 +270,10 @@
 								<div class="space-y-2 md:col-span-2">
 									<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Redeem Code</Label>
 									<div class="relative group">
-										<Ticket class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/50 group-hover:text-senary transition-colors duration-300" />
 										<Input 
 											bind:value={formData.code} 
 											placeholder="e.g. PROMO2025"
-											class="pl-11 h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 font-mono uppercase tracking-wider"
+											class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 font-mono uppercase tracking-wider"
 										/>
 									</div>
 								</div>
@@ -275,12 +283,11 @@
 							<div class="space-y-2 md:col-span-2">
 								<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Value (IDR)</Label>
 								<div class="relative group">
-									<DollarSign class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/50 group-hover:text-senary transition-colors duration-300" />
 									<Input 
 										type="number"
 										bind:value={formData.value} 
 										placeholder="e.g. 50000"
-										class="pl-11 h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+										class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
 									/>
 								</div>
 							</div>
@@ -350,7 +357,7 @@
 								<Button 
 									type="button"
 									variant="destructive" 
-									onclick={handleDelete}
+									onclick={initiateDelete}
 									disabled={loading}
 									class="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
 								>
@@ -361,31 +368,28 @@
 								<div></div>
 							{/if}
 
-							<div class="flex gap-3">
-								<Button 
-									type="button"
-									variant="outline" 
-									onclick={onClose} 
-									disabled={loading}
-									class="border-white/10 bg-transparent text-secondary hover:bg-white/5 hover:text-white"
-								>
-									Cancel
-								</Button>
-								<Button 
-									type="submit" 
-									class="bg-senary text-primary hover:bg-senary/90 font-bold tracking-wide min-w-[120px]" 
-									disabled={loading}
-								>
-									{#if loading}
-										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-									{/if}
-									{voucherId ? 'Save Changes' : 'Create'}
-								</Button>
-							</div>
+							<Button 
+								type="button"
+								variant="outline" 
+								onclick={onClose}
+								class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+							>
+								Cancel
+							</Button>
 						</div>
 					</form>
 				{/if}
 			</div>
+
+			<AdminConfirmDialog 
+				bind:open={confirmOpen}
+				title="Delete Voucher"
+				description="Are you sure you want to delete this voucher? This action cannot be undone."
+				confirmText="Delete"
+				variant="destructive"
+				loading={deleteLoading}
+				onConfirm={confirmDelete}
+			/>
 		</div>
 	</div>
 {/if}
