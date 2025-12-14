@@ -19,7 +19,9 @@
 		location: '',
 		maps_link: '',
 		phone: '',
-		instagram: ''
+		instagram: '',
+		countdown_payment: 12,
+		message_template: ''
 	});
 
 	onMount(async () => {
@@ -97,6 +99,23 @@
 									type="number" 
 									bind:value={settings.admin_fee}
 									class="h-14 rounded-xl border-white/10 bg-black/20 px-4 text-lg text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+								/>
+							</div>
+							<div class="space-y-2">
+								<Label for="countdown_payment" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Countdown Payment (Hour)</Label>
+								<Input 
+									id="countdown_payment" 
+									type="number" 
+									bind:value={settings.countdown_payment}
+									class="h-14 rounded-xl border-white/10 bg-black/20 px-4 text-lg text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+								/>
+							</div>
+							<div class="space-y-2">
+								<Label for="message_template" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Message Template</Label>
+								<Textarea 
+									id="message_template" 
+									bind:value={settings.message_template}
+									class="min-h-[120px] rounded-xl border-white/10 bg-black/20 p-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 leading-relaxed"
 								/>
 							</div>
 						</div>

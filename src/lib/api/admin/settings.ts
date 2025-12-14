@@ -8,6 +8,8 @@ export interface WebsiteSettings {
 	maps_link: string;
 	phone: string;
 	instagram: string;
+	countdown_payment: number;
+	message_template: string;
 	updated_at?: string;
 }
 
