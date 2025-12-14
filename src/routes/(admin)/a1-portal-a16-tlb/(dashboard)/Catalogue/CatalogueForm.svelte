@@ -142,6 +142,12 @@
 		formData.append('skinTones', skinTones);
 
 		// Append new files
+		const existingImages = images
+			.filter(img => img.isExisting)
+			.map(img => img.preview);
+
+		formData.append('existingImages', JSON.stringify(existingImages));
+
 		let hasFile = false;
 		images.forEach((img) => {
 			if (!img.isExisting && img.file) {
@@ -150,7 +156,7 @@
 			}
 		});
 
-		// FIX: Some backends panic if 'file' is missing in multipart/form-data update
+		// // FIX: Some backends panic if 'file' is missing in multipart/form-data update
 		if (!hasFile) {
 			// Append an empty file to ensure the key exists
 			formData.append('file', new File([], 'empty.txt', { type: 'text/plain' }));
@@ -174,7 +180,7 @@
 			onUpdate();
 			onClose();
 		} else {
-			toast.error(res?.message || `Failed to ${mode} catalogue`);
+			toast.error(res.error.message || res?.message || `Failed to ${mode} catalogue`);
 		}
 		loading = false;
 	}
@@ -412,7 +418,7 @@
 								class="text-xs font-bold tracking-widest text-secondary/70 uppercase"
 								>Hair Types</Label
 							>
-							<Select.Root type="single" bind:value={hairTypes}>
+							<Select.Root type="single" bind:value={hairTypes} required>
 								<Select.Trigger
 									class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20"
 								>
@@ -437,7 +443,7 @@
 								class="text-xs font-bold tracking-widest text-secondary/70 uppercase"
 								>Face Shapes</Label
 							>
-							<Select.Root type="single" bind:value={faceShapes}>
+							<Select.Root type="single" bind:value={faceShapes} required>
 								<Select.Trigger
 									class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20"
 								>
@@ -462,7 +468,7 @@
 								class="text-xs font-bold tracking-widest text-secondary/70 uppercase"
 								>Skin Tones</Label
 							>
-							<Select.Root type="single" bind:value={skinTones}>
+							<Select.Root type="single" bind:value={skinTones} required>
 								<Select.Trigger
 									class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary focus:border-senary/50 focus:ring-senary/20"
 								>
@@ -471,6 +477,7 @@
 								<Select.Content class="border-white/10 bg-slate-900 text-secondary">
 									{#each skinToneOptions as option}
 										<Select.Item
+										
 											value={option.value}
 											label={option.label}
 											class="cursor-pointer focus:bg-white/10 focus:text-senary"
