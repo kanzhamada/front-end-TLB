@@ -45,7 +45,6 @@
 		"prettier-plugin-tailwindcss": "^0.7.1",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
-		"svelte-fullcalendar": "^3.0.0",
 		"svelte-preprocess": "^6.0.3",
 		"svelte-sonner": "^1.0.5",
 		"sveltekit-superforms": "^2.27.1",
@@ -59,21 +58,12 @@
 		"vite-plugin-devtools-json": "^0.2.0"
 	},
 	"dependencies": {
-		"@faker-js/faker": "^9.8.0",
 		"@lucide/lab": "^0.1.2",
 		"@supabase/supabase-js": "^2.76.1",
-		"@theatre/core": "^0.7.2",
-		"@theatre/studio": "^0.7.2",
-		"@threlte/core": "^8.3.0",
-		"@threlte/extras": "^9.7.0",
-		"@threlte/theatre": "^3.1.0",
-		"blueimp-load-image": "^5.16.0",
 		"d3-scale": "^4.0.2",
 		"date-fns": "^4.1.0",
 		"lucide-svelte": "^0.553.0",
 		"svelte-easy-crop": "^5.0.0",
-		"svelte-file-dropzone": "^2.0.9",
-		"three": "^0.181.2",
 		"zod": "^3.25.76"
 	}
 }

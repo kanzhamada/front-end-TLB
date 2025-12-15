@@ -1537,9 +1537,7 @@
 							</Accordion.Item>
 						</Accordion.Root>
 					</div>
-				</div>
-
-				<div class="flex flex-col mt-3 gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex flex-col mt-3 gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<Button
 						variant="outline"
 						class="border-white/10 text-secondary hover:bg-white/10 hover:text-white sm:w-auto"
@@ -1582,6 +1580,9 @@
 						</Button>
 					</div>
 				</div>
+				</div>
+
+				
 			{/if}
 		</div>
 	</SheetContent>

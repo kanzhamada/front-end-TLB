@@ -636,7 +636,7 @@
 					disabled={loading}
 				>
 					<RefreshCw class="mr-2 size-4 {loading ? 'animate-spin' : ''}" />
-					Refresh Data
+					Refresh
 				</Button>
 				<p class="text-xs text-secondary/40">
 					Klik refresh jika data belum diperbarui
