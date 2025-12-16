@@ -4,8 +4,12 @@
 	import Separator from '$lib/components/ui/separator/separator.svelte';
 	import { onMount } from 'svelte';
 	import { Toaster } from 'svelte-sonner';
+	import { Button } from '$lib/components/ui/button';
+	import { RefreshCw } from 'lucide-svelte';
 
 	let { children } = $props();
+
+	let loading = $state(false);
 
 	let headerElement: HTMLElement;
 	let lastScrollY = 0;
@@ -81,6 +85,19 @@
             <!-- Header Actions / Status could go here -->
             <div class="flex items-center gap-4">
                  <!-- Add any header-right actions here if needed -->
+				 <Button
+					variant="outline"
+					size="sm"
+					class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+					onclick={() => {
+						loading = true;
+						window.location.reload();
+					}}
+					disabled={loading}
+				>
+					<RefreshCw class="mr-2 size-4 {loading ? 'animate-spin' : ''}" />
+					Refresh
+				</Button>
             </div>
 		</header>
 

@@ -163,7 +163,7 @@
 
 				<div class={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
 					<div
-						class={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-sm break-all whitespace-pre-wrap ${
+						class={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-sm break-words whitespace-pre-wrap ${
 							isAdmin
 								? 'bg-senary text-primary rounded-br-none'
 								: 'bg-white/10 text-secondary rounded-bl-none border border-white/5'
