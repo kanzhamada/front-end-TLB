@@ -18,6 +18,16 @@ export type Reservation = {
 	service?: { name: string; price: number };
 	dateTime?: { date: string; hour: string };
 	reschedule?: { newDate: string; newTime: string } | null;
+	payment?: {
+		status: string;
+		servicePrice: number;
+		adminFee: number;
+		midtransFee: number;
+		voucher: number;
+		total: number;
+		downPayment: number;
+		remaining: number;
+	};
 };
 
 export const getReservations = async (
@@ -101,7 +111,7 @@ export const getReservationById = async (
 
 	const reservation: Reservation = {
 		id: dataToMap.reservationID || dataToMap.id, // Try both
-		invoice: dataToMap.invoice,
+		invoice: dataToMap.invoice || dataToMap.reservationID, // Fallback to reservationID if invoice missing
 		customer_id: dataToMap.user?.id || dataToMap.customer_id || '',
 		barber_id: dataToMap.barber?.id || dataToMap.barber_id || '',
 		service_id: dataToMap.service?.id || dataToMap.service_id || '',
@@ -129,7 +139,8 @@ export const getReservationById = async (
 		reschedule: dataToMap.reschedule ? {
 			newDate: dataToMap.reschedule.newDate,
 			newTime: dataToMap.reschedule.newTime
-		} : null
+		} : null,
+		payment: dataToMap.payment
 	};
 
 	return {

@@ -195,14 +195,16 @@
 					// Let's approximate or use the logic from ReservationSheet.
 					// In ReservationSheet: baseAmount = Math.max(subtotal - voucherDiscount - redeemCodeDiscount, 0);
 					// Here:
-					const subtotal = reservation.downPayment;
-					const voucher = reservation.voucherValue || 0;
+					const servicePrice = reservation.service.price;
+					const voucherDiscount = reservation.voucherValue || 0;
+					// adminFee is already loaded from company settings
+					// adminFee = settingsRes.data.admin_fee;
 
-					// Admin fee is added to total.
-					// Let's assume base is (Price - Voucher).
-					const baseAmount = Math.max(subtotal - voucher, 0);
+					// Calculate the base amount for the percentage fee, which is (Service Price - Voucher Discount + Admin Fee)
+					const baseAmountForPercentageFee = servicePrice - voucherDiscount + adminFee;
 
-					paymentMethodFee = Math.ceil(baseAmount * feeConfig.value);
+					// Calculate payment method fee based on the formula: [(Harga Service - Diskon + Biaya Admin) ÷ 2] × Percentage
+					paymentMethodFee = (baseAmountForPercentageFee / 2) * feeConfig.value;
 				}
 			}
 		}

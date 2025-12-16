@@ -429,13 +429,13 @@
 
 													<div
 														class={cn(
-															'rounded-2xl px-4 py-3 break-words shadow-sm',
+															'rounded-2xl px-4 py-3 break-word shadow-sm',
 															isMe
 																? 'rounded-br-sm bg-senary text-primary'
 																: 'rounded-bl-sm bg-white/10 text-secondary backdrop-blur-sm'
 														)}
 													>
-														<p class="text-sm leading-relaxed break-words whitespace-pre-wrap">
+														<p class="text-sm leading-relaxed break-word whitespace-pre-wrap">
 															{message.content}
 														</p>
 													</div>

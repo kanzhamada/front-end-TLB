@@ -15,6 +15,7 @@
 	import { X, Calendar, Clock, User, Scissors, Phone, CreditCard, MapPin } from 'lucide-svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
 
 	let { reservationId, token, onClose, onUpdate } = $props<{
 		reservationId: string | null;
@@ -25,6 +26,19 @@
 
 	let reservation = $state<Reservation | null>(null);
 	let loading = $state(false);
+
+	$effect(() => {
+		console.log("reservation", reservation)
+	});
+
+	// Confirmation Dialog State
+	let confirmOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmDescription = $state('');
+	let confirmVariant = $state<'default' | 'destructive'>('default');
+	let confirmText = $state('');
+	let confirmLoading = $state(false);
+	let pendingAction = $state<string | null>(null);
 
 	$effect(() => {
 		if (reservationId) {
@@ -48,37 +62,98 @@
 		loading = false;
 	}
 
-	async function handleAction(action: string) {
-		if (!reservationId || !confirm(`Are you sure you want to ${action.replace('-', ' ')}?`)) return;
+	function handleAction(action: string) {
+		if (!reservationId) return;
 
-		let res;
+		pendingAction = action;
+		confirmVariant = 'default';
+		confirmText = 'Confirm';
+
 		switch (action) {
 			case 'accept':
-				res = await acceptReservation(fetch, reservationId, token);
+				confirmTitle = 'Accept Reservation';
+				confirmDescription = 'Are you sure you want to accept this reservation?';
+				confirmText = 'Accept';
+				confirmVariant = 'default';
 				break;
 			case 'decline':
-				res = await declineReservation(fetch, reservationId, token);
+				confirmTitle = 'Decline Reservation';
+				confirmDescription = 'Are you sure you want to decline this reservation? This action cannot be undone.';
+				confirmText = 'Decline';
+				confirmVariant = 'destructive';
 				break;
 			case 'cancel':
-				res = await cancelReservation(fetch, reservationId, token);
+				confirmTitle = 'Cancel Reservation';
+				confirmDescription = 'Are you sure you want to cancel this reservation? This action cannot be undone.';
+				confirmText = 'Cancel Reservation';
+				confirmVariant = 'destructive';
 				break;
 			case 'accept-reschedule':
-				res = await acceptReschedule(fetch, reservationId, token);
+				confirmTitle = 'Accept Reschedule';
+				confirmDescription = 'Are you sure you want to accept this reschedule request?';
+				confirmText = 'Accept Reschedule';
+				confirmVariant = 'default';
 				break;
 			case 'decline-reschedule':
-				res = await declineReschedule(fetch, reservationId, token);
+				confirmTitle = 'Decline Reschedule';
+				confirmDescription = 'Are you sure you want to decline this reschedule request?';
+				confirmText = 'Decline Reschedule';
+				confirmVariant = 'destructive';
 				break;
 			case 'complete':
-				res = await completeReservation(fetch, reservationId, token);
+				confirmTitle = 'Complete Reservation';
+				confirmDescription = 'Are you sure you want to mark this reservation as complete?';
+				confirmText = 'Complete';
+				confirmVariant = 'default';
 				break;
 		}
 
-		if (res?.success) {
-			toast.success(`Reservation ${action.replace('-', ' ')}ed successfully`);
-			onUpdate();
-			onClose();
-		} else {
-			toast.error(res?.message || `Failed to ${action} reservation`);
+		confirmOpen = true;
+	}
+
+	async function executeAction() {
+		if (!reservationId || !pendingAction) return;
+
+		confirmLoading = true;
+		let res;
+		const action = pendingAction;
+
+		try {
+			switch (action) {
+				case 'accept':
+					res = await acceptReservation(fetch, reservationId, token);
+					break;
+				case 'decline':
+					res = await declineReservation(fetch, reservationId, token);
+					break;
+				case 'cancel':
+					res = await cancelReservation(fetch, reservationId, token);
+					break;
+				case 'accept-reschedule':
+					res = await acceptReschedule(fetch, reservationId, token);
+					break;
+				case 'decline-reschedule':
+					res = await declineReschedule(fetch, reservationId, token);
+					break;
+				case 'complete':
+					res = await completeReservation(fetch, reservationId, token);
+					break;
+			}
+
+			if (res?.success) {
+				toast.success(`Reservation ${action.replace('-', ' ')}ed successfully`);
+				onUpdate();
+				onClose();
+			} else {
+				toast.error(res?.message || `Failed to ${action} reservation`);
+			}
+		} catch (error) {
+			console.error('Error executing action:', error);
+			toast.error('An unexpected error occurred');
+		} finally {
+			confirmLoading = false;
+			confirmOpen = false;
+			pendingAction = null;
 		}
 	}
 
@@ -93,7 +168,10 @@
 	const getStatusColor = (status: string) => {
 		switch (status) {
 			case 'waiting':
+			case 'pending':
 				return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20';
+			case 'paid':
+			case 'success':
 			case 'onGoing':
 				return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
 			case 'completed':
@@ -162,7 +240,7 @@
 							<div class="flex items-start justify-between">
 								<div>
 									<h3 class="text-3xl font-light text-secondary">
-										#{(reservation.id || '').slice(0, 8)}
+										#{reservation.invoice}
 									</h3>
 									<p class="mt-1 text-xs font-bold tracking-widest text-secondary/40 uppercase">
 										Invoice ID
@@ -248,6 +326,69 @@
 												New Time
 											</p>
 											<p class="text-xl text-purple-100">{reservation.reschedule.newTime}</p>
+										</div>
+									</div>
+								</div>
+							{/if}
+
+							{#if reservation.payment}
+								<div class="rounded-2xl border border-white/5 bg-white/5 p-6">
+									<h4
+										class="mb-4 flex items-center text-xs font-bold tracking-widest text-secondary/50 uppercase"
+									>
+										<CreditCard class="mr-2 h-3 w-3" /> Payment Details
+									</h4>
+									<div class="space-y-3">
+										<div class="flex justify-between text-sm">
+											<span class="text-secondary/70">Status</span>
+											<span
+												class={`rounded px-2 py-0.5 text-xs font-bold uppercase ${getStatusColor(reservation.payment.status)}`}
+											>
+												{reservation.payment.status}
+											</span>
+										</div>
+										<div class="flex justify-between text-sm">
+											<span class="text-secondary/70">Service Price</span>
+											<span class="text-secondary"
+												>{formatCurrency(reservation.payment.servicePrice)}</span
+											>
+										</div>
+										<div class="flex justify-between text-sm">
+											<span class="text-secondary/70">Admin Fee</span>
+											<span class="text-secondary"
+												>{formatCurrency(reservation.payment.adminFee)}</span
+											>
+										</div>
+										<div class="flex justify-between text-sm">
+											<span class="text-secondary/70">Midtrans Fee</span>
+											<span class="text-secondary"
+												>{formatCurrency(reservation.payment.midtransFee)}</span
+											>
+										</div>
+										{#if reservation.payment.voucher > 0}
+											<div class="flex justify-between text-sm text-green-400">
+												<span>Voucher Discount</span>
+												<span>-{formatCurrency(reservation.payment.voucher)}</span>
+											</div>
+										{/if}
+										<Separator class="my-2 bg-white/10" />
+										<div class="flex justify-between text-base font-bold">
+											<span class="text-secondary">Total</span>
+											<span class="text-senary"
+												>{formatCurrency(reservation.payment.total)}</span
+											>
+										</div>
+										<div class="flex justify-between text-sm">
+											<span class="text-secondary/70">Down Payment</span>
+											<span class="text-secondary"
+												>{formatCurrency(reservation.payment.downPayment)}</span
+											>
+										</div>
+										<div class="flex justify-between text-sm font-medium">
+											<span class="text-secondary/70">Remaining</span>
+											<span class="text-red-400"
+												>{formatCurrency(reservation.payment.remaining)}</span
+											>
 										</div>
 									</div>
 								</div>
@@ -370,3 +511,13 @@
 		</div>
 	</div>
 {/if}
+
+<AdminConfirmDialog
+	bind:open={confirmOpen}
+	title={confirmTitle}
+	description={confirmDescription}
+	variant={confirmVariant}
+	confirmText={confirmText}
+	loading={confirmLoading}
+	onConfirm={executeAction}
+/>
