@@ -105,13 +105,13 @@
 		>
 			<div class="mb-4 flex items-center gap-4" in:fly={{ y: 20, duration: 800, delay: 200 }}>
 				<div class="h-[1px] w-12 bg-senary"></div>
-				<p class="text-lg font-medium tracking-[0.3em] text-senary uppercase">
+				<p class="text-base font-medium tracking-[0.3em] text-senary uppercase">
 					Three Lights Barbershop
 				</p>
 			</div>
 
 			<h1
-				class="max-w-full text-left text-4xl leading-[0.95] font-bold tracking-tighter text-secondary drop-shadow-2xl md:max-w-5xl md:text-7xl lg:text-[130px]"
+				class="max-w-full text-left text-3xl leading-[0.95] font-bold tracking-tighter text-secondary drop-shadow-2xl md:max-w-5xl md:text-6xl lg:text-[110px]"
 				in:fly={{ y: 30, duration: 800, delay: 400 }}
 			>
 				Refine Your <br />

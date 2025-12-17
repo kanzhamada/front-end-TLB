@@ -60,12 +60,13 @@
 		<div class="flex h-16 items-center justify-between md:h-20">
 			<!-- Logo -->
 			<div class="flex items-center gap-2">
-				<img
-					src="/three_lights_barbershop_logo.svg"
-					onclick={() => goto('/')}
-					alt="Three Lights Barbershop Logo"
-					class="h-10 w-auto md:h-12"
-				/>
+				<a href="/">
+					<img
+						src="/three_lights_barbershop_logo.svg"
+						alt="Three Lights Barbershop Logo"
+						class="h-10 w-auto md:h-12"
+					/>
+				</a>
 			</div>
 
 			<!-- Navigation Links -->
