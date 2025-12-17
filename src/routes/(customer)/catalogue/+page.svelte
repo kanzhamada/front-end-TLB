@@ -63,7 +63,7 @@
 	const serviceOptions = [
 		{
 			value: '',
-			label: 'Semua'
+			label: 'All'
 		},
 		{
 			value: 'Short',
@@ -96,7 +96,7 @@
 	let currentPageIndex = $derived(dataCatalogue.getState().pagination.pageIndex + 1);
 
 	// State using Svelte 5 runes
-	let selectedFilter = $state('Semua');
+	let selectedFilter = $state('All');
 	// Fixed: Proper type for selectedService
 	let selectedService = $state<Catalogue | null>(null);
 
@@ -190,7 +190,7 @@
 							options={serviceOptions}
 							{selectedFilter}
 							onSelect={(value) => {
-								selectedFilter = value || 'Semua';
+								selectedFilter = value || 'All';
 								selectedFilterValue = value;
 								dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
 							}}

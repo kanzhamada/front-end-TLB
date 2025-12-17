@@ -21,6 +21,7 @@
 		phone: '',
 		instagram: '',
 		countdown_payment: 12,
+		automatic_interval: undefined,
 		message_template: ''
 	});
 
@@ -118,6 +119,28 @@
 									class="min-h-[120px] rounded-xl border-white/10 bg-black/20 p-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 leading-relaxed"
 								/>
 							</div>
+						</div>
+					</div>
+
+
+					<!-- General Section -->
+					<div class="rounded-3xl border border-white/5 bg-white/5 p-8 backdrop-blur-sm">
+						<h3 class="mb-6 text-xl font-bold text-secondary flex items-center gap-3">
+							<span class="h-1.5 w-1.5 rounded-full bg-senary"></span>
+							Operational Time
+						</h3>
+						
+						<div class="grid gap-6">
+							<div class="space-y-2">
+								<Label for="automatic_interval" class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Automation Add Available Operational Time (in days)</Label>
+								<Input 
+									id="automatic_interval" 
+									type="number" 
+									bind:value={settings.automatic_interval}
+									class="h-14 rounded-xl border-white/10 bg-black/20 px-4 text-lg text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+								/>
+							</div>
+							
 						</div>
 					</div>
 

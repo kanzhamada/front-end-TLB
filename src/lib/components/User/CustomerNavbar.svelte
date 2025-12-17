@@ -5,16 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { LogOut, LogIn, Menu, Home, BookOpen, User } from 'lucide-svelte';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import {
-		AlertDialog,
-		AlertDialogAction,
-		AlertDialogCancel,
-		AlertDialogContent,
-		AlertDialogDescription,
-		AlertDialogFooter,
-		AlertDialogHeader,
-		AlertDialogTitle
-	} from '$lib/components/ui/alert-dialog';
+	import LogoutDialog from '$lib/components/User/LogoutDialog.svelte';
 
 	import { getReservations } from '$lib/api/customer/reservation';
 	import { onMount } from 'svelte';
@@ -235,27 +226,7 @@
 	</div>
 </nav>
 
-<AlertDialog open={showLogoutDialog} onOpenChange={(open) => (showLogoutDialog = open)}>
-	<AlertDialogContent class="border border-white/10 bg-primary text-secondary">
-		<AlertDialogHeader>
-			<AlertDialogTitle class="text-white">Keluar</AlertDialogTitle>
-			<AlertDialogDescription class="text-secondary/70">
-				Apakah anda yakin ingin keluar?
-			</AlertDialogDescription>
-		</AlertDialogHeader>
-		<AlertDialogFooter>
-			<AlertDialogCancel
-				class="border-white/10 bg-transparent text-secondary hover:bg-white/10 hover:text-white"
-				onclick={() => (showLogoutDialog = false)}
-			>
-				Batal
-			</AlertDialogCancel>
-			<AlertDialogAction class="bg-senary text-primary hover:bg-senary/90" onclick={handleLogout}>
-				Keluar
-			</AlertDialogAction>
-		</AlertDialogFooter>
-	</AlertDialogContent>
-</AlertDialog>
+<LogoutDialog bind:open={showLogoutDialog} onConfirm={handleLogout} />
 
 <style>
 	/* Ensure navbar is above other content */
