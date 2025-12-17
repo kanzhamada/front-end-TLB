@@ -8,7 +8,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'X-Frame-Options': 'DENY',
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
-		'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+		'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=()'
 	});
 
 	const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
