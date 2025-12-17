@@ -1,20 +1,28 @@
 <script lang="ts">
 	import SidebarHeader from '../ui/sidebar/sidebar-header.svelte';
-	import ImagesIcon from '@lucide/svelte/icons/images';
-	import HouseIcon from '@lucide/svelte/icons/house';
-	import UserRoundIcon from '@lucide/svelte/icons/users-round';
-	import CalendarCheckIcon from '@lucide/svelte/icons/calendar-check';
-	import TicketsIcon from '@lucide/svelte/icons/tickets';
-	import MessageCircleIcon from '@lucide/svelte/icons/message-circle';
-	import ScissorsIcon from '@lucide/svelte/icons/scissors';
-	import CalendarClockIcon from '@lucide/svelte/icons/calendar-clock';
-	import LogoutIcon from '@lucide/svelte/icons/log-out';
-	import MenuIcon from '@lucide/svelte/icons/menu';
+	import {
+		Images as ImagesIcon,
+		House as HouseIcon,
+		UserRound as UserRoundIcon,
+		CalendarCheck as CalendarCheckIcon,
+		Ticket as TicketsIcon,
+		MessageCircle as MessageCircleIcon,
+		Scissors as ScissorsIcon,
+		CalendarClock as CalendarClockIcon,
+		LogOut as LogoutIcon,
+		Menu as MenuIcon,
+		DollarSign
+	} from 'lucide-svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js'; // Impor Tooltip
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
+	import { unreadChatCount } from '$lib/stores/chat';
+	import { logout } from '$lib/api/auth';
+    import { authStore } from '$lib/stores/auth';
+	import { toast } from 'svelte-sonner';
 
 	let {
 		ref = $bindable(null),
@@ -23,6 +31,13 @@
 	}: ComponentProps<typeof Sidebar.Root> = $props();
 
 	const sidebar = useSidebar();
+
+	// Function to handle logout
+	async function handleLogout() {
+		authStore.clear();
+		goto('/');
+	
+	}
 
 	// Fungsi untuk menangani klik menu pada mobile
 	function handleMenuClick() {
@@ -35,122 +50,142 @@
 	const items = [
 		{
 			title: 'Dashboard',
-			url: '/admin',
+			url: '/a1-portal-a16-tlb',
 			icon: HouseIcon,
-			tooltip: 'Go to Dashboard' // Tambahan tooltip
+			tooltip: 'Go to Dashboard'
 		},
 		{
 			title: 'Reservation',
-			url: '/admin/Reservation',
+			url: '/a1-portal-a16-tlb/Reservation',
 			icon: CalendarCheckIcon,
 			tooltip: 'Manage Reservations'
 		},
 		{
 			title: 'Catalogue',
-			url: '/admin/Catalogue',
+			url: '/a1-portal-a16-tlb/Catalogue',
 			icon: ImagesIcon,
 			tooltip: 'View Catalogue'
 		},
 		{
 			title: 'Barber',
-			url: '/admin/Barber',
+			url: '/a1-portal-a16-tlb/Barber',
 			icon: UserRoundIcon,
 			tooltip: 'Manage Barbers'
 		},
 		{
 			title: 'Service',
-			url: '/admin/Service',
+			url: '/a1-portal-a16-tlb/Service',
 			icon: ScissorsIcon,
 			tooltip: 'Manage Services'
 		},
 		{
 			title: 'Operational Time',
-			url: '/admin/OperationalTime',
+			url: '/a1-portal-a16-tlb/OperationalTime',
 			icon: CalendarClockIcon,
 			tooltip: 'Set Operational Hours'
 		},
 		{
 			title: 'Chat',
-			url: '/admin/Chat',
+			url: '/a1-portal-a16-tlb/Chat',
 			icon: MessageCircleIcon,
 			tooltip: 'Chat with Customers'
 		},
 		{
+			title: 'Finance',
+			url: '/a1-portal-a16-tlb/Finance',
+			icon: DollarSign,
+			tooltip: 'Manage Finances'
+		},
+		{
 			title: 'Voucher',
-			url: '/admin/Voucher',
+			url: '/a1-portal-a16-tlb/Voucher',
 			icon: TicketsIcon,
 			tooltip: 'Manage Vouchers'
+		},
+		{
+			title: 'Settings',
+			url: '/a1-portal-a16-tlb/Settings',
+			icon: MenuIcon,
+			tooltip: 'Website Settings'
 		}
 	];
+
+	// Get unread count value for display
+	let unreadCount = $state(0);
+
+	// Subscribe to the unreadChatCount store
+	$effect(() => {
+		const unsubscribe = unreadChatCount.subscribe((value) => {
+			unreadCount = value;
+		});
+		return unsubscribe;
+	});
 </script>
 
-<!-- Mobile toggle button dengan Tooltip -->
 <Tooltip.Provider>
-	<!-- <button
-		class="fixed top-4 left-4 z-50 rounded-md p-2 md:hidden"
-		on:click={() => sidebar.toggle()}
-	>
-		<Tooltip.Root>
-			<Tooltip.Trigger>
-				<MenuIcon class="h-6 w-6" />
-			</Tooltip.Trigger>
-			<Tooltip.Content>
-				<p>Toggle Sidebar</p>
-			</Tooltip.Content>
-		</Tooltip.Root>
-	</button> -->
-
-	<Sidebar.Root {collapsible} {...restProps}>
-		<Sidebar.Header>
-			<img src="/three_lights_barbershop_logo.svg" alt="" class="p-4" />
+	<Sidebar.Root bind:ref {collapsible} {...restProps} class="border-r border-white/10 bg-slate-950/50 backdrop-blur-md">
+		<Sidebar.Header class="border-b border-white/10 bg-transparent">
+			<img src="/three_lights_barbershop_logo.svg" alt="Three Lights Barbershop" class="p-4" />
 		</Sidebar.Header>
-		<Sidebar.Content>
+		<Sidebar.Content class="bg-transparent">
 			<Sidebar.Group>
 				<Sidebar.GroupContent>
-					<Sidebar.Menu>
+					<Sidebar.Menu class="space-y-2 px-2">
 						{#each items as item (item.title)}
-							<Tooltip.Root>
-								<Tooltip.Trigger>
-									<Sidebar.MenuItem class="py-2">
-										<Sidebar.MenuButton isActive={$page.url.pathname === item.url}>
-											{#snippet child({ props })}
-												<a href={item.url} {...props} on:click={handleMenuClick}>
-													<item.icon class="h-6 w-6" />
-													<span class="py-3 text-base">{item.title}</span>
-													<Tooltip.Content>
-														<p>{item.tooltip}</p>
-													</Tooltip.Content>
-												</a>
-											{/snippet}
-										</Sidebar.MenuButton>
-									</Sidebar.MenuItem>
-								</Tooltip.Trigger>
-							</Tooltip.Root>
+							<Sidebar.MenuItem>
+								<Sidebar.MenuButton
+									isActive={$page.url.pathname === item.url}
+									tooltipContent={item.tooltip}
+									class="w-full justify-start rounded-xl px-4 py-3 text-secondary/70 transition-all duration-300 hover:bg-white/5 hover:pl-6 hover:text-senary data-[active=true]:bg-senary/10 data-[active=true]:text-senary data-[active=true]:shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+									onclick={() => {
+										handleMenuClick();
+										goto(item.url);
+									}}
+								>
+									<item.icon class="h-6 w-6" />
+									<span class="relative ml-3 py-3 text-base font-light">
+										{item.title}
+										{#if item.title === 'Chat' && unreadCount > 0}
+											<span class="absolute -top-1 -right-1 flex h-5 w-5">
+												<span class="relative flex h-5 w-5 items-center justify-center">
+													<span
+														class="absolute inline-flex h-full w-full animate-ping rounded-full bg-senary opacity-75"
+													></span>
+													<span class="relative inline-flex h-3 w-3 rounded-full bg-senary"
+													></span>
+												</span>
+												<span
+													class="absolute -top-0.5 -right-0.5 flex items-center justify-center text-[0.6rem] font-bold text-primary"
+												>
+													{unreadCount > 9 ? '9+' : unreadCount}
+												</span>
+											</span>
+										{/if}
+									</span>
+								</Sidebar.MenuButton>
+							</Sidebar.MenuItem>
 						{/each}
 					</Sidebar.Menu>
 				</Sidebar.GroupContent>
 			</Sidebar.Group>
 		</Sidebar.Content>
-		<Sidebar.Footer>
-			<Sidebar.Menu>
-				<Tooltip.Root>
-					<Tooltip.Trigger>
-						<Sidebar.MenuItem>
-							<Sidebar.MenuButton
-								style="--sidebar-accent: #FCEAE9; --sidebar-accent-foreground: #E0514A;"
-								class="cursor-pointer"
-							>
-								<LogoutIcon class="h-6 w-6" />
-								<span class="py-3 text-base">Logout</span>
-							</Sidebar.MenuButton>
-							<Tooltip.Content>
-								<p>Sign out of your account</p>
-							</Tooltip.Content>
-						</Sidebar.MenuItem>
-					</Tooltip.Trigger>
-				</Tooltip.Root>
+		<Sidebar.Footer class="border-t border-white/10 bg-transparent">
+			<Sidebar.Menu class="px-2 pb-4">
+				<Sidebar.MenuItem>
+					<!-- Replaced form with client-side handler -->
+					<div class="w-full">
+						<Sidebar.MenuButton
+							onclick={handleLogout}
+							tooltipContent="Sign out of your account"
+							class="w-full justify-start rounded-xl px-4 py-3 text-red-400/80 transition-all duration-300 hover:bg-red-500/10 hover:pl-6 hover:text-red-400"
+						>
+							<LogoutIcon class="h-5 w-5" />
+							<span class="ml-3 text-base font-light">Logout</span>
+						</Sidebar.MenuButton>
+					</div>
+				</Sidebar.MenuItem>
 			</Sidebar.Menu>
-			<div class="items-left flex justify-center space-x-2 p-4 text-xs">
+			<div class="items-left flex justify-center space-x-2 p-4 text-xs text-secondary/50">
 				<span>© 2025 by Three Lights Barbershop</span>
 			</div>
 		</Sidebar.Footer>
