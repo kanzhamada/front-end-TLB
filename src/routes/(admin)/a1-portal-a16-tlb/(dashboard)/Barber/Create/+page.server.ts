@@ -3,7 +3,7 @@ import { fail } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { barberSchema, userId } from '$lib/zod/schema.js';
-import { createBarber, editBarber, getBarber } from '$lib/api/admin/barber.js';
+import { createBarber, editBarber, getBarbers } from '$lib/api/admin/barber.ts';
 
 const crudSchema = barberSchema.extend({
 	id: barberSchema.shape.id.optional()
@@ -20,8 +20,8 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const form = await superValidate(formData, zod(crudSchema));
 
-		const response = getBarber();
-		const barber = response.barbers;
+		const response = getBarbesr();
+		const barber = response;
 		console.log('formData:', Object.fromEntries(formData));
 		console.log('form:', form);
 		// let error = false;
