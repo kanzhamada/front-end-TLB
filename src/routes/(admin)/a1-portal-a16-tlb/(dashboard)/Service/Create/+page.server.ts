@@ -3,7 +3,7 @@ import { fail } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { serviceSchema, userId } from '$lib/zod/schema.js';
-import { createService, editService, getService } from '$lib/api/admin/service.js';
+import { createService, editService, getServices } from '$lib/api/admin/service.js';
 
 const crudSchema = serviceSchema.extend({
 	id: serviceSchema.shape.id.optional()
@@ -22,8 +22,8 @@ export const actions: Actions = {
 		const form = await superValidate(formData, zod(crudSchema));
 		console.log('form:', form);
 
-		const response = getService();
-		const service = response.services;
+		const response = getServices();
+		const service = response;
 		// let error = false;
 
 		if (!form.valid) {
