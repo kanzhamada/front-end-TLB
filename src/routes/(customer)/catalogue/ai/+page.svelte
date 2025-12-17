@@ -70,6 +70,7 @@
 	let videoEl = $state<HTMLVideoElement | null>(null);
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let stream = $state<MediaStream | null>(null);
+	let isSecure = $state(true);
 
 	const onFileSelected = (e) => {
 		const file = e.target.files?.[0];
@@ -113,41 +114,19 @@
 
 	// Camera Functions
 	async function startCamera() {
-		if (!browser) return;
-		showCamera = true;
-
-		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-			alert(
-				'Camera API is not available in your browser. This may be due to accessing via HTTP (insecure) instead of HTTPS, or the browser does not support it. Please try using localhost or HTTPS.'
-			);
-			showCamera = false;
-			return;
-		}
-
-		try {
-			stream = await navigator.mediaDevices.getUserMedia({ video: true });
-			// Wait for DOM update to bind videoEl
-			setTimeout(() => {
-				if (videoEl) videoEl.srcObject = stream;
-			}, 100);
-		} catch (err: any) {
-			console.error('Camera Error:', err);
-			let msg = 'Unable to access camera. ';
-			if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-				msg += 'Permission denied. Please allow camera access in your browser settings.';
-			} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-				msg += 'No camera device found.';
-			} else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-				msg += 'Camera is already in use by another application.';
-			} else if (err.name === 'OverconstrainedError') {
-				msg += 'Camera constraints could not be satisfied.';
-			} else if (err.name === 'SecurityError') {
-				msg += 'Security error. Please ensure you are using HTTPS.';
-			} else {
-				msg += err.message || 'Unknown error occurred.';
+		if (navigator.permissions) {
+			try {
+				const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+				if (permissionStatus.state === 'denied') {
+					alert('Akses kamera ditolak. Harap izinkan akses kamera di pengaturan browser Anda.');
+					showCamera = false;
+					return;
+				}
+				// If state is 'granted' or 'prompt', proceed to try getUserMedia
+			} catch (error) {
+				console.warn('Permission API for camera not fully supported or error:', error);
+				// Fallback to direct getUserMedia if permission API fails or is not fully supported
 			}
-			alert(msg);
-			showCamera = false;
 		}
 	}
 
@@ -198,6 +177,10 @@
 		if (response.success && response.data) {
 			allCatalogues = response.data;
 			catalogues = response.data;
+		}
+
+		if (browser) {
+			isSecure = window.isSecureContext;
 		}
 	});
 
@@ -452,13 +435,22 @@
 							</button>
 
 							<!-- Camera Button -->
-							<button
-								onclick={startCamera}
-								class="mb-8 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold tracking-widest text-secondary uppercase transition-all hover:bg-white/10 hover:text-senary"
-							>
-								<Camera class="h-4 w-4" />
-								<span>Gunakan Kamera</span>
-							</button>
+							<div class="mb-8 space-y-2">
+								<button
+									onclick={startCamera}
+									disabled={!isSecure}
+									class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold tracking-widest text-secondary uppercase transition-all hover:bg-white/10 hover:text-senary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white/5 disabled:hover:text-secondary"
+								>
+									<Camera class="h-4 w-4" />
+									<span>{isSecure ? 'Gunakan Kamera' : 'Kamera Tidak Tersedia'}</span>
+								</button>
+								{#if !isSecure}
+									<div class="flex items-center justify-center gap-2 text-xs text-red-400">
+										<AlertCircle class="h-3 w-3" />
+										<span>Koneksi tidak aman (HTTP). Gunakan HTTPS untuk akses kamera.</span>
+									</div>
+								{/if}
+							</div>
 						{/if}
 
 						<!-- Hidden file input -->
