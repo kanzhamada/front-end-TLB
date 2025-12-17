@@ -10,10 +10,11 @@ export interface WebsiteSettings {
 	instagram: string;
 	countdown_payment: number;
 	message_template: string;
+	automatic_interval?: number;
 	updated_at?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.PUBLIC_API_URL;
 
 export async function getSettings(fetch: any): Promise<{ success: boolean; message: string; data?: WebsiteSettings }> {
 	try {

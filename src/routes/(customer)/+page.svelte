@@ -114,10 +114,10 @@
 				class="max-w-full text-left text-3xl leading-[0.95] font-bold tracking-tighter text-secondary drop-shadow-2xl md:max-w-5xl md:text-6xl lg:text-[110px]"
 				in:fly={{ y: 30, duration: 800, delay: 400 }}
 			>
-				Refine Your <br />
+				Lights Up <br />
 				<span
 					class="animate-shimmer bg-gradient-to-r from-senary via-[#F5F5DC] to-senary bg-[length:200%_auto] bg-clip-text text-transparent"
-					>Signature Look</span
+					>Your Style</span
 				>
 			</h1>
 

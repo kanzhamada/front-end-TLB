@@ -21,6 +21,7 @@
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte/icons';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { getCatalogue, type Catalogue } from '$lib/api/shared/api';
+	import { analyzeImage } from '$lib/api/shared/ai';
 	import * as Accordion from '$lib/components/ui/accordion';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -39,10 +40,11 @@
 	import FilterGroup from '$lib/components/ui/FilterGroup.svelte';
 	import ReservationSheet from '$lib/components/User/Reservation/ReservationSheet.svelte';
 	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
 	let avatar = $state(null);
 	let isDragging = $state(false);
-	let fileInput;
+	let fileInput = $state<HTMLInputElement | null>(null);
 	let accordionValue = $state(['contoh-foto']); // Auto open on load
 	let scanning = $state(false);
 	let result = $state<any>(null);
@@ -75,7 +77,7 @@
 
 		// Check file size (6MB max)
 		if (file.size > 6 * 1024 * 1024) {
-			alert('Ukuran file terlalu besar. Maksimal 6 MB.');
+			toast.error('Ukuran file terlalu besar. Maksimal 6 MB.');
 			return;
 		}
 
@@ -113,15 +115,38 @@
 	async function startCamera() {
 		if (!browser) return;
 		showCamera = true;
+
+		if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+			alert(
+				'Camera API is not available in your browser. This may be due to accessing via HTTP (insecure) instead of HTTPS, or the browser does not support it. Please try using localhost or HTTPS.'
+			);
+			showCamera = false;
+			return;
+		}
+
 		try {
 			stream = await navigator.mediaDevices.getUserMedia({ video: true });
 			// Wait for DOM update to bind videoEl
 			setTimeout(() => {
 				if (videoEl) videoEl.srcObject = stream;
 			}, 100);
-		} catch (err) {
-			alert('Unable to access camera. Please allow camera permissions.');
-			console.error(err);
+		} catch (err: any) {
+			console.error('Camera Error:', err);
+			let msg = 'Unable to access camera. ';
+			if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+				msg += 'Permission denied. Please allow camera access in your browser settings.';
+			} else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+				msg += 'No camera device found.';
+			} else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+				msg += 'Camera is already in use by another application.';
+			} else if (err.name === 'OverconstrainedError') {
+				msg += 'Camera constraints could not be satisfied.';
+			} else if (err.name === 'SecurityError') {
+				msg += 'Security error. Please ensure you are using HTTPS.';
+			} else {
+				msg += err.message || 'Unknown error occurred.';
+			}
+			alert(msg);
 			showCamera = false;
 		}
 	}
@@ -208,7 +233,7 @@
 	const serviceOptions = [
 		{
 			value: '',
-			label: 'Semua'
+			label: 'All'
 		},
 		{
 			value: 'Short',
@@ -245,15 +270,8 @@
 			const res = await fetch(avatar);
 			const blob = await res.blob();
 
-			const formData = new FormData();
-			formData.append('image', blob);
-
-			const response = await fetch('/api/ai/analyze', {
-				method: 'POST',
-				body: formData
-			});
-
-			const data = await response.json();
+			const response = await analyzeImage(fetch, blob);
+			const data = response;
 
 			if (data.success) {
 				result = data.data; // Array of { label: string, score: number }
@@ -295,13 +313,13 @@
 		}
 	}
 
-	const itemsPerPage = $derived(8);
+	const itemsPerPage = $derived(isDesktopView.current ? 8 : 8);
 	const siblingCount = $derived(isDesktopView.current ? 1 : 0);
 	const visibleRowCount = $derived(dataCatalogue.getFilteredRowModel().rows.length);
 	let currentPageIndex = $derived(dataCatalogue.getState().pagination.pageIndex + 1);
 
 	// State
-	let selectedFilter = $state('Semua');
+	let selectedFilter = $state('All');
 	let selectedService = $state<Catalogue | null>(null);
 
 	function handleBook(catalogue: Catalogue) {
@@ -479,7 +497,19 @@
 								// Submit logic here
 								console.log('Submitting photo...');
 								handleScan();
-							}}
+							
+							const recomendationElement = document.getElementById('recomendation');
+							if (recomendationElement) {
+								const stickyHeaderHeight = 60;
+								const elementRect = recomendationElement.getBoundingClientRect();
+								const targetScrollPosition = window.scrollY + elementRect.top - stickyHeaderHeight;
+								window.scrollTo({
+									top: targetScrollPosition,
+									behavior: 'smooth'
+								});
+							}
+						}}
+							
 						>
 							<Upload
 								class="relative h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5"
@@ -491,7 +521,7 @@
 			</div>
 
 			<!-- Right Side - Results Section -->
-			<div class="lg:col-span-8" in:fly={{ x: 50, duration: 1000, delay: 400, easing: quintOut }}>
+			<div class="lg:col-span-8" in:fly={{ x: 50, duration: 1000, delay: 400, easing: quintOut }} id="recomendation">
 				<div class="h-full rounded-[2rem] border border-white/5 bg-white/5 p-8 backdrop-blur-xl">
 					<div class="mb-8 flex items-center justify-between">
 						<h3 class="font-serif text-2xl text-secondary">Rekomendasi Gaya</h3>
@@ -515,8 +545,7 @@
 								>
 									<AlertCircle class="mt-0.5 h-5 w-5 flex-shrink-0 text-senary" />
 									<p class="text-sm leading-relaxed text-secondary/80">
-										AI kami menganalisis struktur dan fitur wajah. Foto berkualitas tinggi
-										memastikan akurasi 90-100% dalam rekomendasi.
+										AI menganalisis gaya rambut berdasarkan bentuk wajah, tekstur rambut, dan warna kulit. Rekomendasi ini tidak 100% akurat; konsultasikan dengan barber sebelum memutuskan.
 									</p>
 								</div>
 								<div class="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-6">
@@ -594,7 +623,7 @@
 									<Star class="h-12 w-12 text-senary" />
 								</div>
 							</div>
-							<h4 class="mb-3 font-serif text-2xl text-secondary">Siap untuk Berubah?</h4>
+							<h4 class="mb-3 font-serif text-2xl text-secondary">Apa yang cocok denganmu?</h4>
 							<p class="max-w-xs text-sm leading-relaxed text-secondary/70">
 								Unggah foto Anda untuk membuka koleksi gaya rambut yang dikurasi sesuai dengan fitur
 								unik Anda.
@@ -610,9 +639,9 @@
 									<Sparkles class="h-10 w-10 animate-pulse text-senary" />
 								</div>
 							</div>
-							<h4 class="mb-2 font-serif text-2xl text-secondary">Menganalisis Fitur</h4>
+							<h4 class="mb-2 font-serif text-2xl text-secondary">Sedang Berpikir</h4>
 							<p class="text-sm text-secondary/60">
-								Mengidentifikasi bentuk wajah dan tekstur rambut...
+								Mengidentifikasi bentuk wajah, tekstur rambut, dan warna kulit...
 							</p>
 						</div>
 					{:else if showResults}
@@ -685,7 +714,7 @@
 								options={serviceOptions}
 								{selectedFilter}
 								onSelect={(value) => {
-									selectedFilter = value || 'Semua';
+									selectedFilter = value || 'All';
 									selectedFilterValue = value;
 									dataCatalogue.getColumn('type')?.setFilterValue(value || undefined);
 									dataCatalogue.setPageIndex(0);

@@ -106,8 +106,9 @@
 	let typingRequest = $state('');
 
 	$effect(() => {
-		specialRequest = initialNote;
-		console.log('specialRequest', specialRequest);
+		if (initialNote) {
+			specialRequest = initialNote;
+		}
 	});
 
 	let voucherSelection = $state('none');
@@ -290,11 +291,7 @@
 		}
 	});
 
-	$effect(() => {
-		if (initialNote) {
-			specialRequest = initialNote;
-		}
-	});
+
 
 	$effect(() => {
 		availableYears = Array.from(
@@ -489,7 +486,7 @@
 		voucherSelection = 'none';
 		redeemCode = null;
 		redeemCodeDiscount = 0;
-		specialRequest = '';
+		specialRequest = initialNote || '';
 		agreeTnc = false;
 		selectedPaymentMethod = null;
 		clearState();

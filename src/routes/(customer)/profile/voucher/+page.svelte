@@ -166,12 +166,13 @@
 			if (response.success) {
 				toast.success('Voucher purchased successfully!');
 				selectedVoucher = null;
-				await loadData(); // Reload everything to update lists and coins
+				await window.location.reload();
 			} else {
 				toast.error(response.error || response.message || 'Failed to purchase voucher');
 			}
 
 			buySheetOpen = false;
+			
 		} catch (err) {
 			console.error('Error buying voucher:', err);
 			toast.error('An error occurred while purchasing the voucher');

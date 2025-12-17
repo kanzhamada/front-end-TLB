@@ -23,12 +23,14 @@
 	import { fade, fly } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import { profileSchema } from '$lib/zod/schema';
+	import LogoutDialog from '$lib/components/User/LogoutDialog.svelte';
 
 	let { children } = $props();
 
 	// State variables
 	let showEditModal = $state(false);
 	let showChangePasswordModal = $state(false);
+	let showLogoutDialog = $state(false);
 	let profileData = $state<ProfileData | null>(null);
 
 	let loading = $state(false);
@@ -50,6 +52,7 @@
 
 	function handleLogout() {
 		authStore.clear();
+		showLogoutDialog = false;
 		goto('/auth/login');
 	}
 
@@ -273,7 +276,7 @@
 								<Button
 									variant="outline"
 									class="w-full border-white/10 bg-transparent text-red-500 transition-all hover:border-red-500/30 hover:bg-white/5 hover:text-red-500"
-									onclick={handleLogout}
+									onclick={() => (showLogoutDialog = true)}
 								>
 									<LogOut class="mr-2 size-4" />
 									Keluar
@@ -551,4 +554,6 @@
 			</div>
 		</div>
 	{/if}
+
+	<LogoutDialog bind:open={showLogoutDialog} onConfirm={handleLogout} />
 </div>
