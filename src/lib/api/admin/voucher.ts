@@ -9,6 +9,7 @@ export type Voucher = {
 	expireDate: string;
 	description: string;
 	code?: string; // Only for redeem_code
+	serviceID?: string | null;
 };
 
 export type CreateVoucherRequest = {
@@ -20,6 +21,7 @@ export type CreateVoucherRequest = {
 	description: string;
 	price?: number;
 	code?: string;
+	serviceID?: string | null;
 };
 
 export type UpdateVoucherRequest = {
@@ -30,6 +32,7 @@ export type UpdateVoucherRequest = {
 	expireDate: string;
 	description: string;
 	code?: string;
+	serviceID?: string | null;
 };
 
 export const getVouchers = async (

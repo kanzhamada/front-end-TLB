@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createVoucher, updateVoucher, deleteVoucher, getVoucherById, type CreateVoucherRequest } from '$lib/api/admin/voucher';
+	import { getServices, type Service } from '$lib/api/admin/service';
 	import { toast } from 'svelte-sonner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -13,6 +14,8 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
+	import * as Select from '$lib/components/ui/select';
+	import { Check } from 'lucide-svelte';
 
 	let { voucherId = null, token, open = $bindable(false), onClose, onUpdate } = $props<{
 		voucherId?: string | null;
@@ -24,6 +27,8 @@
 
 	let loading = $state(false);
 	let fetching = $state(false);
+	let services = $state<Service[]>([]);
+	let selectedService = $state<string | undefined>(undefined);
 
 	let formData = $state<CreateVoucherRequest>({
 		type: 'voucher',
@@ -33,7 +38,10 @@
 		expireDate: '',
 		description: '',
 		price: 0,
-		code: ''
+		description: '',
+		price: 0,
+		code: '',
+		serviceID: null
 	});
 
 	// Date handling
@@ -53,6 +61,11 @@
 		}
 	});
 
+	// Service binding
+	$effect(() => {
+		formData.serviceID = selectedService || null;
+	});
+
 	$effect(() => {
 		if (open) {
 			if (voucherId) {
@@ -60,6 +73,7 @@
 			} else {
 				resetForm();
 			}
+			loadServices();
 		}
 	});
 
@@ -76,6 +90,14 @@
 		};
 		startDateValue = undefined;
 		expireDateValue = undefined;
+		selectedService = undefined;
+	}
+
+	async function loadServices() {
+		const res = await getServices(fetch);
+		if (res.success && res.data) {
+			services = res.data;
+		}
 	}
 
 	async function loadVoucher() {
@@ -92,8 +114,14 @@
 				startDate: voucher.startDate,
 				expireDate: voucher.expireDate,
 				description: voucher.description,
-				code: voucher.code || ''
+				description: voucher.description,
+				code: voucher.code || '',
+				serviceID: voucher.serviceID
 			};
+			
+			if (voucher.serviceID) {
+				selectedService = voucher.serviceID;
+			}
 			
 			// Parse dates
 			try {
@@ -350,6 +378,36 @@
 									class="min-h-[120px] rounded-xl border-white/10 bg-white/5 p-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20 resize-none"
 								/>
 							</div>
+
+							<!-- Service (Optional) -->
+							<div class="space-y-2 md:col-span-2">
+								<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Linked Service (Optional)</Label>
+								<Select.Root type="single" bind:value={selectedService}>
+									<Select.Trigger class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary hover:bg-white/10 hover:border-senary/50">
+										{#if selectedService}
+											{services.find(s => s.id === selectedService)?.name}
+										{:else}
+											<span class="text-secondary/50">Select a service...</span>
+										{/if}
+									</Select.Trigger>
+									<Select.Content class="bg-slate-900 border-white/10 text-secondary max-h-[200px] overflow-y-auto">
+										<Select.Item value="" label="None" class="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-senary">
+											None
+										</Select.Item>
+										{#each services as service}
+											<Select.Item value={service.id} label={service.name} class="cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-senary">
+												<div class="flex items-center justify-between w-full">
+													<span>{service.name}</span>
+													{#if selectedService === service.id}
+														<Check class="h-4 w-4 text-senary" />
+													{/if}
+												</div>
+											</Select.Item>
+										{/each}
+									</Select.Content>
+								</Select.Root>
+								<p class="text-[10px] text-secondary/40">* If selected, this voucher applies specifically to this service.</p>
+							</div>
 						</div>
 
 						<div class="flex justify-between items-center pt-6 border-t border-white/10">
@@ -368,14 +426,28 @@
 								<div></div>
 							{/if}
 
-							<Button 
-								type="button"
-								variant="outline" 
-								onclick={onClose}
-								class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
-							>
-								Cancel
-							</Button>
+							<div class="flex gap-3">
+								<Button 
+									type="button"
+									variant="outline" 
+									onclick={onClose}
+									class="border-white/10 bg-white/5 text-secondary hover:bg-white/10 hover:text-white"
+								>
+									Cancel
+								</Button>
+								<Button 
+									type="submit"
+									disabled={loading}
+									class="bg-senary text-primary hover:bg-senary/90 min-w-[100px]"
+								>
+									{#if loading}
+										<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+										Saving...
+									{:else}
+										Confirm
+									{/if}
+								</Button>
+							</div>
 						</div>
 					</form>
 				{/if}

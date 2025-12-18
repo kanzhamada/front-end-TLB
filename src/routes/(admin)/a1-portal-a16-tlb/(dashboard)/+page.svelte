@@ -49,19 +49,27 @@
 	}
 
 	// Pagination State
-	let actionPage = $state(1);
+	let pendingPage = $state(1);
+	let ongoingPage = $state(1);
 	let upcomingPage = $state(1);
 	const ITEMS_PER_PAGE = 5;
 
-	let combinedActionItems = $derived(dashboardData ? [
-		...(dashboardData.operational.pending_actions || []).map(i => ({...i, type: 'pending'})),
-		...(dashboardData.operational.ongoing_reservations || []).map(i => ({...i, type: 'ongoing'}))
-	] : []);
+	// Pending Actions (Action Required)
+	let paginatedPendingItems = $derived(
+		(dashboardData?.operational.pending_actions || []).slice((pendingPage - 1) * ITEMS_PER_PAGE, pendingPage * ITEMS_PER_PAGE)
+	);
+	let totalPendingPages = $derived(Math.ceil((dashboardData?.operational.pending_actions.length || 0) / ITEMS_PER_PAGE));
 
-	let paginatedActionItems = $derived(combinedActionItems.slice((actionPage - 1) * ITEMS_PER_PAGE, actionPage * ITEMS_PER_PAGE));
-	let totalActionPages = $derived(Math.ceil(combinedActionItems.length / ITEMS_PER_PAGE));
+	// Ongoing Reservations (Today)
+	let paginatedOngoingItems = $derived(
+		(dashboardData?.operational.ongoing_reservations || []).slice((ongoingPage - 1) * ITEMS_PER_PAGE, ongoingPage * ITEMS_PER_PAGE)
+	);
+	let totalOngoingPages = $derived(Math.ceil((dashboardData?.operational.ongoing_reservations.length || 0) / ITEMS_PER_PAGE));
 
-	let paginatedUpcomingItems = $derived(dashboardData?.operational.upcoming_reservations.slice((upcomingPage - 1) * ITEMS_PER_PAGE, upcomingPage * ITEMS_PER_PAGE) || []);
+	// Upcoming (Next 3 Days)
+	let paginatedUpcomingItems = $derived(
+		(dashboardData?.operational.upcoming_reservations || []).slice((upcomingPage - 1) * ITEMS_PER_PAGE, upcomingPage * ITEMS_PER_PAGE)
+	);
 	let totalUpcomingPages = $derived(Math.ceil((dashboardData?.operational.upcoming_reservations.length || 0) / ITEMS_PER_PAGE));
 
 	async function loadDashboardData() {
@@ -292,87 +300,138 @@
 					</div>
 				</div>
 
-				<!-- Reservations Grid -->
-				<div class="grid gap-6 lg:grid-cols-2">
-					<!-- Pending & Ongoing -->
+				<!-- Lists Grid -->
+				<div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+					
+					<!-- 1. Action Required (Pending) -->
 					<div class="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-1 backdrop-blur-md">
 						<div class="p-6">
 							<div class="mb-6 flex items-center justify-between">
 								<div class="flex items-center gap-3">
-									<div class="p-2 rounded-full bg-senary/10 text-senary">
-										<Activity class="h-5 w-5" />
+									<div class="p-2 rounded-full bg-yellow-500/10 text-yellow-500">
+										<AlertCircle class="h-5 w-5" />
 									</div>
 									<h3 class="text-lg font-bold text-white">Action Required</h3>
 								</div>
-								<Badge variant="outline" class="border-senary/20 text-senary bg-senary/5">
-									{dashboardData.operational.pending_actions.length + dashboardData.operational.ongoing_reservations.length} Active
+								<Badge variant="outline" class="border-yellow-500/20 text-yellow-500 bg-yellow-500/5">
+									{dashboardData.operational.pending_actions.length} Pending
 								</Badge>
 							</div>
 							
 							<div class="space-y-4 min-h-[300px]">
-								{#each paginatedActionItems as item}
-									{#if item.type === 'pending'}
-										<div class="flex items-center justify-between rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4 hover:bg-yellow-500/10 transition-colors">
-											<div class="flex items-center gap-4">
-												<div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20 text-yellow-500 font-bold">
-													{item.customerName.charAt(0)}
-												</div>
-												<div>
-													<p class="font-medium text-white text-sm">{item.customerName}</p>
-													<p class="text-xs text-secondary/60">{item.serviceName} • {item.barberName}</p>
-													<Badge variant="outline" class="mt-1 border-yellow-500/30 text-yellow-500 text-[10px] h-5 px-1.5">Action Needed</Badge>
-												</div>
+								{#each paginatedPendingItems as item}
+									<div class="flex items-center justify-between rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4 hover:bg-yellow-500/10 transition-colors">
+										<div class="flex items-center gap-4">
+											<div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20 text-yellow-500 font-bold">
+												{item.customerName.charAt(0)}
 											</div>
-											<Button
-												variant="outline"
-												size="sm"
-												class="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-black"
-												onclick={() => openDetailModal(item.reservationID)}
-											>
-												Review
-											</Button>
-										</div>
-									{:else}
-										<div class="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 hover:bg-white/10 transition-colors">
-											<div class="flex items-center gap-4">
-												<div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 font-bold">
-													{item.customerName.charAt(0)}
+											<div>
+												<p class="font-medium text-white text-sm">{item.customerName}</p>
+												<p class="text-xs text-secondary/60">{item.serviceName} • {item.barberName}</p>
+												
+												<!-- Status Badge -->
+												<div class="mt-1">
+													{#if item.status === 'requestToReschedule'}
+														<Badge variant="outline" class="border-purple-500/30 text-purple-500 text-[10px] h-5 px-1.5 py-0">Reschedule Req</Badge>
+													{:else}
+														<Badge variant="outline" class="border-yellow-500/30 text-yellow-500 text-[10px] h-5 px-1.5 py-0">Waiting</Badge>
+													{/if}
 												</div>
-												<div>
-													<p class="font-medium text-white text-sm">{item.customerName}</p>
-													<p class="text-xs text-secondary/60">{item.serviceName} • {item.barberName}</p>
-													<Badge variant="outline" class="mt-1 border-emerald-500/30 text-emerald-500 text-[10px] h-5 px-1.5">Ongoing</Badge>
-												</div>
-											</div>
-											<div class="flex items-center gap-2">
-												<Button
-													variant="ghost"
-													size="icon"
-													class="h-8 w-8 text-secondary/40 hover:text-white"
-													onclick={() => openDetailModal(item.reservationID)}
-												>
-													<MoreHorizontal class="h-4 w-4" />
-												</Button>
 											</div>
 										</div>
-									{/if}
+										<Button
+											variant="outline"
+											size="sm"
+											class="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-black"
+											onclick={() => openDetailModal(item.reservationID)}
+										>
+											Review
+										</Button>
+									</div>
 								{/each}
-								{#if combinedActionItems.length === 0}
+								{#if dashboardData.operational.pending_actions.length === 0}
 									<div class="text-center py-12 border border-dashed border-white/10 rounded-2xl h-[300px] flex flex-col items-center justify-center">
-										<Activity class="h-12 w-12 text-secondary/20 mb-4" />
+										<AlertCircle class="h-12 w-12 text-secondary/20 mb-4" />
 										<p class="text-sm text-secondary/40">No pending actions</p>
 									</div>
 								{/if}
 							</div>
 							
-							{#if totalActionPages > 1}
+							{#if totalPendingPages > 1}
 								<div class="flex items-center justify-between pt-4 mt-2 border-t border-white/5">
-									<span class="text-xs text-secondary/50">Page {actionPage} of {totalActionPages}</span>
+									<span class="text-xs text-secondary/50">Page {pendingPage} of {totalPendingPages}</span>
 									<div class="flex gap-2">
-										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={actionPage === 1} onclick={() => actionPage--}>
+										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={pendingPage === 1} onclick={() => pendingPage--}>
 											<ChevronLeft class="h-4 w-4" />
 										</Button>
-										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={actionPage === totalActionPages} onclick={() => actionPage++}>
+										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={pendingPage === totalPendingPages} onclick={() => pendingPage++}>
+											<ChevronRight class="h-4 w-4" />
+										</Button>
+									</div>
+								</div>
+							{/if}
+						</div>
+					</div>
+
+					<!-- 2. Ongoing Reservations (Today) -->
+					<div class="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-1 backdrop-blur-md">
+						<div class="p-6">
+							<div class="mb-6 flex items-center justify-between">
+								<div class="flex items-center gap-3">
+									<div class="p-2 rounded-full bg-emerald-500/10 text-emerald-500">
+										<Scissors class="h-5 w-5" />
+									</div>
+									<h3 class="text-lg font-bold text-white">Ongoing Today</h3>
+								</div>
+								<Badge variant="outline" class="border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
+									{dashboardData.operational.ongoing_reservations.length} Active
+								</Badge>
+							</div>
+							
+							<div class="space-y-4 min-h-[300px]">
+								{#each paginatedOngoingItems as item}
+									<div class="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 hover:bg-white/10 transition-colors">
+										<div class="flex items-center gap-4">
+											<div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 font-bold">
+												{item.customerName.charAt(0)}
+											</div>
+											<div>
+												<p class="font-medium text-white text-sm">{item.customerName}</p>
+												<p class="text-xs text-secondary/60">{item.serviceName} • {item.barberName}</p>
+												<div class="flex items-center gap-1.5 mt-1 text-emerald-400 text-xs">
+													<Clock class="h-3 w-3" />
+													<span>{item.time}</span>
+												</div>
+											</div>
+										</div>
+										<div class="flex items-center gap-2">
+											<Button
+												variant="ghost"
+												size="icon"
+												class="h-8 w-8 text-secondary/40 hover:text-white"
+												onclick={() => openDetailModal(item.reservationID)}
+											>
+												<MoreHorizontal class="h-4 w-4" />
+											</Button>
+										</div>
+									</div>
+								{/each}
+								{#if dashboardData.operational.ongoing_reservations.length === 0}
+									<div class="text-center py-12 border border-dashed border-white/10 rounded-2xl h-[300px] flex flex-col items-center justify-center">
+										<Activity class="h-12 w-12 text-secondary/20 mb-4" />
+										<p class="text-sm text-secondary/40">No ongoing reservations</p>
+									</div>
+								{/if}
+							</div>
+							
+							{#if totalOngoingPages > 1}
+								<div class="flex items-center justify-between pt-4 mt-2 border-t border-white/5">
+									<span class="text-xs text-secondary/50">Page {ongoingPage} of {totalOngoingPages}</span>
+									<div class="flex gap-2">
+										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={ongoingPage === 1} onclick={() => ongoingPage--}>
+											<ChevronLeft class="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="icon" class="h-7 w-7" disabled={ongoingPage === totalOngoingPages} onclick={() => ongoingPage++}>
 											<ChevronRight class="h-4 w-4" />
 										</Button>
 									</div>
@@ -392,7 +451,7 @@
 									<h3 class="text-lg font-bold text-white">Upcoming</h3>
 								</div>
 								<Badge variant="outline" class="border-blue-500/20 text-blue-500 bg-blue-500/5">
-									{dashboardData.operational.upcoming_reservations.length} Scheduled
+									{dashboardData.operational.upcoming_reservations.length} (Next 3 Days)
 								</Badge>
 							</div>
 
