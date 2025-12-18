@@ -14,7 +14,8 @@
 		Fingerprint,
 		ScanFace,
 		Scissors,
-		Sun
+		Sun,
+		RefreshCcw
 	} from 'lucide-svelte';
 
 	import * as Pagination from '$lib/components/ui/pagination/index.js';
@@ -71,6 +72,7 @@
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let stream = $state<MediaStream | null>(null);
 	let isSecure = $state(true);
+	let facingMode = $state<'user' | 'environment'>('user');
 
 	const onFileSelected = (e) => {
 		const file = e.target.files?.[0];
@@ -114,21 +116,26 @@
 
 	// Camera Functions
 	async function startCamera() {
-		if (navigator.permissions) {
-			try {
-				const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-				if (permissionStatus.state === 'denied') {
-					alert('Akses kamera ditolak. Harap izinkan akses kamera di pengaturan browser Anda.');
-					showCamera = false;
-					return;
-				}
-				// If state is 'granted' or 'prompt', proceed to try getUserMedia
-			} catch (error) {
-				console.warn('Permission API for camera not fully supported or error:', error);
-				// Fallback to direct getUserMedia if permission API fails or is not fully supported
+		try {
+			if (stream) {
+				stream.getTracks().forEach((track) => track.stop());
 			}
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: { facingMode: facingMode }
+			});
+			showCamera = true;
+		} catch (err) {
+			console.error('Error accessing camera:', err);
+			alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
+			showCamera = false;
 		}
 	}
+
+	$effect(() => {
+		if (videoEl && stream) {
+			videoEl.srcObject = stream;
+		}
+	});
 
 	function stopCamera() {
 		if (stream) {
@@ -136,6 +143,11 @@
 			stream = null;
 		}
 		showCamera = false;
+	}
+
+	function switchCamera() {
+		facingMode = facingMode === 'user' ? 'environment' : 'user';
+		startCamera();
 	}
 
 	function takePhoto() {
@@ -377,6 +389,12 @@
 										class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg transition-transform hover:scale-110 active:scale-95"
 									>
 										<Aperture class="h-6 w-6 text-white" />
+									</button>
+									<button
+										onclick={switchCamera}
+										class="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-black/60 backdrop-blur-md transition-colors hover:bg-white/20"
+									>
+										<RefreshCcw class="h-6 w-6 text-white" />
 									</button>
 									<button
 										onclick={stopCamera}
