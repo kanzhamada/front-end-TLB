@@ -5,6 +5,12 @@
 	import { quintOut } from 'svelte/easing';
 
 	let { selectedService = $bindable(), onClose, onBook } = $props();
+
+	function getOptimizedImage(url: string | undefined | null) {
+		if (!url) return '';
+		const separator = url.includes('?') ? '&' : '?';
+		return `${url}${separator}width=400&resize=cover&format=webp`;
+	}
 </script>
 
 {#if selectedService}
@@ -31,7 +37,7 @@
 						{#each selectedService.catalogueImages as img, i}
 							<Carousel.Item>
 								<img
-									src={img.imageUrl}
+									src={getOptimizedImage(img.imageUrl)}
 									alt={`${selectedService.name} ${i + 1}`}
 									class="h-69 w-full object-cover sm:h-128"
 								/>
