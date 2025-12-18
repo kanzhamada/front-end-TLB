@@ -78,9 +78,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const response = await resolve(event);
 
-	response.headers.set(
-    'Permissions-Policy',
-    'camera=(self), microphone=(self), geolocation=()'
-  );
+	
 	return response;
 };
