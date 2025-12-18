@@ -198,11 +198,17 @@
 	}
 
 	function getMonthsForYear(year: number) {
+		const now = new Date();
+		const currentYear = now.getFullYear();
+		const currentMonth = now.getMonth() + 1;
+
 		const months = new Set<number>();
 		for (const day of operational) {
 			const parts = parseDateString(day.date);
 			if (parts && parts.year === year) {
-				months.add(parts.month);
+				if (year > currentYear || (year === currentYear && parts.month >= currentMonth)) {
+					months.add(parts.month);
+				}
 			}
 		}
 		return Array.from(months).sort((a, b) => a - b);
@@ -294,11 +300,12 @@
 
 
 	$effect(() => {
+		const currentYear = new Date().getFullYear();
 		availableYears = Array.from(
 			new Set(
 				operational
 					.map((day) => parseDateString(day.date))
-					.filter((parts): parts is DateParts => Boolean(parts))
+					.filter((parts): parts is DateParts => Boolean(parts) && parts.year >= currentYear)
 					.map((parts) => parts.year)
 			)
 		).sort((a, b) => a - b);
@@ -313,10 +320,16 @@
 			availableDays = [];
 			return;
 		}
+
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+
 		const days: DayOption[] = [];
 		for (const entry of operational) {
 			const parts = parseDateString(entry.date);
 			if (!parts || parts.year !== selectedYear || parts.month !== selectedMonth) continue;
+			if (parts.date < today) continue;
+
 			const available = entry.hours.some((hour) => hour.status === 'available');
 			days.push({
 				id: entry.id,
