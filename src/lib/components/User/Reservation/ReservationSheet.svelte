@@ -515,15 +515,12 @@
 
 		// Only initialize if not already selected (e.g. from restored state)
 		if (selectedYear && selectedMonth && selectedDayId) return;
+		const now = new Date();
+		selectedYear = now.getFullYear();
+		selectedMonth = now.getMonth() + 1;
 
-		const dayWithAvailability =
-			days.find((day) => day.hours.some((hour) => hour.status === 'available')) ?? days[0];
-		const parts = parseDateString(dayWithAvailability.date);
-		if (!parts) return;
-
-		selectedYear = parts.year;
-		selectedMonth = parts.month;
-		selectedDayId = dayWithAvailability.id;
+		const todayStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+		selectedDayId = days.find((d) => d.date === todayStr)?.id ?? null;
 		selectedTimeId = null;
 	}
 
