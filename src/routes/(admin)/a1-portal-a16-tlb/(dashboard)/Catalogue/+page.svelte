@@ -114,6 +114,11 @@
 		{ value: 'medium', label: 'Medium' },
 		{ value: 'long', label: 'Long' }
 	];
+	function getOptimizedImage(url: string | undefined | null) {
+		if (!url) return '';
+		const separator = url.includes('?') ? '&' : '?';
+		return `${url}${separator}width=400&resize=cover&format=webp`;
+	}
 </script>
 
 <div class="min-h-screen w-full bg-slate-950 text-secondary selection:bg-senary/30">
@@ -217,7 +222,7 @@
 					>
 						<div class="relative aspect-[3/4] overflow-hidden">
 							<img
-								src={`${catalogue.image}?width=400&resize=cover&format=webp`}
+								src={getOptimizedImage(catalogue.image)}
 								alt={catalogue.name}
 								class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
 								loading="lazy"

@@ -10,7 +10,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
 		'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()',
-		'Content-Security-Policy': `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com https://*.google.com https://*.gstatic.com; connect-src 'self' https://*.supabase.co https://app.sandbox.midtrans.com https://www.google.com${dev ? ' http://localhost:3000' : ''}; frame-src 'self' https://app.sandbox.midtrans.com https://www.google.com; font-src 'self' data: https://fonts.gstatic.com;`
+		'Content-Security-Policy': `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.sandbox.midtrans.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://images.unsplash.com https://*.google.com https://*.gstatic.com https://*.supabase.co https://ivehjxlbcvbequifsldg.supabase.co; connect-src 'self' https://*.supabase.co https://ivehjxlbcvbequifsldg.supabase.co https://app.sandbox.midtrans.com https://www.google.com${dev ? ' http://localhost:3000' : ''}; frame-src 'self' https://app.sandbox.midtrans.com https://www.google.com; font-src 'self' data: https://fonts.gstatic.com;`
 	});
 
 	const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {

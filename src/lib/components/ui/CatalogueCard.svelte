@@ -11,6 +11,12 @@
 	function toggleActive() {
 		isActive = !isActive;
 	}
+
+	function getOptimizedImage(url: string | undefined | null) {
+		if (!url) return '';
+		const separator = url.includes('?') ? '&' : '?';
+		return `${url}${separator}width=400&resize=cover&format=webp`;
+	}
 </script>
 
 <div
@@ -28,7 +34,7 @@
 >
 	<div class="relative aspect-[3/4] overflow-hidden">
 		<img
-			src={catalogue.catalogueImages?.[0]?.imageUrl}
+			src={getOptimizedImage(catalogue.catalogueImages?.[0]?.imageUrl)}
 			alt={catalogue.name}
 			class="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:grayscale-100"
 		/>
