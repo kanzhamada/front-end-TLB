@@ -321,7 +321,7 @@
 			return;
 		}
 
-		const today = new Date();
+		const today = new Date() + 1;
 		today.setHours(0, 0, 0, 0);
 
 		const days: DayOption[] = [];
