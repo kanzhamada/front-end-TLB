@@ -519,8 +519,8 @@
 		selectedYear = now.getFullYear();
 		selectedMonth = now.getMonth() + 1;
 
-		const todayStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-		selectedDayId = days.find((d) => d.date === todayStr)?.id ?? null;
+		const tomorrow = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(now.getDate() + 1).padStart(2, '0')}`;
+		selectedDayId = days.find((d) => d.date === tomorrow)?.id ?? null;
 		selectedTimeId = null;
 	}
 
