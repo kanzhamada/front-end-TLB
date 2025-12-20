@@ -321,14 +321,14 @@
 			return;
 		}
 
-		const today = new Date() + 1;
+		const today = new Date();
 		today.setHours(0, 0, 0, 0);
 
 		const days: DayOption[] = [];
 		for (const entry of operational) {
 			const parts = parseDateString(entry.date);
 			if (!parts || parts.year !== selectedYear || parts.month !== selectedMonth) continue;
-			if (parts.date < today) continue;
+			if (parts.date <= today) continue;
 
 			const available = entry.hours.some((hour) => hour.status === 'available');
 			days.push({
