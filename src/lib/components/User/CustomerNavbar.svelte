@@ -56,6 +56,9 @@
 						src="/three_lights_barbershop_logo.svg"
 						alt="Three Lights Barbershop Logo"
 						class="h-10 w-auto md:h-12"
+						fetchpriority="high"
+						width="266"
+						height="94"
 					/>
 				</a>
 			</div>
