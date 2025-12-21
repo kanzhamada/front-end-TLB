@@ -72,7 +72,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { register } from '$lib/api/auth';
-	import { phoneSchema } from '$lib/zod/schema';
+	import { phoneSchema, passwordSchema } from '$lib/zod/schema';
 	import { authStore } from '$lib/stores/auth';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -114,6 +114,14 @@
 			console.log('Passwords do not match.');
 			handleError('Kata sandi tidak cocok.');
 			return;
+		}
+
+		if (password){
+			const passwordValidation = passwordSchema.safeParse(password);
+			if (!passwordValidation.success) {
+				handleError(passwordValidation.error.errors[0].message);
+				return;
+			}
 		}
 
 		if (phone) {

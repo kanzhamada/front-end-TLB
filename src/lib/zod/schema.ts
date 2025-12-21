@@ -105,27 +105,35 @@ export const phoneSchema = z
 	.string()
 	.trim()
 	.refine((val) => /^\d+$/.test(val), {
-		message: 'Phone number must be numeric only'
+		message: 'Nomor telepon harus angka'
 	})
 	.refine((val) => val.length >= 10, {
-		message: 'Phone number must be at least 10 digits'
+		message: 'Nomor telepon harus minimal 10 angka'
 	})
 	.refine((val) => val.length <= 14, {
-		message: 'Phone number must be at most 14 digits'
+		message: 'Nomor telepon harus maksimal 14 angka'
 	})
 	.refine((val) => val.startsWith('08'), {
-		message: "Phone number must start with '08'"
+		message: "Nomor telepon harus dimulai dengan '08'"
 	});
 
 export const profileSchema = z.object({
 	displayName: z
 		.string()
 		.trim()
-		.min(1, 'Full name is required')
-		.max(30, 'Full name must be at most 30 characters'),
+		.min(1, 'Nama lengkap harus diisi')
+		.max(30, 'Nama lengkap harus maksimal 30 karakter'),
 
 	phone: phoneSchema
 });
+export const passwordSchema = z
+	.string()
+	.trim()
+	.min(8, 'Password minimal 8 karakter')
+	.regex(/[A-Z]/, 'Password harus mengandung setidaknya satu huruf besar')
+	.regex(/[a-z]/, 'Password harus mengandung setidaknya satu huruf kecil')
+	.regex(/[0-9]/, 'Password harus mengandung setidaknya satu angka')
+	.regex(/[^A-Za-z0-9]/, 'Password harus mengandung setidaknya satu karakter khusus (contoh: @, #, $, %, ^, &, *, ?, !, dll)');
 
 export type BarberSchema = typeof barberSchema;
 export type ServiceSchema = typeof serviceSchema;
@@ -133,3 +141,4 @@ export type VoucherSchema = typeof voucherSchema;
 export type CatalogueSchema = typeof catalogueSchema;
 export type OperationalTimeSchema = typeof operationalTimeSchema;
 export type ProfileSchema = typeof profileSchema;
+export type PasswordSchema = typeof passwordSchema;

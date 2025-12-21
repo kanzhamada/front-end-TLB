@@ -11,6 +11,7 @@
 	import { Sparkles, Eye, EyeOff } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import { passwordSchema } from '$lib/zod/schema';
 
 	let newPassword = $state('');
 	let confirmPassword = $state('');
@@ -65,6 +66,14 @@
 		if (newPassword !== confirmPassword) {
 			handleError('Password tidak sama.');
 			return;
+		}
+
+		if(newPassword){
+			const passwordValidation = passwordSchema.safeParse(newPassword);
+			if (!passwordValidation.success) {
+				handleError(passwordValidation.error.errors[0].message);
+				return;
+			}
 		}
 
 		if (!tokens || !tokens.access_token) {
