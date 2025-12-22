@@ -12,6 +12,7 @@
 	import { quintOut } from 'svelte/easing';
 	import { Input } from "$lib/components/ui/input";
 	import AdminConfirmDialog from '$lib/components/ui/AdminConfirmDialog.svelte';
+	import { error } from '@sveltejs/kit';
 
 	let { operational = null, token, open = $bindable(false), onClose, onUpdate, initialDate = undefined } = $props<{
 		operational?: OperationalTime | null;
@@ -25,7 +26,7 @@
 	let loading = $state(false);
 	
 	let dateValue = $state<DateValue | undefined>(initialDate);
-	let hours = $state<string[]>(['10:00']); // Default start time
+	let hours = $state<string[]>(['']); // Default start time
 
 	// Date handling
 	const df = new DateFormatter('en-US', {
@@ -49,7 +50,7 @@
 				} else if (!dateValue) {
 					dateValue = parseDate(new Date().toISOString().split('T')[0]);
 				}
-				hours = ['10:00'];
+				hours.length = 0;
 			}
 		}
 	});
@@ -113,7 +114,7 @@
 			onUpdate();
 			onClose();
 		} else {
-			toast.error(res.message || `Failed to ${operational ? 'update' : 'create'} schedule`);
+			toast.error(res.error.error || res.message || `Failed to ${operational ? 'update' : 'create'} schedule`);
 		}
 		loading = false;
 	}
