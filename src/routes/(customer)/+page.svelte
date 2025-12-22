@@ -212,7 +212,7 @@
 				<div class="h-1 w-24 rounded-full bg-senary/50"></div>
 			</div>
 
-			<div class="grid grid-cols-1 items-center gap-8 md:grid-cols-3 md:gap-16">
+			<div class="grid grid-cols-1 items-center gap-8 md:grid-cols-3 sm:grid-cols-2 md:gap-16">
 				<div
 					class="group aspect-[3/4] overflow-hidden rounded-2xl border border-white/10 shadow-2xl transition-transform duration-700 hover:scale-[1.02] active:scale-[1.02]"
 				>
@@ -227,7 +227,7 @@
 						class="h-full w-full bg-[url('/IMG_3092.webp')] bg-cover bg-center transition-transform duration-700 group-hover:scale-110 group-active:scale-110 hover:grayscale-0 active:grayscale-0"
 					></div>
 				</div>
-				<div class="space-y-8 text-lg leading-relaxed font-light text-secondary/80">
+				<div class="space-y-8 text-lg leading-relaxed font-light text-secondary/80 md:col-span-1 col-span-2">
 					<p>
 						<span class="float-left mr-4 font-serif text-5xl text-senary">T</span>hree Lights
 						Barbershop adalah barbershop yang berfokus pada pelayanan potong rambut pria yang rapi,
@@ -256,13 +256,13 @@
 							stroke-width="1"
 						/>
 					</div>
-					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
+					<CardHeader class="relative z-10 flex flex-col items-start gap-8 md:flex-row md:gap-12">
 						<h3
-							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-3xl font-bold whitespace-nowrap text-transparent md:text-5xl"
+							class="self-start bg-gradient-to-r from-secondary to-senary bg-clip-text text-3xl font-bold whitespace-nowrap text-transparent md:self-center md:text-5xl"
 						>
 							Visi
 						</h3>
-						<div class="flex-1 border-l border-senary/20 pl-8">
+						<div class="w-full border-t border-senary/20 pt-8 md:flex-1 md:border-l md:border-t-0 md:pl-8 md:pt-0">
 							<p class="text-left text-lg leading-relaxed font-light text-secondary/80 md:text-xl">
 								{data.companySettings?.vision || 'Visi belum tersedia'}
 							</p>
@@ -280,8 +280,8 @@
 							stroke-width="1"
 						/>
 					</div>
-					<CardHeader class="relative z-10 flex items-start gap-8 md:gap-12">
-						<div class="flex-1 border-r border-senary/20 pr-8">
+					<CardHeader class="relative z-10 flex flex-col-reverse items-start gap-8 md:flex-row md:gap-12">
+						<div class="w-full border-t border-senary/20 pt-8 md:flex-1 md:border-r md:border-t-0 md:pr-8 md:pt-0">
 							<p
 								class="text-left text-lg leading-relaxed font-light whitespace-pre-line text-secondary/80 md:text-xl"
 							>
@@ -289,7 +289,7 @@
 							</p>
 						</div>
 						<h3
-							class="self-center bg-gradient-to-r from-secondary to-senary bg-clip-text text-right text-3xl font-bold whitespace-nowrap text-transparent md:text-5xl"
+							class="self-start bg-gradient-to-r from-secondary to-senary bg-clip-text text-left text-3xl font-bold whitespace-nowrap text-transparent md:self-center md:text-right md:text-5xl"
 						>
 							Misi
 						</h3>
