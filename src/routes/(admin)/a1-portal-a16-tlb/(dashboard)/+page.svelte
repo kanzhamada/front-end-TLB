@@ -21,7 +21,9 @@
 	} from 'lucide-svelte';
 	import { format } from 'date-fns';
 	import { getDashboardInfo, type DashboardData } from '$lib/api/admin/dashboard';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import { supabase } from '$lib/supabase/client';
+	import { toast } from 'svelte-sonner';
 	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
@@ -33,6 +35,7 @@
 
 	let dashboardData = $state<DashboardData | null>(null);
 	let isLoading = $state(true);
+	let realtimeSubscription: any = null;
 
 	// Modal State
 	let selectedReservationId = $state<string | null>(null);
@@ -82,11 +85,102 @@
 		isLoading = false;
 	}
 
+	async function refreshDashboardData() {
+		if (!token) return;
+		// Silent refresh without setting isLoading
+		const res = await getDashboardInfo(fetch, token);
+		if (res.success && res.data) {
+			dashboardData = res.data;
+		}
+	}
+
 	$effect(() => {
 		if (token) {
 			loadDashboardData();
+			setupRealtimeListener();
 		}
 	});
+
+	onDestroy(() => {
+		cleanupRealtimeListener();
+	});
+
+	function setupRealtimeListener() {
+		cleanupRealtimeListener();
+
+		const d = new Date();
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		const today = `${year}-${month}-${day}`;
+		console.log('Dashboard: Setting up realtime listener for date:', today);
+
+		realtimeSubscription = supabase
+			.channel('dashboard-reservations-changes')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'reservations'
+				},
+				async (payload) => {
+					console.log('Dashboard: Realtime INSERT received');
+					const newReservation = payload.new as any;
+					
+					// Check created_at timestamp
+					const createdAt = newReservation.created_at;
+					if (createdAt) {
+						const d = new Date(createdAt);
+						const year = d.getFullYear();
+						const month = String(d.getMonth() + 1).padStart(2, '0');
+						const day = String(d.getDate()).padStart(2, '0');
+						const createdDate = `${year}-${month}-${day}`;
+
+						if (createdDate === today) {
+							console.log('Dashboard: Date matches! Refreshing data...');
+							await refreshDashboardData();
+							toast.info('New reservation received!');
+						}
+					}
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'reservations'
+				},
+				async (payload) => {
+					console.log('Dashboard: Realtime UPDATE received');
+					const updatedReservation = payload.new as any;
+					
+					// Check updated_at timestamp
+					const updatedAt = updatedReservation.updated_at;
+					if (updatedAt) {
+						const d = new Date(updatedAt);
+						const year = d.getFullYear();
+						const month = String(d.getMonth() + 1).padStart(2, '0');
+						const day = String(d.getDate()).padStart(2, '0');
+						const updatedDate = `${year}-${month}-${day}`;
+
+						if (updatedDate === today) {
+							console.log('Dashboard: Date matches! Refreshing data...');
+							await refreshDashboardData();
+						}
+					}
+				}
+			)
+			.subscribe();
+	}
+
+	function cleanupRealtimeListener() {
+		if (realtimeSubscription) {
+			realtimeSubscription.unsubscribe();
+			realtimeSubscription = null;
+		}
+	}
 
 	const formatCurrency = (value: number) => {
 		return new Intl.NumberFormat('id-ID', {
