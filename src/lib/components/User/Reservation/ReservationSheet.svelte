@@ -1629,7 +1629,7 @@
 				// Reload data
 				await loadReservationData();
 			} else {
-				toast.error(response.message || 'Gagal membeli voucher');
+				toast.error(response.error || response.message || 'Gagal membeli voucher');
 			}
 		} catch (e) {
 			console.error('Error buying voucher:', e);
