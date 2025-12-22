@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getReservations, type Reservation } from '$lib/api/admin/reservation';
+	import { getReservations, getReservationById, type Reservation } from '$lib/api/admin/reservation';
+	import { supabase } from '$lib/supabase/client';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
@@ -22,7 +23,7 @@
 		Users
 	} from 'lucide-svelte';
 	import { format } from 'date-fns';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import ReservationDetailModal from './ReservationDetailModal.svelte';
 	import { fade, fly, scale } from 'svelte/transition';
@@ -33,6 +34,7 @@
 	let selectedStatuses = $state<string[]>([]);
 	let selectedSort = $state<string>('newest');
 	let selectedReservationId = $state<string | null>(null);
+	let realtimeSubscription: any = null;
 
 	async function loadReservations() {
 		const token = data.session?.access_token || '';
@@ -46,7 +48,143 @@
 
 	onMount(async () => {
 		await loadReservations();
+		setupRealtimeListener();
 	});
+
+	onDestroy(() => {
+		cleanupRealtimeListener();
+	});
+
+	function setupRealtimeListener() {
+		cleanupRealtimeListener();
+
+		const d = new Date();
+		const year = d.getFullYear();
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const day = String(d.getDate()).padStart(2, '0');
+		const today = `${year}-${month}-${day}`;
+		console.log('Setting up realtime listener for date:', today);
+
+		realtimeSubscription = supabase
+			.channel('reservations-changes')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'reservations'
+				},
+				async (payload) => {
+					console.log('Realtime INSERT received:', payload);
+					const newReservation = payload.new as any;
+					console.log('Payload keys:', Object.keys(newReservation));
+					
+					const reservationId = newReservation.reservationID || newReservation.id;
+					if (!reservationId) {
+						console.error('No reservation ID found in payload:', newReservation);
+						return;
+					}
+
+					// Check created_at timestamp
+					const createdAt = newReservation.created_at;
+					if (!createdAt) {
+						console.log('No created_at in payload, ignoring');
+						return;
+					}
+
+					const d = new Date(createdAt);
+					const year = d.getFullYear();
+					const month = String(d.getMonth() + 1).padStart(2, '0');
+					const day = String(d.getDate()).padStart(2, '0');
+					const createdDate = `${year}-${month}-${day}`;
+
+					console.log('Created date:', createdDate, 'Target today:', today);
+
+					if (createdDate === today) {
+						console.log('Date matches! Fetching details...');
+						const token = data.session?.access_token || '';
+						const res = await getReservationById(fetch, reservationId, token);
+						
+						if (res.success && res.data) {
+							console.log('Reservation details fetched, adding to list');
+							reservations = [res.data, ...reservations];
+							toast.info('New reservation received!');
+						} else {
+							console.error('Failed to fetch reservation details:', res);
+						}
+					} else {
+						console.log('Created date does not match today, ignoring.');
+					}
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'reservations'
+				},
+				async (payload) => {
+					console.log('Realtime UPDATE received:', payload);
+					const updatedReservation = payload.new as any;
+					console.log('Payload keys:', Object.keys(updatedReservation));
+					
+					const reservationId = updatedReservation.reservationID || updatedReservation.id;
+					if (!reservationId) {
+						console.error('No reservation ID found in payload:', updatedReservation);
+						return;
+					}
+
+					// Check updated_at timestamp
+					const updatedAt = updatedReservation.updated_at;
+					if (!updatedAt) {
+						console.log('No updated_at in payload, ignoring');
+						return;
+					}
+
+					const d = new Date(updatedAt);
+					const year = d.getFullYear();
+					const month = String(d.getMonth() + 1).padStart(2, '0');
+					const day = String(d.getDate()).padStart(2, '0');
+					const updatedDate = `${year}-${month}-${day}`;
+
+					console.log('Updated date:', updatedDate, 'Target today:', today);
+					
+					if (updatedDate === today) {
+						console.log('Date matches! Fetching details...');
+						const token = data.session?.access_token || '';
+						const res = await getReservationById(fetch, reservationId, token);
+						
+						if (res.success && res.data) {
+							const index = reservations.findIndex(r => r.id === reservationId);
+							
+							if (index !== -1) {
+								console.log('Updating existing reservation in list');
+								reservations[index] = res.data;
+								reservations = [...reservations]; 
+							} else {
+								console.log('Reservation not in list, adding it');
+								reservations = [res.data, ...reservations];
+							}
+						} else {
+							console.error('Failed to fetch updated reservation details:', res);
+						}
+					} else {
+						console.log('Updated date does not match today, ignoring.');
+					}
+				}
+			)
+			.subscribe((status) => {
+				console.log('Realtime subscription status:', status);
+			});
+	}
+
+	function cleanupRealtimeListener() {
+		if (realtimeSubscription) {
+			realtimeSubscription.unsubscribe();
+			realtimeSubscription = null;
+		}
+	}
 
 	// Calculate statistics
 	const stats = $derived({
@@ -376,7 +514,7 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-white/5">
-							{#each paginatedReservations as reservation}
+							{#each paginatedReservations as reservation (reservation.id)}
 								<tr
 									class="cursor-pointer transition-colors hover:bg-white/5"
 									onclick={() => (selectedReservationId = reservation.id)}
