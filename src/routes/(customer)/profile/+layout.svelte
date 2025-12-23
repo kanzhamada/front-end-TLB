@@ -92,6 +92,12 @@
 	}
 
 	onMount(() => {
+		const token = get(authStore).session?.access_token;
+		if (!token) {
+			console.error('User not authenticated, redirecting to login');
+			goto('/auth/login');
+			return;
+		}
 		loadProfile();
 	});
 

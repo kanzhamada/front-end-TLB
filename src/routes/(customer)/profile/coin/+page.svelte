@@ -136,7 +136,7 @@
 	});
 
 	$effect(() => {
-		console.log('coinTransactions:', paginatedTransactions);
+		console.log('coinTransactions:', coinTransactions);
 	});
 </script>
 
