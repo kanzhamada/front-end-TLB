@@ -319,17 +319,19 @@
 							</div>
 
 							<!-- Price -->
-							<div class="space-y-2">
-								<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Price (IDR)</Label>
-								<div class="relative group">
-									<Input 
-										type="number"
-										bind:value={formData.price} 
-										placeholder="e.g. 45000"
-										class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
-									/>
+							{#if formData.type === 'voucher'}
+								<div class="space-y-2">
+									<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Price (IDR)</Label>
+									<div class="relative group">
+										<Input 
+											type="number"
+											bind:value={formData.price} 
+											placeholder="e.g. 45000"
+											class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+										/>
+									</div>
 								</div>
-							</div>
+							{/if}
 
 							<!-- Dates -->
 							<div class="space-y-2">
