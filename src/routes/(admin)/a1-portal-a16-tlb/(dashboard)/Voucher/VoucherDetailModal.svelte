@@ -38,8 +38,6 @@
 		expireDate: '',
 		description: '',
 		price: 0,
-		description: '',
-		price: 0,
 		code: '',
 		serviceID: null
 	});
@@ -114,7 +112,7 @@
 				startDate: voucher.startDate,
 				expireDate: voucher.expireDate,
 				description: voucher.description,
-				description: voucher.description,
+				price: voucher.price || 0,
 				code: voucher.code || '',
 				serviceID: voucher.serviceID
 			};
@@ -308,13 +306,26 @@
 							{/if}
 
 							<!-- Value -->
-							<div class="space-y-2 md:col-span-2">
+							<div class="space-y-2">
 								<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Value (IDR)</Label>
 								<div class="relative group">
 									<Input 
 										type="number"
 										bind:value={formData.value} 
 										placeholder="e.g. 50000"
+										class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
+									/>
+								</div>
+							</div>
+
+							<!-- Price -->
+							<div class="space-y-2">
+								<Label class="text-xs font-bold tracking-widest text-secondary/70 uppercase">Price (IDR)</Label>
+								<div class="relative group">
+									<Input 
+										type="number"
+										bind:value={formData.price} 
+										placeholder="e.g. 45000"
 										class="h-12 rounded-xl border-white/10 bg-white/5 px-4 text-secondary placeholder:text-secondary/30 focus:border-senary/50 focus:ring-senary/20"
 									/>
 								</div>
