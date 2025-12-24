@@ -8,6 +8,7 @@ export type Voucher = {
 	startDate: string;
 	expireDate: string;
 	description: string;
+	price?: number;
 	code?: string; // Only for redeem_code
 	serviceID?: string | null;
 };
@@ -31,6 +32,7 @@ export type UpdateVoucherRequest = {
 	startDate: string;
 	expireDate: string;
 	description: string;
+	price?: number;
 	code?: string;
 	serviceID?: string | null;
 };
