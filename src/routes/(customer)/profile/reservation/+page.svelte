@@ -775,19 +775,21 @@
 										{/if}
 									</Button>
 								{:else if reservation.status === 'onGoing'}
-									<Button
-										variant="outline"
-										class="border-quaternary/30 text-quaternary transition-all duration-300 hover:border-quaternary hover:bg-quaternary/10 hover:text-quaternary"
-										onclick={() => handleRescheduleReservation(reservation)}
-										disabled={processingReservationId === reservation.reservationID}
-									>
-										{#if processingReservationId === reservation.reservationID}
-											<Skeleton class="h-4 w-20 bg-white/10" />
-										{:else}
-											<RotateCcw class="mr-2 size-4" />
-											Jadwal Ulang
-										{/if}
-									</Button>
+									{#if reservation.alreadyReschedule == false}
+										<Button
+											variant="outline"
+											class="border-quaternary/30 text-quaternary transition-all duration-300 hover:border-quaternary hover:bg-quaternary/10 hover:text-quaternary"
+											onclick={() => handleRescheduleReservation(reservation)}
+											disabled={processingReservationId === reservation.reservationID}
+										>
+											{#if processingReservationId === reservation.reservationID}
+												<Skeleton class="h-4 w-20 bg-white/10" />
+											{:else}
+												<RotateCcw class="mr-2 size-4" />
+												Jadwal Ulang
+											{/if}
+										</Button>
+									{/if}
 									<Button
 										variant="outline"
 										class="border-destructive/30 text-destructive transition-all duration-300 hover:border-destructive hover:bg-destructive/10 hover:text-destructive"

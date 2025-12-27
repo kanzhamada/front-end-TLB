@@ -35,6 +35,7 @@ export type ReservationResponse = {
 	totalPayment?: number;
 	fulfillmentStatus?: string;
 	payment_method: string;
+	alreadyReschedule?: boolean;
 };
 
 export type CreateReservationPayload = {
